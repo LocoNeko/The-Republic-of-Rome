@@ -4,6 +4,11 @@
     <title realm="Lobby">List TEPEKS</title>
 {% endblock %}
 
+{% block menu %}
+    <a class="navbar-brand" href="{{ path('ListGames') }}">List</a>
+    <a class="navbar-brand" href="{{ path('CreateGame') }}">Create</a>
+{% endblock %}
+
 {% block content %}
     <h2>List</h2>
     <div class="table-responsive table-bordered ">
@@ -24,34 +29,35 @@
             <tbody>
             {% for game in list %}
                 {% set partieslist='' %}
-                {% for party in game['parties'] %}
-                    {% set partieslist = partieslist ~ party['name'] ~ ' (' ~ app['user.manager'].getUser(party['user_id']).getDisplayName()|default('N/A') ~ ')<br>' %}
+                {% for party in game.getParties() %}
+                    {% set partieslist = partieslist ~ party.getName() ~ ' (' ~ app['user.manager'].getUser(party.getUser_id()).getDisplayName()|default('N/A') ~ ')<br>' %}
                 {% endfor %}
                 <tr>
-                    <th scope="row">{{game['id']}}</th>
-                    <td>{{game['name']}}</td>
-                    <td>{{game['scenario']}}</td>
-                    <td><a data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}">{{game['parties']|length}}</a></td>
-                    <td>{{game['variants']|join(', ')}}</td>
-                    <td>{{game['turn']}}</td>
-                    <td>{{game['phase']}}</td>
-                    <td>{{game['created']|date('Y/m/d H:i')}}</td>
+                    <th scope="row">{{game.getId()}}</th>
+                    <td>{{game.getName()}}</td>
+                    <td>{{game.getScenario()}}</td>
+                    <td><button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs">{{game.getNumberOfPlayers()}}</button></td>
+                    <td>{{game.getVariants()|join(', ')}}</td>
+                    <td>{{game.getTurn()}}</td>
+                    <td>{{game.getPhase()}}</td>
+                    <td>{{game.getCreated()|date('Y/m/d H:i')}}</td>
                     <td>
-                        {% if game['state'] == 'CAN_JOIN' %}
-                            <a href="{{ path('JoinGame' , {'game_id' : game['id'] }) }}">
+                        {% set gamestate = game.getGameState(app.user.id) %}
+                        {% if gamestate == 'CAN_JOIN' %}
+                            <a href="{{ path('JoinGame' , {'game_id' : game.getId() }) }}">
                                 <span class="label label-primary">JOIN</span>
                             </a>
-                        {% elseif game['state'] == 'JOINED' %}
-                            <a href="{{ path('JoinGame' , {'game_id' : game['id'] }) }}">
+                        {% elseif gamestate == 'JOINED' %}
+                            <a href="{{ path('JoinGame' , {'game_id' : game.getId() }) }}">
                                 <span class="label label-warning">JOINED (not ready)</span>
                             </a>
-                        {% elseif game['state'] == 'READY' %}
-                            <a href="{{ path('JoinGame' , {'game_id' : game['id'] }) }}">
+                        {% elseif gamestate == 'READY' %}
+                            <a href="{{ path('JoinGame' , {'game_id' : game.getId() }) }}">
                                 <span class="label label-success">JOINED (ready)</span>
                             </a>
-                        {% elseif game['state'] == 'FULL' %}
+                        {% elseif gamestate == 'FULL' %}
                             <span class="label label-danger">FULL</span>
-                        {% elseif game['state'] == 'STARTED' %}
+                        {% elseif gamestate == 'STARTED' %}
                             <span class="label label-danger">STARTED</span>
                         {% endif %}
                     </td>

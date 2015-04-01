@@ -4,7 +4,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @Entity @Table(name="cards")
  **/
-class Card
+abstract class Card
 {
     public static $VALID_TYPES = array('Family', 'Statesman' , 'Concession' , 'Province' , 'Conflict' , 'Leader' ,'Faction' ,'Era ends' ) ;
     public static $VALID_DECKS = array('Draw' , 'Discard' , 'Forum', 'Curia' , 'Unplayed Provinces' , 'Early Republic' , 'Middle Republic' , 'Late Republic' , 'Inactive Wars' , 'Active Wars' , 'Imminent Wars' , 'Unprosecuted Wars') ;
@@ -95,6 +95,20 @@ class Card
         }
     }
     
+    public function __construct(Game $game , $id , $name , $type) {
+        $this->game = $game ;
+        $this->setId($id) ;
+        $this->setName($name) ;
+        $this->setType($type) ;
+        $this->cards_controlled = new ArrayCollection();
+    }
+
+    /**
+    * ----------------------------------------------------
+    * Other methods
+    * ----------------------------------------------------
+    */
+
     public function resetLocation()
     {
         if ($this->location_card!==NULL) {
@@ -120,14 +134,6 @@ class Card
         } else {
             throw new Exception(_('Invalid location type.'));
         }
-    }
-    
-    public function __construct(Game $game , $id , $name , $type) {
-        $this->game = $game ;
-        $this->setId($id) ;
-        $this->setName($name) ;
-        $this->setType($type) ;
-        $this->cards_controlled = new ArrayCollection();
     }
 
     public function getValue($property) {

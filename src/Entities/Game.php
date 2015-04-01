@@ -261,6 +261,11 @@ class Game
      * Functions
      * ----------------------------------------------------
      */
+    
+    public static function getAllVariants() {
+        return self::$VALID_VARIANTS ;
+    }
+    
     public function nextTurn()
     {
         $this->turn++;
@@ -335,21 +340,24 @@ class Game
         return count($this->parties) ;
     }
     
-    public function getGameInfos($user_id) {
-        $result = array() ;
-        $result['parties'] = $this->getParties() ;
-        $result['game'] = $this ;
-        $result['state'] = ($this->userAlreadyJoined($user_id) ? 'JOINED' : 'CAN_JOIN') ;
+    /**
+     * Returns the current state of the game for a given user_id
+     * @param int $user_id
+     * @return string JOINED|CAN_JOIN|STARTED|READY|FULL
+     */
+    public function getGameState($user_id) {
+        $parties = $this->getParties() ;
+        $result = $this->userAlreadyJoined($user_id) ? 'JOINED' : 'CAN_JOIN' ;
         if ($this->gameStarted()) {
-            $result['state']='STARTED' ;
-        } elseif($result['state']=='JOINED') {
-            foreach($result['parties'] as $party) {
+            $result ='STARTED' ;
+        } elseif (count($parties) == $this::$MAX_PLAYERS) {
+            $result = 'FULL' ;
+        } elseif($result == 'JOINED') {
+            foreach($parties as $party) {
                 if ($party->getUser_id() == $user_id && $party->getReadyToStart()) {
-                    $result['state'] = 'READY' ;
+                    $result = 'READY' ;
                 }
             }
-        } elseif (count($result['parties']) == $this::$MAX_PLAYERS) {
-            $result['state'] = 'FULL' ;
         }
         return $result ;
     }

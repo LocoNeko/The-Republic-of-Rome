@@ -1,6 +1,14 @@
 {% extends layout_template  %}
 
-{% block title %}Create a Globiboulga{% endblock %}
+{% block title %}
+    <title realm="Lobby">Create</title>
+{% endblock %}
+
+{% block menu %}
+    <a class="navbar-brand" href="{{ path('ListGames') }}">List</a>
+    <a class="navbar-brand" href="{{ path('CreateGame') }}">Create</a>
+{% endblock %}
+
 {% block content %}
 
     <h2>Create</h2>
@@ -10,28 +18,32 @@
                         <tbody>
                             <tr>
                                 <th>Name</th>
-                                <td><input type="text" class="form-control" id="gameName" name="gameName"></td>
+                                <td colspan="2"><input type="text" class="form-control" id="gameName" name="gameName"></td>
                             </tr>
                             <tr>
                                 <th>Scenario</th>
-                                <td>
-                                    <div class="dropdown">
-                                      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
-                                        Select
-                                        <span class="caret"></span>
-                                      </button>
-                                      <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 1</a></li>
-                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 2</a></li>
-                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 3</a></li>
-                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 4</a></li>
-                                      </ul>
-                                    </div>
+                                <td colspan="2">
+                                    <select class="form-control">
+                                        <option>Scenario 1</option>
+                                        <option>Scenario 2</option>
+                                        <option>Scenario 3</option>
+                                    </select>
                                 </td>
                             </tr>
                             <tr>
                                 <th>Variants</th>
-                                <td>---</td>
+                                <td>
+                                    <ul class="list-group" style="max-height:200px; overflow-y:auto;">
+                                        {% for variant in variants %}
+                                            <li class="list-group-item">{{variant}}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                                <td>
+                                    <ul class="list-group" style="max-height:200px; overflow-y:auto;">
+                                        <li class="list-group-item">Cras justo odio</li>
+                                    </ul>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

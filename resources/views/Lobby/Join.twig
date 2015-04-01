@@ -4,6 +4,11 @@
     <title realm="{{game.getId()}}">Join TEPEK</title>
 {% endblock %}
 
+{% block menu %}
+    <a class="navbar-brand" href="{{ path('ListGames') }}">List</a>
+    <a class="navbar-brand" href="{{ path('CreateGame') }}">Create</a>
+{% endblock %}
+
 {% block content %}
     <h2>Game {{game.getName()}}</h2>
     <h5 style="margin-left: 20px;"><strong>Scenario: </strong>{{game.getScenario()}}</h5>
@@ -19,7 +24,7 @@
                 </tr>
             </thead>
             <tbody>
-            {% for party in parties %}
+            {% for party in game.getParties() %}
                 <tr>
                     <td>{{app['user.manager'].getUser(party.getUser_id()).getDisplayName()|default('N/A')}}</td>
                     <td>{{party.getName()}}</td>
@@ -35,9 +40,10 @@
             </tbody>
         </table>
     </div>
-    {% if state == 'CAN_JOIN' %}
+    {% set gamestate = game.getGameState(app.user.id) %}
+    {% if gamestate == 'CAN_JOIN' %}
         {% embed 'Lobby/Form_Join.twig' %}{% endembed %}
-    {% elseif state == 'JOINED'  %}
+    {% elseif gamestate == 'JOINED'  %}
         {% embed 'Lobby/Form_Ready.twig' %}{% endembed %}
     {% endif %}
 

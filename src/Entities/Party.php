@@ -80,6 +80,12 @@ class Party
         $this->setUser_id($user_id) ;
     }
 
+    /**
+    * ----------------------------------------------------
+    * Other methods
+    * ----------------------------------------------------
+    */
+
     public function joinGame(Game $game)
     {
         if ($game->userAlreadyJoined($this->user_id)) {

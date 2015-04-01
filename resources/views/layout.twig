@@ -20,8 +20,7 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a class="navbar-brand" href="/">Home</a>
-                    <a class="navbar-brand" href="{{ path('ListGames') }}">List</a>
-                    <a class="navbar-brand" href="{{ path('CreateGame') }}">Create</a>
+                    {% block menu %}{% endblock %}
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->

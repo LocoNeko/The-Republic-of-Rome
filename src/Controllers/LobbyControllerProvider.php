@@ -36,6 +36,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             return $app['twig']->render('Lobby/Create.twig', array(
                'layout_template' => 'layout.twig' ,
                'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
+               'variants' => \Entities\Game::$VALID_VARIANTS ,
             ));
         })
         ->bind('CreateGame');
@@ -54,12 +55,9 @@ class LobbyControllerProvider implements ControllerProviderInterface
             } elseif ($result[0]->gameStarted()) {
                 return $app->redirect('/Setup/'.$game_id) ;
             } else {
-                $gameInfos = $result[0]->getGameInfos($app['user']->getId()) ;
                 return $app['twig']->render('Lobby/Join.twig', array(
                    'layout_template' => 'layout.twig' ,
-                   'game' => $gameInfos['game'] ,
-                   'parties' => $gameInfos['parties'] ,
-                   'state' => $gameInfos['state'] ,
+                   'game' => $result[0] ,
                 ));
             }
         })
@@ -120,22 +118,8 @@ class LobbyControllerProvider implements ControllerProviderInterface
      */
     public function getGamesList($user_id)
     {
-        $query = $this->entityManager->createQuery('SELECT g , p FROM Entities\Game g LEFT JOIN g.parties p');
-        $result = $query->getArrayResult() ;
-        foreach($result as $key=>$game) {
-            $parties = $game['parties'] ;
-            $result[$key]['state']='';
-            foreach($parties as $party) {
-                if ($party['user_id']==$user_id) {
-                    $result[$key]['state'] = ($party['readyToStart'] ? 'READY' : 'JOINED' ) ;
-                }
-            }
-            if (count($parties) == \Entities\Game::$MAX_PLAYERS) {
-                $result[$key]['state'] = 'FULL' ;
-            } elseif ($result[$key]['state']=='') {
-                $result[$key]['state'] = 'CAN_JOIN' ;
-            }
-        }
+        $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g');
+        $result = $query->getResult() ;
         return $result ;
     }
 
