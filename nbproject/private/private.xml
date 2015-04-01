@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/src/Entities/Game.php</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/src/app.php</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/Lobby/List.twig</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/src/Controllers/LobbyControllerProvider.php</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/Lobby/Form_Ready.twig</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/Lobby/Create.twig</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/layout.twig</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/Lobby/Form_Start.twig</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/Lobby/Form_Join.twig</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/src/Entities/Party.php</file>
+            <file>file:/home/gpetraud/Projects/testing/silex-test/resources/views/Lobby/Join.twig</file>
+        </group>
+    </open-files>
+</project-private>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% block title %}{% endblock %}
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
+        <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css"></style>
+    </head>
+    <body>
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">Home</a>
+                    <a class="navbar-brand" href="{{ path('ListGames') }}">List</a>
+                    <a class="navbar-brand" href="{{ path('CreateGame') }}">Create</a>
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="{{ path('user.list') }}">List users</a></li>
+                        {% if app.user %}
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                                    Hello, {{ app.user.displayName }}!
+                                    <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li><a href="{{ path('user') }}"><span class="glyphicon glyphicon-user"></span> View your profile</a></li>
+                                    <li><a href="{{ path('user.edit', { id: app.user.id }) }}"><span class="glyphicon glyphicon-edit"></span> Edit your profile</a></li>
+                                    <li><a href="{{ path('user.logout') }}"><span class="glyphicon glyphicon-off"></span> Sign out</a></li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li><a href="{{ path('user.login') }}">Sign in</a></li>
+                            <li><a href="{{ path('user.register') }}">Create account</a></li>
+                        {% endif %}
+                    </ul>
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+        </nav>
+
+        <div class="container">
+            {% for type , messages in app.session.flashbag.all() %}
+                {%for message in messages %}
+                    <div class="alert alert-info alert-dismissible">{{message}}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {% block content %}{% endblock %}
+        </div>
+        
+        <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+        <script>
+        // Connecting to the socket.io server :
+        // - Port is the client's port
+        // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
+        var socket = io.connect('http://silex-test:8081');
+        socket.on('Update', function(realm){
+            if ( realm === $("title").attr('realm') ) {
+                window.location.reload(true) ;
+            }
+        });
+        // any submit of a form with the 'json-submit' property will result is submitting data in json to the current route + '/verb'
+        $(function(){
+            $('.json-submit').submit(function(e){
+                //prevent Default functionality
+                e.preventDefault();
+
+                var data = $(this).serializeArray();
+                var json = {};
+                $.each(data, function() {
+                    json[this.name] = this.value || '';
+                });
+                
+                socket.emit('Update', $(this).attr('gameId'));
+                
+                $.post(
+                    window.location.pathname + '/' + $(this).attr('verb') ,
+                    json ,
+                    function( data ) {
+                        window.location.reload(true) ;
+                    } ,
+                    "json"
+                );
+            });
+        });
+        </script>
+        {% block scripts %}{% endblock %}
+
+    </body>
+</html>

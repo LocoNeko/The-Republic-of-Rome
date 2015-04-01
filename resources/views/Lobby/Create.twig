@@ -1,0 +1,48 @@
+{% extends layout_template  %}
+
+{% block title %}Create a Globiboulga{% endblock %}
+{% block content %}
+
+    <h2>Create</h2>
+        <form class="form-inline json-submit" verb="Create">
+            <div class="table-responsive table-bordered ">
+                    <table class="table" id='CreateGame'>
+                        <tbody>
+                            <tr>
+                                <th>Name</th>
+                                <td><input type="text" class="form-control" id="gameName" name="gameName"></td>
+                            </tr>
+                            <tr>
+                                <th>Scenario</th>
+                                <td>
+                                    <div class="dropdown">
+                                      <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                                        Select
+                                        <span class="caret"></span>
+                                      </button>
+                                      <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 1</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 2</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 3</a></li>
+                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#">Scenario 4</a></li>
+                                      </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Variants</th>
+                                <td>---</td>
+                            </tr>
+                        </tbody>
+                    </table>
+            </div>
+            <button type="submit" class="btn btn-success">Create</button>
+        </form>
+    
+{% endblock %}
+
+{% block scripts %}
+            
+    <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+    
+{% endblock %}
