@@ -7,6 +7,14 @@
         {% block title %}{% endblock %}
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
         <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css"></style>
+        <style>
+            .sortable-list-placeholder {
+                background-color: #bbb;
+                border: 1px dashed #666;
+                margin-bottom: -1px;
+                padding: 10px 15px;
+            }
+        </style>
     </head>
     <body>
         <nav class="navbar navbar-default" role="navigation">
@@ -59,9 +67,17 @@
         </div>
         
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
         <script>
+        // jquery code for jqueryUI to handle sortable lists
+        $(document).ready(function(){
+            $('.sortable-list').sortable({
+                connectWith: '.sortable-list',
+                placeholder: 'sortable-list-placeholder',
+            });
+        });
         // Connecting to the socket.io server :
         // - Port is the client's port
         // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
@@ -77,12 +93,27 @@
                 //prevent Default functionality
                 e.preventDefault();
 
+                // Add FORM data to a json variable made of [name] => value
                 var data = $(this).serializeArray();
                 var json = {};
                 $.each(data, function() {
                     json[this.name] = this.value || '';
                 });
                 
+                // Add sortable lists data to the json variable in the format [list name] => json array
+                // For each sortable list with an id
+                $('.sortable-list').each(function() {
+                    if ($(this).attr('id')) {
+                        var listName = $(this).attr('id') ;
+                        json[listName] = [];
+                        // Go through each li tag and add it to the json [list name] array
+                        $(this).find('li').each(function() {
+                            json[listName].push($(this).text());
+                        });
+                    }
+                });
+                
+                // Emit the Update event to socket.io
                 socket.emit('Update', $(this).attr('gameId'));
                 
                 $.post(

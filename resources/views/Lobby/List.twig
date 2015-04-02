@@ -58,7 +58,9 @@
                         {% elseif gamestate == 'FULL' %}
                             <span class="label label-danger">FULL</span>
                         {% elseif gamestate == 'STARTED' %}
-                            <span class="label label-danger">STARTED</span>
+                            <a href="{{ path('PlayGame' , {'game_id' : game.getId() }) }}">
+                                <span class="label label-danger">STARTED</span>
+                            </a>
                         {% endif %}
                     </td>
                 </tr>

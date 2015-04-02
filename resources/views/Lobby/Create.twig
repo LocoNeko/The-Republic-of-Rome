@@ -23,26 +23,27 @@
                             <tr>
                                 <th>Scenario</th>
                                 <td colspan="2">
-                                    <select class="form-control">
-                                        <option>Scenario 1</option>
-                                        <option>Scenario 2</option>
-                                        <option>Scenario 3</option>
+                                    <select class="form-control" id="scenario" name="scenario">
+                                        {% for scenario in scenarios %}
+                                            <option>{{scenario}}</option>
+                                        {% endfor %}
                                     </select>
                                 </td>
                             </tr>
                             <tr>
-                                <th>Variants</th>
-                                <td>
-                                    <ul class="list-group" style="max-height:200px; overflow-y:auto;">
+                                <th style="width:20%;">Variants</th>
+                                <td style="width:40%;">Played
+                                    <ul id="variants" name="variants" class="list-group sortable-list ui-sortable variants" style="max-height:300px; overflow-y:auto; min-height: 300px; background-color: #eee;">
+                                    </ul>
+                                    <a id="move_right" class="label label-danger">NONE &gt; </a>
+                                </td>
+                                <td style="width:40%;">Not played
+                                    <ul class="list-group sortable-list ui-sortable variants_not_played" style="max-height:300px; overflow-y:auto; min-height: 300px; background-color: #eee;">
                                         {% for variant in variants %}
-                                            <li class="list-group-item">{{variant}}</li>
+                                            <li class="list-group-item sortable-item">{{variant}}</li>
                                         {% endfor %}
                                     </ul>
-                                </td>
-                                <td>
-                                    <ul class="list-group" style="max-height:200px; overflow-y:auto;">
-                                        <li class="list-group-item">Cras justo odio</li>
-                                    </ul>
+                                    <a id="move_left" class="label label-primary">&lt; ALL</a>
                                 </td>
                             </tr>
                         </tbody>
@@ -54,7 +55,14 @@
 {% endblock %}
 
 {% block scripts %}
-            
-    <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
-    
+
+    <script>
+        $('#move_left').click(function() {
+            $('.variants').append($('.variants_not_played .list-group-item'));
+        });
+        $('#move_right').click(function() {
+            $('.variants_not_played').append($('.variants .list-group-item'));
+        });
+    </script>
+
 {% endblock %}

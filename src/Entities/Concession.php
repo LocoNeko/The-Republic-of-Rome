@@ -3,9 +3,6 @@ namespace Entities ;
 use Doctrine\Common\Collections\ArrayCollection;
 
 /**
- * @Entity @Table(name="concessions")
- **/
-/**
  * Although this is actually a Faction card, this class exists as a convenience
  * Warning : the type is 'Concession' NOT 'Faction'
  * @property int $income The concession income, can be 0 for special cases (armaments & ship building)
@@ -14,7 +11,10 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @property bool $corrupt whether or not the concession has generated revenue for its controlling senator
  * @property bool $flipped whether or not assigning the concession has already been proposed and rejected during the Senate phase
  */
-class Concession extends Card
+/**
+ * @Entity  @Table(name="concessions")
+ **/
+class Concession extends \Entities\Card
 {
     public static $VALID_SPECIAL = array('legions' , 'fleets' , 'drought' , 'land bill' ) ;
 
@@ -82,12 +82,10 @@ class Concession extends Card
      * ----------------------------------------------------
      */
 
-    public function __construct(Game $game , $id , $name , $type , $income , $special = NULL , $corrupt = FALSE , $flipped = FALSE) {
-        parent::__construct($game, $id, $name, $type) ;
-        $this->setIncome($income) ;
-        $this->setSpecial($special) ;
-        $this->setCorrupt($corrupt) ;
-        $this->setFlipped($flipped) ;
+    public function __construct(Game $game , $data) {
+        parent::__construct($game, (int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        $this->setIncome((int)$data[4]) ;
+        $this->setSpecial(($data[5]=='' ? NULL : $data[5])) ;
     }
 
 }

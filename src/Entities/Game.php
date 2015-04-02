@@ -265,7 +265,7 @@ class Game
     public static function getAllVariants() {
         return self::$VALID_VARIANTS ;
     }
-    
+       
     public function nextTurn()
     {
         $this->turn++;
@@ -373,6 +373,9 @@ class Game
     }
 
     public function gameStarted() {
+        if ($this->getNumberOfPlayers()<self::$MIN_PLAYERS) {
+                return FALSE ;
+        }
         foreach($this->getParties() as $party) {
             if (!$party->getReadyToStart()) {
                 return FALSE ;
@@ -381,4 +384,25 @@ class Game
         return TRUE ;
     }
     
+    public function createCardsFromFile($entityManager) {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/scenarios/'.$this->getScenario().'.csv', 'r');
+        if (!$filePointer) {
+            throw new Exception(_('Could not open the file'));
+        }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
+            if ($data[0]!='') {
+                $type = $data[2] ;
+                if ($type=='Faction' && $data[3]==2) {
+                    $type='Concession' ;
+                }
+                if (\Entities\Card::isValidType($type)) {
+                    $class = __NAMESPACE__.'\\'.$type ;
+                    $card = new $class ( $this , $data);
+                    $card->setLocation('Early Republic') ;
+                    $entityManager->persist($card) ;
+                }
+            }
+        }
+        fclose($filePointer);
+     }
 }

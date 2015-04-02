@@ -36,6 +36,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             return $app['twig']->render('Lobby/Create.twig', array(
                'layout_template' => 'layout.twig' ,
                'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
+               'scenarios' => \Entities\Game::$VALID_SCENARIOS ,
                'variants' => \Entities\Game::$VALID_VARIANTS ,
             ));
         })
@@ -62,6 +63,25 @@ class LobbyControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('JoinGame');
+
+        /*
+         * Play game
+         */
+        $controllers->get('/Play/{game_id}', function($game_id) use ($app)
+        {
+            $game_id = (int)$game_id ;
+            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
+            $result = $query->getResult() ;
+            if (count($result)!=1) {
+                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->redirect('/Lobby/List') ;
+            } elseif ($result[0]->gameStarted()) {
+                return $app->redirect('/'.$result[0]->getPhase().'/'.$game_id) ;
+            } else {
+                return $app->redirect('/Lobby/List') ;
+            }
+        })
+        ->bind('PlayGame');
 
         /*
         * POST target
@@ -108,6 +128,24 @@ class LobbyControllerProvider implements ControllerProviderInterface
         })
         ->bind('ReadyAction');
 
+        /*
+        * POST target
+        * Verb : Create
+        * JSON Data : Game info
+        */
+        $controllers->post('/Create/Create', function(Request $request) use ($app)
+        {
+            $result= $this->CreateGame($request->request->all()) ;
+            if ( $result === TRUE ) {
+                $app['session']->getFlashBag()->add('alert', 'Game created');
+                return $app->json( _('Game created') , 201);
+            } else {
+                $app['session']->getFlashBag()->add('alert', $result);
+                return $app->json( $result , 201);
+            }
+        })
+        ->bind('CreateAction');
+
         return $controllers ;
     }
     
@@ -137,4 +175,38 @@ class LobbyControllerProvider implements ControllerProviderInterface
         }
     }
     
+    private function CreateGame($data) {
+        $data['gameName'] = strip_tags($data['gameName']) ;
+        $query = $this->entityManager->createQuery('SELECT COUNT(g.id) FROM Entities\Game g WHERE g.name = ?1');
+        $query->setParameter(1, $data['gameName']);
+        if ($query->getSingleScalarResult() > 0) {
+            return _('ERROR - A game with the same name already exists.') ;
+        }
+        if (strlen($data['gameName']) <1 ) {
+            return _('ERROR - Game name too short.') ;
+        }
+        if (!in_array($data['scenario'], \Entities\Game::$VALID_SCENARIOS) ) {
+            return sprintf(_('ERROR - %1$s is not a valid Scenario.') , $data['scenario']) ;
+        }
+        foreach($data['variants'] as $variant) {
+            if (!in_array($variant , \Entities\Game::$VALID_VARIANTS)) {
+                return sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
+            }
+        }
+        $game = new \Entities\Game();
+        try 
+        {
+            $game->setName($data['gameName']) ;
+            $game->setTreasury(100) ;
+            $game->setUnrest(0) ;
+            $game->setScenario($data['scenario']) ;
+            $game->createCardsFromFile($this->entityManager);
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+           return TRUE ;
+        } catch (Exception $e) {
+            return _('Error') . $e->getMessage() ;
+        }
+    }
+
 }

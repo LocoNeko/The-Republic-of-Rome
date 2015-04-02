@@ -1,12 +1,17 @@
 <?php
 namespace Entities ;
 use Doctrine\Common\Collections\ArrayCollection;
+
 /**
  * @Entity @Table(name="cards")
- **/
+ * @InheritanceType("JOINED")
+ * @DiscriminatorColumn(name="type", type="string")
+ * @DiscriminatorMap({"concession" = "Concession"})
+ */
 abstract class Card
 {
-    public static $VALID_TYPES = array('Family', 'Statesman' , 'Concession' , 'Province' , 'Conflict' , 'Leader' ,'Faction' ,'Era ends' ) ;
+    //public static $VALID_TYPES = array('Family', 'Statesman' , 'Concession' , 'Province' , 'Conflict' , 'Leader' ,'Faction' ,'Era ends' ) ;
+    public static $VALID_TYPES = array('Concession') ;
     public static $VALID_DECKS = array('Draw' , 'Discard' , 'Forum', 'Curia' , 'Unplayed Provinces' , 'Early Republic' , 'Middle Republic' , 'Late Republic' , 'Inactive Wars' , 'Active Wars' , 'Imminent Wars' , 'Unprosecuted Wars') ;
     
     /**
@@ -23,11 +28,6 @@ abstract class Card
     * @var string
     */
     protected $name ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
-    protected $type ;
     /**
      * @ManyToOne(targetEntity="Card", inversedBy="cards_controlled")
      * @JoinColumn(name="location_card_id", referencedColumnName="id", nullable=true)
@@ -72,20 +72,6 @@ abstract class Card
         $this->name = (string)$name ;
     }
 
-    public function getType()
-    {
-        return $this->type ;
-    }
-
-    public function setType($type)
-    {
-        if (in_array($type, self::$VALID_TYPES)) {
-            $this->type = $type ;
-        } else {
-            throw new Exception(sprintf(_('Invalid card type %1$s.') , $type));
-        }
-    }
-
     public function getLocation()
     {
         if ($this->location_deck!==NULL) {
@@ -95,11 +81,10 @@ abstract class Card
         }
     }
     
-    public function __construct(Game $game , $id , $name , $type) {
+    public function __construct(Game $game , $id , $name) {
         $this->game = $game ;
         $this->setId($id) ;
         $this->setName($name) ;
-        $this->setType($type) ;
         $this->cards_controlled = new ArrayCollection();
     }
 
