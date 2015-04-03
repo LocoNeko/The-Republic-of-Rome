@@ -72,14 +72,16 @@ class Game
      * @var int
      */
     protected $treasury ;
+    // A Game has many parties
     /**
      * @OneToMany(targetEntity="Party", mappedBy="game")
      **/
     private $parties ;
+    // A Game has many decks
     /**
-     * @OneToMany(targetEntity="Card", mappedBy="game")
+     * @OneToMany(targetEntity="Deck", mappedBy="game")
      **/
-    private $cards ;
+    private $decks ;
     /**
      * @Column(type="datetime") 
      */
@@ -227,11 +229,11 @@ class Game
         return $this->parties ;
     }
     
-    public function getCards()
+    public function getDecks()
     {
-        return $this->cards ;
+        return $this->decks ;
     }
-
+    
     public function getCreated()
     {
         if ($this->timezone==NULL) {
@@ -254,7 +256,7 @@ class Game
         $this->created = $createDate;
         $this->timezone = $createDate->getTimeZone()->getName();
         $this->parties = new ArrayCollection();
-        $this->cards = new ArrayCollection();
+        $this->decks = new ArrayCollection();
     }
     /**
      * ----------------------------------------------------
@@ -389,20 +391,20 @@ class Game
         if (!$filePointer) {
             throw new Exception(_('Could not open the file'));
         }
+        $deck = new \Entities\Deck('Early Republic') ;
+        $deck->attachToGame($this) ;
         while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
             if ($data[0]!='') {
                 $type = $data[2] ;
-                if ($type=='Faction' && $data[3]==2) {
-                    $type='Concession' ;
-                }
                 if (\Entities\Card::isValidType($type)) {
                     $class = __NAMESPACE__.'\\'.$type ;
-                    $card = new $class ( $this , $data);
-                    $card->setLocation('Early Republic') ;
+                    $card = new $class ($data);
                     $entityManager->persist($card) ;
+                    $deck->putCardOnTop($card) ;
                 }
             }
         }
+        $entityManager->persist($deck) ;
         fclose($filePointer);
      }
 }

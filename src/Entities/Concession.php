@@ -1,6 +1,5 @@
 <?php
 namespace Entities ;
-use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Although this is actually a Faction card, this class exists as a convenience
@@ -14,7 +13,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @Entity  @Table(name="concessions")
  **/
-class Concession extends \Entities\Card
+class Concession extends Card
 {
     public static $VALID_SPECIAL = array('legions' , 'fleets' , 'drought' , 'land bill' ) ;
 
@@ -82,8 +81,8 @@ class Concession extends \Entities\Card
      * ----------------------------------------------------
      */
 
-    public function __construct(Game $game , $data) {
-        parent::__construct($game, (int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+    public function __construct($data) {
+        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
         $this->setIncome((int)$data[4]) ;
         $this->setSpecial(($data[5]=='' ? NULL : $data[5])) ;
     }

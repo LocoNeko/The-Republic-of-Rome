@@ -6,40 +6,37 @@ use Doctrine\Common\Collections\ArrayCollection;
  * @Entity @Table(name="cards")
  * @InheritanceType("JOINED")
  * @DiscriminatorColumn(name="type", type="string")
- * @DiscriminatorMap({"concession" = "Concession"})
+ * @DiscriminatorMap({ "Concession" = "Concession" , "Conflict" = "Conflict" , "Senator" = "Senator" , "Leader" = "Leader" , "FactionCard" = "FactionCard" })
  */
 abstract class Card
 {
-    //public static $VALID_TYPES = array('Family', 'Statesman' , 'Concession' , 'Province' , 'Conflict' , 'Leader' ,'Faction' ,'Era ends' ) ;
-    public static $VALID_TYPES = array('Concession') ;
+    // TO DO : ADD 'Province'and 'Era ends'
+    public static $VALID_TYPES = array('Concession' , 'Conflict' , 'Senator' , 'Leader' , 'FactionCard' ) ;
     public static $VALID_DECKS = array('Draw' , 'Discard' , 'Forum', 'Curia' , 'Unplayed Provinces' , 'Early Republic' , 'Middle Republic' , 'Late Republic' , 'Inactive Wars' , 'Active Wars' , 'Imminent Wars' , 'Unprosecuted Wars') ;
     
     /**
-     * @Id @Column(type="integer")
+     * @Id @Column(type="integer") @GeneratedValue
+     * @var int
+     */
+    protected $internalId ;
+    /**
+     * @Column(type="integer")
      * @var int
      */
     protected $id ;
+    // One Deck has many cards
     /**
-     * @ManyToOne(targetEntity="Game", inversedBy="cards")
+     * @ManyToOne(targetEntity="Deck", inversedBy="cards")
      **/
-    private $game ;
+    private $deck ;
     /**
     * @Column(type="string")
     * @var string
     */
     protected $name ;
+    // A Card can have a deck (of controlled cards)
     /**
-     * @ManyToOne(targetEntity="Card", inversedBy="cards_controlled")
-     * @JoinColumn(name="location_card_id", referencedColumnName="id", nullable=true)
-     **/
-    protected $location_card = NULL ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
-    protected $location_deck = NULL ;
-    /**
-     * @OneToMany(targetEntity="Card", mappedBy="location_card")
+     * @OneToOne(targetEntity="Deck", mappedBy="controlled_by")
      **/
     private $cards_controlled ;
 
@@ -52,19 +49,15 @@ abstract class Card
      * Getters & Setters
      * ----------------------------------------------------
      */
-    public function getId()
-    {
-        return $this->id ;
-    }
-
+    
     public function setId($id)
     {
         $this->id = (int)$id ;
     }
 
-    public function getName()
+    public function setDeck($deck)
     {
-        return $this->name ;
+        $this->deck = $deck ;
     }
 
     public function setName($name)
@@ -72,20 +65,29 @@ abstract class Card
         $this->name = (string)$name ;
     }
 
-    public function getLocation()
+    public function getId()
     {
-        if ($this->location_deck!==NULL) {
-            return $this->location_deck ;
-        } else {
-            return $this->location_card ;
-        }
+        return $this->id ;
+    }
+
+    public function getName()
+    {
+        return $this->name ;
+    }
+
+    public function getDeck()
+    {
+        return $this->deck ;
     }
     
-    public function __construct(Game $game , $id , $name) {
-        $this->game = $game ;
+    public function getCardsControlled()
+    {
+        return $this->cards_controlled ;
+    }
+    
+    public function __construct($id , $name) {
         $this->setId($id) ;
         $this->setName($name) ;
-        $this->cards_controlled = new ArrayCollection();
     }
 
     /**
@@ -94,6 +96,7 @@ abstract class Card
     * ----------------------------------------------------
     */
 
+    /*
     public function resetLocation()
     {
         if ($this->location_card!==NULL) {
@@ -102,12 +105,14 @@ abstract class Card
         }
         $this->location_deck = NULL ;
     }
+    */
     
     /**
      * If location is a string, the card is in a deck
      * If location is a card, the card is controlled by another
      * @param mixed $location
      */
+    /*
     public function setLocation($location) {
         if (is_string($location) && in_array($location, self::$VALID_DECKS)) {
             $this->resetLocation() ;
@@ -120,7 +125,8 @@ abstract class Card
             throw new Exception(_('Invalid location type.'));
         }
     }
-
+    */
+    
     public function getValue($property) {
         if (isset($this->$property))
         {
