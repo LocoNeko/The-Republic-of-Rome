@@ -75,6 +75,17 @@ class Concession extends Card
         return $this->flipped ;
     }
 
+    public function saveData() {
+        $data = array() ;
+        $data['id'] = $this->getId() ;
+        $data['name'] = $this->getName() ;
+        $data['income'] = $this->getIncome() ;
+        $data['special'] = $this->getSpecial() ;
+        $data['corrupt'] = $this->getCorrupt() ;
+        $data['flipped'] = $this->getFlipped() ;
+        return $data ;
+    }
+    
     /**
      * ----------------------------------------------------
      * Other methods

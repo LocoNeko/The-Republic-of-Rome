@@ -21,6 +21,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
             $game_id = (int)$game_id ;
+            $app['session']->set('game_id', $game_id);
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {

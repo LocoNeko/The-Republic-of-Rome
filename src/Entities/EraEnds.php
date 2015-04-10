@@ -2,9 +2,9 @@
 namespace Entities ;
 
 /**
- * @Entity  @Table(name="factionCards")
+ * @Entity  @Table(name="EraEnds")
  **/
-class FactionCard extends Card
+class EraEnds extends Card
 {
     /**
      * ----------------------------------------------------

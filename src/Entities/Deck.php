@@ -56,14 +56,35 @@ class Deck
         $this->controlled_by = $card ;
     }
 
-    public function getCards() {
-        return $this->cards ;
-    }
+    public function getCards() { return $this->cards ; }
+    public function getName() { return $this->name ; }
+    public function getId() { return $this->id; }
+    public function getGame() { return $this->game; }
+    public function getControlled_by() { return $this->controlled_by; }
+    public function getOrder() { return $this->order; }
 
     public function __construct($name) {
         $this->setName($name) ;
         $this->cards = new ArrayCollection();
     }
+
+    public function saveData() {
+        $data = array() ;
+        $data['name'] = $this->getName() ;
+        $data['order'] = $this->getOrder() ;
+        $data['cards'] = array () ;
+        foreach ($this->getCards() as $key=>$card) {
+            $data['cards'][$key] = $card->saveData() ;
+        }
+        $data['game_id'] = ($this->game === NULL ? NULL : $this->game->getId()) ;
+        return $data ;
+    }
+
+    /**
+    * ----------------------------------------------------
+    * Other methods
+    * ----------------------------------------------------
+    */
 
     public function attachToGame($game) {
         $this->setGame($game) ;
@@ -81,4 +102,25 @@ class Deck
         array_unshift($this->order , $card->getId()) ;
     }
 
+    public function shuffle() {
+        shuffle($this->order) ;
+    }
+    
+    /**
+     * Returns the first card that has a $property equal to $value
+     * @param type $property
+     * @param type $value
+     * @return boolean
+     */
+    public function getFirstCardByProperty($property , $value) {
+        foreach($this->getCards() as $card) {
+            $getter = 'get'.ucfirst($property);
+            if (method_exists($card, $getter)) {
+                if ($card->$getter() == $value) {
+                    return $card ;
+                }
+            }
+        }
+        return FALSE ;
+    }
 }

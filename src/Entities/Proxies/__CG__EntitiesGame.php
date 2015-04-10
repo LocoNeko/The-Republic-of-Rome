@@ -64,10 +64,10 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'initiative', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'cards', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localized');
+            return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'decks', '' . "\0" . 'Entities\\Game' . "\0" . 'messages', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localized', '' . "\0" . 'Entities\\Game' . "\0" . 'currentBidder', 'initiative', '' . "\0" . 'Entities\\Game' . "\0" . 'persuasionTarget');
         }
 
-        return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'initiative', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'cards', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localized');
+        return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'decks', '' . "\0" . 'Entities\\Game' . "\0" . 'messages', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localized', '' . "\0" . 'Entities\\Game' . "\0" . 'currentBidder', 'initiative', '' . "\0" . 'Entities\\Game' . "\0" . 'persuasionTarget');
     }
 
     /**
@@ -176,6 +176,127 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
+    public function setName($name)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setName', array($name));
+
+        return parent::setName($name);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setSubPhase($subPhase)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSubPhase', array($subPhase));
+
+        return parent::setSubPhase($subPhase);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCensorIsDone($flag)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setCensorIsDone', array($flag));
+
+        return parent::setCensorIsDone($flag);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setSenateAdjourned($flag)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSenateAdjourned', array($flag));
+
+        return parent::setSenateAdjourned($flag);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setUnrest($unrest)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUnrest', array($unrest));
+
+        return parent::setUnrest($unrest);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setTreasury($treasury)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setTreasury', array($treasury));
+
+        return parent::setTreasury($treasury);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setInitiative($i)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setInitiative', array($i));
+
+        return parent::setInitiative($i);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setCurrentBidder($currentBidder)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setCurrentBidder', array($currentBidder));
+
+        return parent::setCurrentBidder($currentBidder);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setPersuasionTarget($persuasionTarget)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setPersuasionTarget', array($persuasionTarget));
+
+        return parent::setPersuasionTarget($persuasionTarget);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setScenario($scenario)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setScenario', array($scenario));
+
+        return parent::setScenario($scenario);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setPhase($phase)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setPhase', array($phase));
+
+        return parent::setPhase($phase);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getId()
     {
 
@@ -193,17 +314,6 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getName', array());
 
         return parent::getName();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setName($name)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setName', array($name));
-
-        return parent::setName($name);
     }
 
     /**
@@ -231,34 +341,12 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setPhase($phase)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setPhase', array($phase));
-
-        return parent::setPhase($phase);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getSubPhase()
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getSubPhase', array());
 
         return parent::getSubPhase();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setSubPhase($subPhase)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSubPhase', array($subPhase));
-
-        return parent::setSubPhase($subPhase);
     }
 
     /**
@@ -275,17 +363,6 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setInitiative($i)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setInitiative', array($i));
-
-        return parent::setInitiative($i);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getCensorIsDone()
     {
 
@@ -297,45 +374,12 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setCensorIsDone($flag)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setCensorIsDone', array($flag));
-
-        return parent::setCensorIsDone($flag);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getSenateAdjourned()
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getSenateAdjourned', array());
 
         return parent::getSenateAdjourned();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setSenateAdjourned($flag)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setSenateAdjourned', array($flag));
-
-        return parent::setSenateAdjourned($flag);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setScenario($scenario)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setScenario', array($scenario));
-
-        return parent::setScenario($scenario);
     }
 
     /**
@@ -374,34 +418,12 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setUnrest($unrest)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUnrest', array($unrest));
-
-        return parent::setUnrest($unrest);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
     public function getTreasury()
     {
 
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTreasury', array());
 
         return parent::getTreasury();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function setTreasury($treasury)
-    {
-
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setTreasury', array($treasury));
-
-        return parent::setTreasury($treasury);
     }
 
     /**
@@ -418,12 +440,56 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getCards()
+    public function getDecks()
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getCards', array());
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getDecks', array());
 
-        return parent::getCards();
+        return parent::getDecks();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getMessages()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getMessages', array());
+
+        return parent::getMessages();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTimezone()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTimezone', array());
+
+        return parent::getTimezone();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getCurrentBidder()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getCurrentBidder', array());
+
+        return parent::getCurrentBidder();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getPersuasionTarget()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getPersuasionTarget', array());
+
+        return parent::getPersuasionTarget();
     }
 
     /**
@@ -440,12 +506,12 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getTimezone()
+    public function saveData()
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTimezone', array());
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'saveData', array());
 
-        return parent::getTimezone();
+        return parent::saveData();
     }
 
     /**
@@ -550,12 +616,67 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getGameInfos($user_id)
+    public function getDeck($deckName)
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getGameInfos', array($user_id));
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getDeck', array($deckName));
 
-        return parent::getGameInfos($user_id);
+        return parent::getDeck($deckName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getGameState($user_id)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getGameState', array($user_id));
+
+        return parent::getGameState($user_id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setPartyToReady($user_id)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setPartyToReady', array($user_id));
+
+        return parent::setPartyToReady($user_id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function gameStarted()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'gameStarted', array());
+
+        return parent::gameStarted();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function populateDeckFromFile($entityManager, $fileName, $deck)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'populateDeckFromFile', array($entityManager, $fileName, $deck));
+
+        return parent::populateDeckFromFile($entityManager, $fileName, $deck);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function log($text, $type = 'log', $parameters = NULL, $recipients = NULL, $from = NULL)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'log', array($text, $type, $parameters, $recipients, $from));
+
+        return parent::log($text, $type, $parameters, $recipients, $from);
     }
 
 }

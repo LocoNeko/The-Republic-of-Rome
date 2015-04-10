@@ -56,61 +56,21 @@ class Leader extends Card
     * ----------------------------------------------------
     */
     
-    public function setMatches ($matches) {
-        $this->matches = $matches ;
-    }
-    
-    public function setDescription ($description) {
-        $this->description = $description ;
-    }
-    
-    public function setStrength ($strength) {
-        $this->strength = $strength ;
-    }
-    
-    public function setDisaster ($disaster) {
-        $this->disaster = $disaster ;
-    }
-    
-    public function setStandoff ($standoff) {
-        $this->standoff = $standoff ;
-    }
-    
-    public function setAbility ($ability) {
-        $this->ability = $ability ;
-    }
-    
-    public function setCauses ($causes) {
-        $this->causes = $causes ;
-    }
+    public function setMatches ($matches) { $this->matches = $matches ; }
+    public function setDescription ($description) { $this->description = $description ; }
+    public function setStrength ($strength) { $this->strength = $strength ; }
+    public function setDisaster ($disaster) { $this->disaster = $disaster ; }
+    public function setStandoff ($standoff) { $this->standoff = $standoff ; }
+    public function setAbility ($ability) { $this->ability = $ability ; }
+    public function setCauses ($causes) { $this->causes = $causes ; }
 
-    public function getMatches () {
-        return $this->matches ;
-    }
-    
-    public function getDescription () {
-        return $this->description ;
-    }
-    
-    public function getStrength () {
-        return $this->strength ;
-    }
-    
-    public function getDisaster () {
-        return $this->disaster ;
-    }
-    
-    public function getStandoff () {
-        return $this->standoff ;
-    }
-    
-    public function getAbility () {
-        return $this->ability ;
-    }
-    
-    public function getCauses () {
-        return $this->causes ;
-    }
+    public function getMatches () { return $this->matches ; }
+    public function getDescription () { return $this->description ; }
+    public function getStrength () { return $this->strength ; }
+    public function getDisaster () { return $this->disaster ; }
+    public function getStandoff () { return $this->standoff ; }
+    public function getAbility () { return $this->ability ; }
+    public function getCauses () { return $this->causes ; }
     
     /**
      * ----------------------------------------------------
@@ -129,6 +89,19 @@ class Leader extends Card
         $this->setCauses ( is_string($data[9]) ? $data[9] : NULL ) ;
 
     }
-
+            
+    public function saveData() {
+        $data = array() ;
+        $data['id'] = $this->getId() ;
+        $data['name'] = $this->getName() ;
+        $data['matches'] = $this->getMatches () ;
+        $data['description'] = $this->getDescription () ;
+        $data['strength'] = $this->getStrength () ;
+        $data['disaster'] = $this->getDisaster () ;
+        $data['standoff'] = $this->getStandoff () ;
+        $data['ability'] = $this->getAbility () ;
+        $data['causes'] = $this->getCauses () ;
+        return $data ;
+    }
 
 }

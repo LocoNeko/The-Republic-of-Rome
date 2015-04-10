@@ -6,123 +6,109 @@ use Doctrine\Common\Collections\ArrayCollection;
  **/
 class Game
 {
-    public static $VALID_PHASES = array('Setup','Mortality','Revenue','Forum','Population','Senate','Combat','Revolution','Rome falls');
-    public static $VALID_SCENARIOS = array('EarlyRepublic');
-    public static $VALID_VARIANTS = array('Pontifex Maximus' , 'Provincial Wars' , 'Rebel governors' , 'Legionary disbandment' , 'Advocates' , 'Passing Laws');
+    public static $VALID_PHASES = array('Setup','Mortality','Revenue','Forum','Population','Senate','Combat','Revolution','Rome falls') ;
+    public static $VALID_SCENARIOS = array('EarlyRepublic') ;
+    public static $VALID_VARIANTS = array('Pontifex Maximus' , 'Provincial Wars' , 'Rebel governors' , 'Legionary disbandment' , 'Advocates' , 'Passing Laws') ;
+    public static $VALID_DECKS = array('drawDeck' , 'earlyRepublic' , 'middleRepublic' , 'lateRepublic' , 'discard' , 'unplayedProvinces' , 'inactiveWars' , 'activeWars' , 'imminentWars' , 'unprosecutedWars' , 'forum' , 'curia') ;
     public static $MIN_PLAYERS = 3 ;
     public static $MAX_PLAYERS = 6 ;
 
-    /**
-     * @Id @Column(type="integer") @GeneratedValue
-     * @var int
-     */
+    /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $name ;
-    /**
-     * @Column(type="integer")
-     * @var int
-     */
+    
+    /** @Column(type="integer") @var int */
     protected $turn = 0 ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $phase = 'Setup';
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $subPhase = 'PickLeaders';
-    /**
-     * @Column(type="integer")
-     * @var int
-     */
-    protected $initiative = 0 ;
-    /**
-     * @Column(type="boolean")
-     * @var int
-     */
+    
+    /** @Column(type="boolean") @var int */
     protected $censorIsDone = FALSE ;
-    /**
-     * @Column(type="boolean")
-     * @var int
-     */
+    
+    /** @Column(type="boolean") @var int */
     protected $senateAdjourned = FALSE ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $scenario ;
-    /**
-    * @Column(type="array")
-    * @var array
-    */
+    
+    /** @Column(type="array") @var array */
     protected $variants = array() ;
-    /**
-     * @Column(type="integer")
-     * @var int
-     */
+    
+    /** @Column(type="integer") @var int */
     protected $unrest ;
-    /**
-     * @Column(type="integer")
-     * @var int
-     */
+    
+    /** @Column(type="integer") @var int */
     protected $treasury ;
+    
     // A Game has many parties
-    /**
-     * @OneToMany(targetEntity="Party", mappedBy="game")
-     **/
+    /** @OneToMany(targetEntity="Party", mappedBy="game") **/
     private $parties ;
+    
     // A Game has many decks
-    /**
-     * @OneToMany(targetEntity="Deck", mappedBy="game")
-     **/
+    /** @OneToMany(targetEntity="Deck", mappedBy="game", cascade={"persist"} ) **/
     private $decks ;
-    /**
-     * @Column(type="datetime") 
-     */
+    
+    // A Game has many messages
+    /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist"} ) **/
+    private $messages ;
+    
+    /** @Column(type="datetime")  */
     private $created;
-    /**
-     * @Column(type="string")
-     */
+    
+    /** @Column(type="string") */
     private $timezone;
-    /**
-     * @var bool
-     */
+    
+    /** @Column(type="boolean") @var bool */
     private $localized = false;
-   
+    
+    /******************************************************
+     * Forum related
+     ******************************************************/
+    
+    /** @OneToOne(targetEntity="Party") **/
+    private $currentBidder ;
+    
+    /** @Column(type="integer") @var int */
+    protected $initiative = 0 ;
+
+    /** @OneToOne(targetEntity="Senator") @JoinColumn(name="persuasionTarget_id", referencedColumnName="internalId" , nullable=true) **/
+    private $persuasionTarget ;
+
     /**
      * ----------------------------------------------------
-     * Getters & Setters
+     * Setters
      * ----------------------------------------------------
      */
-    public function getId()
-    {
-        return $this->id ;
-    }
 
-    public function getName()
-    {
-        return $this->name ;
-    }
+    public function setName($name) { $this->name = $name ; }
+    public function setSubPhase($subPhase) { $this->subPhase = $subPhase ; }
+    public function setCensorIsDone($flag) { $this->censorIsDone = $flag ; }
+    public function setSenateAdjourned($flag) { $this->senateAdjourned = $flag ; }
+    public function setUnrest($unrest) { $this->unrest = $unrest ; }
+    public function setTreasury($treasury) { $this->treasury = $treasury ; }
+    public function setInitiative($i) { $this->initiative = $i ; }
+    private function setCreated($created) { $this->created = $created ; }
+    public function setCurrentBidder($currentBidder) { $this->currentBidder = $currentBidder; }
+    public function setPersuasionTarget($persuasionTarget) { $this->persuasionTarget = $persuasionTarget; }
 
-    public function setName($name)
+ 
+    /**
+     * @param string $scenario
+     * @throws Exception
+     */
+    public function setScenario($scenario)
     {
-        $this->name = $name ;
-    }
-
-    public function getTurn()
-    {
-        return $this->turn ;
-    }
-
-    public function getPhase()
-    {
-        return $this->phase ;
+        if (in_array($scenario, self::$VALID_SCENARIOS)) {
+            $this->scenario = $scenario ;
+        } else {
+            throw new \Exception(sprintf(_('Invalid scenario %1$s') , $scenario));
+        }
     }
 
     /**
@@ -138,118 +124,6 @@ class Game
         }
     }
 
-    public function getSubPhase()
-    {
-        return $this->subPhase ;
-    }
-
-    public function setSubPhase($subPhase)
-    {
-        $this->subPhase = $subPhase ;
-    }
-  
-    public function getInitiative()
-    {
-        return $this->initiative ;
-    }
-
-    public function setInitiative($i)
-    {
-        $this->initiative = $i ;
-    }
-
-    public function getCensorIsDone()
-    {
-        return $this->censorIsDone ;
-    }
-
-    public function setCensorIsDone($flag)
-    {
-        $this->censorIsDone = $flag ;
-    }
-
-    public function getSenateAdjourned()
-    {
-        return $this->senateAdjourned ;
-    }
-
-    public function setSenateAdjourned($flag)
-    {
-        $this->senateAdjourned = $flag ;
-    }
-
-    /**
-     * @param string $scenario
-     * @throws Exception
-     */
-    public function setScenario($scenario)
-    {
-        if (in_array($scenario, self::$VALID_SCENARIOS)) {
-            $this->scenario = $scenario ;
-        } else {
-            throw new \Exception(sprintf(_('Invalid scenario %1$s') , $scenario));
-        }
-    }
-
-    public function getScenario()
-    {
-        return $this->scenario ;
-    }
-
-    /**
-     * @return Array Array of variants
-     */
-    public function getVariants()
-    {
-        return $this->variants ;
-    }
-
-    public function getUnrest()
-    {
-        return $this->unrest ;
-    }
-
-    public function setUnrest($unrest)
-    {
-        $this->unrest = $unrest ;
-    }
-
-    public function getTreasury()
-    {
-        return $this->treasury ;
-    }
-
-    public function setTreasury($treasury)
-    {
-        $this->treasury = $treasury ;
-    }
-
-    public function getParties()
-    {
-        return $this->parties ;
-    }
-    
-    public function getDecks()
-    {
-        return $this->decks ;
-    }
-    
-    public function getCreated()
-    {
-        if ($this->timezone==NULL) {
-            $this->timezone = 'UTC' ;
-        }
-        if (!$this->localized) {
-            $this->created->setTimeZone(new \DateTimeZone($this->timezone));
-        }
-        return $this->created;
-    }
-    
-    public function getTimezone()
-    {
-        return $this->timezone ;
-    }
-    
     public function __construct() {
         $createDate = new \DateTime('NOW') ;
         $this->localized = true;
@@ -257,7 +131,73 @@ class Game
         $this->timezone = $createDate->getTimeZone()->getName();
         $this->parties = new ArrayCollection();
         $this->decks = new ArrayCollection();
+        $this->messages = new ArrayCollection();
+        foreach (self::$VALID_DECKS as $deckName) {
+            $deck = new \Entities\Deck($deckName) ;
+            $deck->attachToGame($this) ;
+        }
     }
+    
+    /**
+    * ----------------------------------------------------
+    * Getters
+    * ----------------------------------------------------
+    */
+
+    public function getId() { return $this->id ; }
+    public function getName() { return $this->name ; }
+    public function getTurn() { return $this->turn ; }
+    public function getPhase() { return $this->phase ; }
+    public function getSubPhase() { return $this->subPhase ; }
+    public function getInitiative() { return $this->initiative ; }
+    public function getCensorIsDone() { return $this->censorIsDone ; }
+    public function getSenateAdjourned() { return $this->senateAdjourned ; }
+    public function getScenario() { return $this->scenario ; }
+    public function getVariants() { return $this->variants ; }
+    public function getUnrest() { return $this->unrest ; }
+    public function getTreasury() { return $this->treasury ; }
+    public function getParties() { return $this->parties ; }
+    public function getDecks() { return $this->decks ; }
+    public function getMessages() { return $this->messages; }
+    public function getTimezone() { return $this->timezone ; }
+    public function getCurrentBidder() { return $this->currentBidder; }
+    public function getPersuasionTarget() { return $this->persuasionTarget; }
+
+    public function getCreated()
+    {
+        if ($this->timezone==NULL) { $this->timezone = 'UTC' ; }
+        if (!$this->localized) { $this->created->setTimeZone(new \DateTimeZone($this->timezone)); }
+        return $this->created;
+    }
+    
+    public function saveData() {
+        $data = array() ;
+        $data['id'] = $this->getId() ;
+        $data['created'] = $this->getCreated() ;
+        $data['name'] = $this->getName() ;
+        $data['turn'] = $this->getTurn() ;
+        $data['phase'] = $this->getPhase() ;
+        $data['subPhase'] = $this->getSubPhase() ;
+        $data['initiative'] = $this->getInitiative() ;
+        $data['censorIsDone'] = $this->getCensorIsDone() ;
+        $data['senateAdjourned'] = $this->getSenateAdjourned() ;
+        $data['scenario'] = $this->getScenario() ;
+        $data['variants'] = $this->getVariants() ;
+        $data['unrest'] = $this->getUnrest() ;
+        $data['treasury'] = $this->getTreasury() ;
+        $data['parties'] = array() ;
+        foreach($this->getParties() as $key=>$party) {
+            $data['parties'][$key] = $party->saveData() ;
+        }
+        $data['decks'] = array() ;
+        foreach($this->getDecks() as $deck) {
+            array_push($data['decks'] , $deck->saveData()) ;
+        }
+        $data['currentBidder'] = $this->getCurrentBidder() ;
+        $data['persuasionTarget'] = $this->getPersuasionTarget() ;
+        return $data ;
+    }
+
     /**
      * ----------------------------------------------------
      * Functions
@@ -342,6 +282,15 @@ class Game
         return count($this->parties) ;
     }
     
+    public function getDeck($deckName) {
+        foreach ($this->getDecks() as $deck) {
+            if ($deck->getName() == $deckName) {
+                return $deck ;
+            }
+        }
+        return FALSE ;
+    }
+    
     /**
      * Returns the current state of the game for a given user_id
      * @param int $user_id
@@ -386,13 +335,11 @@ class Game
         return TRUE ;
     }
     
-    public function createCardsFromFile($entityManager) {
-        $filePointer = fopen(dirname(__FILE__).'/../../resources/scenarios/'.$this->getScenario().'.csv', 'r');
+    public function populateDeckFromFile($entityManager , $fileName , $deck) {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/scenarios/'.$fileName.'.csv', 'r');
         if (!$filePointer) {
             throw new Exception(_('Could not open the file'));
         }
-        $deck = new \Entities\Deck('Early Republic') ;
-        $deck->attachToGame($this) ;
         while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
             if ($data[0]!='') {
                 $type = $data[2] ;
@@ -404,7 +351,33 @@ class Game
                 }
             }
         }
-        $entityManager->persist($deck) ;
         fclose($filePointer);
-     }
+        $entityManager->persist($deck) ;
+    }
+    
+    public function log($text , $type='log' , $parameters=NULL , $recipients=NULL , $from=NULL) {
+        try {
+            $message = new \Entities\Message($this, $text, $type, $parameters, $recipients, $from) ;
+            $this->getMessages()->add($message) ;
+        } catch (Exception $e) {
+            throw new \Exception($e->getMessage()) ;
+        }
+    }
+    
+    public function getNewMessages ($user_id) {
+        foreach($this->getParties() as $party) {
+            if ($party->getUser_id()==$user_id) {
+                $messages = array() ;
+                foreach ($this->getMessages() as $message) {
+                    if ($message->getTime() > $party->getLastUpdate()) {
+                        if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) {
+                            array_push($messages , $message) ;
+                        }
+                    }
+                }
+                return $messages ;
+            }
+        }
+        return FALSE ;
+    }
 }

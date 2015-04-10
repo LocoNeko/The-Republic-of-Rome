@@ -34,7 +34,11 @@
                 {% endfor %}
                 <tr>
                     <th scope="row">{{game.getId()}}</th>
-                    <td>{{game.getName()}}</td>
+                    <td>
+                        <a href="{{ path('SaveGame' , {'game_id' : game.getId() }) }}">
+                            {{game.getName()}}
+                        </a>
+                    </td>
                     <td>{{game.getScenario()}}</td>
                     <td><button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs">{{game.getNumberOfPlayers()}}</button></td>
                     <td>{{game.getVariants()|join(', ')}}</td>

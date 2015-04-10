@@ -225,5 +225,26 @@ class Conflict extends Card
         $this->setStandoff ( $data[15] ) ;
         $this->setSpoils ( $data[16] ) ;
     }
+    
+    public function saveData() {
+        $data = array() ;
+        $data['id'] = $this->getId() ;
+        $data['name'] = $this->getName() ;
+        $data['matches'] = $this->getMatches() ;
+        $data['nbOfMatch'] = $this->getNbOfMatch() ;
+        $data['description'] = $this->getDescription() ;
+        $data['active'] = $this->getActive() ;
+        $data['causes'] = $this->getCauses() ;
+        $data['attacks'] = $this->getAttacks() ;
+        $data['revolt'] = $this->getRevolt() ;
+        $data['creates'] = $this->getCreates() ;
+        $data['land'] = $this->getLand() ;
+        $data['support'] = $this->getSupport() ;
+        $data['fleet'] = $this->getFleet() ;
+        $data['disaster'] = $this->getDisaster() ;
+        $data['standoff'] = $this->getStandoff() ;
+        $data['spoils'] = $this->getSpoils() ;
+        return $data ;
+    }
         
 }

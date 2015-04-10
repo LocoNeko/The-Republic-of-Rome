@@ -4,6 +4,8 @@ namespace Controllers ;
 use Silex\Application;
 use Silex\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 
 class LobbyControllerProvider implements ControllerProviderInterface
 {
@@ -14,12 +16,13 @@ class LobbyControllerProvider implements ControllerProviderInterface
         // creates a new controller based on the default route
         $controllers = $app['controllers_factory'];
         $this->entityManager = $app['orm.em'] ;
-        
+
         /*
          * List existing games
          */
         $controllers->get('/List', function() use ($app)
         {
+            $app['session']->set('game_id', NULL);
             return $app['twig']->render('Lobby/List.twig', array(
                'layout_template' => 'layout.twig' ,
                'list' => $this->getGamesList($app['user']->getId()) ,
@@ -33,6 +36,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
          */
         $controllers->get('/Create', function() use ($app)
         {
+            $app['session']->set('game_id', NULL);
             return $app['twig']->render('Lobby/Create.twig', array(
                'layout_template' => 'layout.twig' ,
                'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
@@ -48,6 +52,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/Join/{game_id}', function($game_id) use ($app)
         {
             $game_id = (int)$game_id ;
+            $app['session']->set('game_id', $game_id);
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
@@ -70,6 +75,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/Play/{game_id}', function($game_id) use ($app)
         {
             $game_id = (int)$game_id ;
+            $app['session']->set('game_id', $game_id);
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
@@ -84,6 +90,27 @@ class LobbyControllerProvider implements ControllerProviderInterface
         ->bind('PlayGame');
 
         /*
+         * Save game
+         */
+        $controllers->get('/Save/{game_id}', function($game_id) use ($app)
+        {
+            $game_id = (int)$game_id ;
+            $app['session']->set('game_id', $game_id);
+            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
+            $result = $query->getResult() ;
+            if (count($result)!=1) {
+                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->redirect('/Lobby/List') ;
+            } else {
+                return $app['twig']->render('Lobby/GameData.twig', array(
+                   'layout_template' => 'layout.twig' ,
+                   'gameData' => $result[0]->saveData() ,
+                ));
+            }
+        })
+        ->bind('SaveGame');
+
+        /*
         * POST target
         * Verb : Join
         * JSON data : "partyName"
@@ -91,8 +118,10 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->post('/Join/{game_id}/JoinGame', function($game_id , Request $request) use ($app)
         {
             $partyName = $request->request->get('partyName') ;
+            $game_id = (int)$game_id ;
+            $app['session']->set('game_id', $game_id);
             try {
-                $this->joinGame($game_id , $app['user']->getId() , $partyName) ;
+                $this->joinGame($game_id , $app['user']->getId() , $app['user']->getDisplayName() , $partyName) ;
                 $app['session']->getFlashBag()->add('alert', sprintf(_('You joined and named your party %s') , $partyName ));
                 return $app->json( $partyName , 201);
             } catch (\Exception $e) {
@@ -110,6 +139,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->post('/Join/{game_id}/Ready', function($game_id) use ($app)
         {
             $game_id = (int)$game_id ;
+            $app['session']->set('game_id', $game_id);
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
@@ -135,6 +165,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/Create/Create', function(Request $request) use ($app)
         {
+            $app['session']->set('game_id', NULL);
             $result= $this->CreateGame($request->request->all()) ;
             if ( $result === TRUE ) {
                 $app['session']->getFlashBag()->add('alert', 'Game created');
@@ -161,11 +192,11 @@ class LobbyControllerProvider implements ControllerProviderInterface
         return $result ;
     }
 
-    private function joinGame($game_id , $user_id , $partyName) {
+    private function joinGame($game_id , $user_id , $userName , $partyName) {
         $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.$game_id);
         $game = $query->getResult() ;
         try {
-            $party = new \Entities\Party($user_id , $partyName) ;
+            $party = new \Entities\Party($user_id , $userName, $partyName) ;
             $party->joinGame($game[0]) ;
             $this->entityManager->persist($game[0]);
             $this->entityManager->persist($party);
@@ -188,9 +219,11 @@ class LobbyControllerProvider implements ControllerProviderInterface
         if (!in_array($data['scenario'], \Entities\Game::$VALID_SCENARIOS) ) {
             return sprintf(_('ERROR - %1$s is not a valid Scenario.') , $data['scenario']) ;
         }
-        foreach($data['variants'] as $variant) {
-            if (!in_array($variant , \Entities\Game::$VALID_VARIANTS)) {
-                return sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
+        if (isset($data['variants'])) {
+            foreach((array)$data['variants'] as $variant) {
+                if (!in_array($variant , \Entities\Game::$VALID_VARIANTS)) {
+                    return sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
+                }
             }
         }
         $game = new \Entities\Game();
@@ -200,10 +233,20 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $game->setTreasury(100) ;
             $game->setUnrest(0) ;
             $game->setScenario($data['scenario']) ;
-            $game->createCardsFromFile($this->entityManager);
+            $game->log(_('Game "%1$s" created. Scenario : %2$s'), 'log', array($data['gameName'] , $data['scenario']) ) ;
+            // Early Republic deck
+            $earlyRepublicDeck = $game->getDeck('earlyRepublic') ;
+            $game->populateDeckFromFile($this->entityManager, $game->getScenario() , $earlyRepublicDeck) ;
+            $this->entityManager->persist($earlyRepublicDeck);
+
+            // Unplayed provinces deck
+            $provinceDeck = $game->getDeck('unplayedProvinces') ;
+            $game->populateDeckFromFile($this->entityManager, 'Provinces' , $provinceDeck) ;
+            $this->entityManager->persist($provinceDeck);
+
             $this->entityManager->persist($game);
             $this->entityManager->flush();
-           return TRUE ;
+            return TRUE ;
         } catch (Exception $e) {
             return _('Error') . $e->getMessage() ;
         }

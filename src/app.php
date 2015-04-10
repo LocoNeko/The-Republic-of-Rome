@@ -2,8 +2,8 @@
     use Silex\Provider;
     use Symfony\Component\HttpFoundation\Response;
 
-    $app->register(new Provider\SessionServiceProvider());
     $app->register(new Provider\ServiceControllerServiceProvider());
+    $app->register(new Provider\SessionServiceProvider());
     $app->register(new Provider\UrlGeneratorServiceProvider());
     $app->register(new Provider\TwigServiceProvider());
     $app->register(new Provider\SwiftmailerServiceProvider());
@@ -14,10 +14,17 @@
 
     // JSON middleware
     use Symfony\Component\HttpFoundation\Request;
-    $app->before(function (Request $request) {
+    $app->before(function (Request $request) use ($app) {
         if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
+        }
+        $request->getSession()->start();
+        $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
+        if (count($messages)>0) {
+            foreach($messages as $key=>$message) {
+                $app['session']->getFlashBag()->add($message->getFlashType(), $message->show());
+            }
         }
     });
 
@@ -37,6 +44,16 @@
     $app->mount('/Lobby', new Controllers\LobbyControllerProvider($app) );
     $app->mount('/Setup', new Controllers\SetupControllerProvider($app) );
     
+    function getNewMessages($user_id , $game_id , $entityManager) {
+        $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
+        $result = $query->getResult() ;
+        if (count($result)==1) {
+            return $result[0]->getNewMessages($user_id) ;
+        } else {
+            return FALSE ;
+        }
+    }
+
     /*
     $app->error(function (\Exception $e, $code) {
         switch ($code) {
@@ -50,5 +67,3 @@
         return new Response($message);
     });
      */    
-    
-

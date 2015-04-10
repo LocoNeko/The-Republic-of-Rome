@@ -4,6 +4,7 @@ namespace Entities ;
 /**
  * @var bool corrupt : This is only used for Provincial spoils corruption
  * @var bool major : Whether or not this Senator held an office before the current Senate phase
+ * @var bool hasStatesman : Whether or not at least one Statesman exists for this family
  */
 /**
  * @Entity  @Table(name="senators")
@@ -12,120 +13,51 @@ class Senator extends Card
 {
     public static $VALID_OFFICES = array('Dictator', 'Rome Consul' , 'Field Consul' , 'Censor' , 'Master of Horse' , 'Pontifex Maximus');
 
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    /** @Column(type="string") @var string */
     protected $senatorID ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $baseMIL ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $baseORA ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $baseLOY ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $baseINF ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $MIL ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $ORA ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $LOY ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $INF ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    /** @Column(type="string") @var string */
     protected $specialLOY ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    /** @Column(type="string") @var string */
     protected $specialAbility ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
-    protected $hasStatesman ; // Whether or not at least one Statesman exists for this family (TRUE|FALSE)
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
+    protected $hasStatesman = FALSE ;
+    /** @Column(type="integer") @var int */
     protected $knights ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $treasury ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $POP ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    /** @Column(type="string", nullable=true) @var string */
     protected $office = NULL ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
     protected $priorConsul = FALSE ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
     protected $corrupt = FALSE ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
     protected $major = FALSE ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
     protected $rebel = FALSE ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
     protected $captive = FALSE ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $freeTribune = 0 ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    /** @Column(type="boolean") @var int */
     protected $returningGovernor = FALSE ;
     //protected $conflict ; // the card ID of the conflict this Senator is fighting or FALSE
 
@@ -135,185 +67,83 @@ class Senator extends Card
      * ----------------------------------------------------
      */
 
-    public function setSenatorID($senatorID) {
-        $this->senatorID = $senatorID ;
-    }      
+    public function setSenatorID($senatorID) { $this->senatorID = $senatorID ; }
+    public function setBaseMIL($baseMIL) { $this->baseMIL = $baseMIL ; }
+    public function setBaseORA($baseORA) { $this->baseORA = $baseORA ; }
+    public function setBaseLOY($baseLOY) { $this->baseLOY = $baseLOY ; }
+    public function setBaseINF($baseINF) { $this->baseINF = $baseINF ; }
+    public function setMIL ($MIL) { $this->MIL = $MIL ; }
+    public function setORA ($ORA) { $this->ORA = $ORA ; }
+    public function setLOY ($LOY) { $this->LOY = $LOY ; }
+    public function setINF ($INF) { $this->INF = $INF ; }
+    public function setSpecialLOY ($specialLOY) { $this->specialLOY = $specialLOY ; }
+    public function setSpecialAbility ($specialAbility) { $this->specialAbility = $specialAbility ; }
+    public function setHasStatesman ($hasStatesman) { $this->hasStatesman = $hasStatesman ; }
+    public function setKnights ($knights) { $this->knights = $knights ; }
+    public function setTreasury ($treasury) { $this->treasury = $treasury ; }
+    public function setPOP ($POP) { $this->POP = $POP ; }
+    public function setOffice ($office) { $this->office = $office ; }
+    public function setPriorConsul ($priorConsul) { $this->priorConsul = $priorConsul ; }
+    public function setCorrupt ($corrupt) { $this->corrupt = $corrupt ; } 
+    public function setMajor ($major) { $this->major = $major ; }
+    public function setRebel ($rebel) { $this->rebel = $rebel ; }
+    public function setCaptive ($captive) { $this->captive = $captive ; }
+    public function setFreeTribune ($freeTribune) { $this->freeTribune = $freeTribune ; }
+    public function setReturningGovernor ($returningGovernor) { $this->returningGovernor = $returningGovernor ; }      
 
-    public function setBaseMIL($baseMIL) {
-        $this->baseMIL = $baseMIL ;
-    }      
-
-    public function setBaseORA($baseORA) {
-        $this->baseORA = $baseORA ;
-    }      
+    public function getSenatorID() { return $this->senatorID ; }      
+    public function getBaseMIL() { return $this->baseMIL ; }
+    public function getBaseORA() { return $this->baseORA ; }
+    public function getBaseLOY() { return $this->baseLOY ; }
+    public function getBaseINF() { return $this->baseINF ; }
+    public function getMIL () { return $this->MIL ; }
+    public function getORA () { return $this->ORA ; }
+    public function getLOY () { return $this->LOY ; }
+    public function getINF () { return $this->INF ; }
+    public function getSpecialLOY () { return $this->specialLOY ; }
+    public function getSpecialAbility () { return $this->specialAbility ; }
+    public function getHasStatesman () { return $this->hasStatesman ; }
+    public function getKnights () { return $this->knights ; }
+    public function getTreasury () { return $this->treasury ; }
+    public function getPOP () { return $this->POP ; }
+    public function getOffice () { return $this->office ; }
+    public function getPriorConsul () { return $this->priorConsul ; }
+    public function getCorrupt () { return $this->corrupt ; }
+    public function getMajor () { return $this->major ; }
+    public function getRebel () { return $this->rebel ; }
+    public function getCaptive () { return $this->captive ; }
+    public function getFreeTribune () { return $this->freeTribune ; }
+    public function getReturningGovernor () { return $this->returningGovernor ; }      
     
-    public function setBaseLOY($baseLOY) {
-        $this->baseLOY = $baseLOY ;
-    }      
-    
-    public function setBaseINF($baseINF) {
-        $this->baseINF = $baseINF ;
-    }      
-    
-    public function setMIL ($MIL) {
-        $this->MIL = $MIL ;
+    public function saveData() {
+        $data = array() ;
+        $data['id'] = $this->getId() ;
+        $data['name'] = $this->getName() ;
+        $data['senatorID'] = $this->getSenatorID() ;
+        $data['baseMIL'] = $this->getBaseMIL() ;
+        $data['baseORA'] = $this->getBaseORA() ;
+        $data['baseLOY'] = $this->getBaseLOY() ;
+        $data['baseINF'] = $this->getBaseINF() ;
+        $data['MIL'] = $this->getMIL () ;
+        $data['ORA'] = $this->getORA () ;
+        $data['LOY'] = $this->getLOY () ;
+        $data['INF'] = $this->getINF () ;
+        $data['specialLOY'] = $this->getSpecialLOY () ;
+        $data['specialAbility'] = $this->getSpecialAbility () ;
+        $data['hasStatesman'] = $this->getHasStatesman () ;
+        $data['knights'] = $this->getKnights () ;
+        $data['treasury'] = $this->getTreasury () ;
+        $data['POP'] = $this->getPOP () ;
+        $data['office'] = $this->getOffice () ;
+        $data['priorConsul'] = $this->getPriorConsul () ;
+        $data['corrupt'] = $this->getCorrupt () ;
+        $data['major'] = $this->getMajor () ;
+        $data['rebel'] = $this->getRebel () ;
+        $data['captive'] = $this->getCaptive () ;
+        $data['freeTribune'] = $this->getFreeTribune () ;
+        $data['returningGovernor'] = $this->getReturningGovernor () ;
+        return $data ;
     }
-    
-    public function setORA ($ORA) {
-        $this->ORA = $ORA ;
-    }
-    
-    public function setLOY ($LOY) {
-        $this->LOY = $LOY ;
-    }
-    
-    public function setINF ($INF) {
-        $this->INF = $INF ;
-    }
-    
-    public function setSpecialLOY ($specialLOY) {
-        $this->specialLOY = $specialLOY ;
-    }
-    
-    public function setSpecialAbility ($specialAbility) {
-        $this->specialAbility = $specialAbility ;
-    }
-    
-    public function setHasStatesman ($hasStatesman) {
-        $this->hasStatesman = $hasStatesman ;
-    }
-    
-    public function setKnights ($knights) {
-        $this->knights = $knights ;
-    }
-    
-    public function setTreasury ($treasury) {
-        $this->treasury = $treasury ;
-    }
-    
-    public function setPOP ($POP) {
-        $this->POP = $POP ;
-    }
-
-    public function setOffice ($office) {
-        $this->office = $office ;
-    }      
-
-    public function setPriorConsul ($priorConsul) {
-        $this->priorConsul = $priorConsul ;
-    }
-
-    public function setCorrupt ($corrupt) {
-        $this->corrupt = $corrupt ;
-    }
-
-    public function setMajor ($major) {
-        $this->major = $major ;
-    }
-
-    public function setRebel ($rebel) {
-        $this->rebel = $rebel ;
-    }
-
-    public function setCaptive ($captive) {
-        $this->captive = $captive ;
-    }      
-
-    public function setFreeTribune ($freeTribune) {
-        $this->freeTribune = $freeTribune ;
-    }      
-
-    public function setReturningGovernor ($returningGovernor) {
-        $this->returningGovernor = $returningGovernor ;
-    }      
-
-    public function getSenatorID() {
-        return $this->senatorID ;
-    }      
-
-    public function getBaseMIL() {
-        return $this->baseMIL ;
-    }      
-
-    public function getBaseORA() {
-        return $this->baseORA ;
-    }      
-    
-    public function getBaseLOY() {
-        return $this->baseLOY = $baseLOY ;
-    }      
-    
-    public function getMIL () {
-        return $this->MIL ;
-    }
-    
-    public function getORA () {
-        return $this->ORA ;
-    }
-    
-    public function getLOY () {
-        return $this->LOY ;
-    }
-    
-    public function getINF () {
-        return $this->INF ;
-    }
-    
-    public function getSpecialLOY () {
-        return $this->specialLOY ;
-    }
-    
-    public function getSpecialAbility () {
-        return $this->specialAbility ;
-    }
-    
-    public function getHasStatesman () {
-        return $this->hasStatesman ;
-    }
-    
-    public function getKnights () {
-        return $this->knights ;
-    }
-    
-    public function getTreasury () {
-        return $this->treasury ;
-    }
-    
-    public function getPOP () {
-        return $this->POP ;
-    }
-
-    public function getOffice () {
-        return $this->office ;
-    }      
-
-    public function getPriorConsul () {
-        return $this->priorConsul ;
-    }
-
-    public function getCorrupt () {
-        return $this->corrupt ;
-    }
-
-    public function getMajor () {
-        return $this->major ;
-    }
-
-    public function getRebel () {
-        return $this->rebel ;
-    }
-
-    public function getCaptive () {
-        return $this->captive ;
-    }      
-
-    public function getFreeTribune () {
-        return $this->freeTribune ;
-    }      
-
-    public function getReturningGovernor () {
-        return $this->returningGovernor ;
-    }      
 
     /**
      * ----------------------------------------------------

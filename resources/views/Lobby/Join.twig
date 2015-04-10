@@ -26,7 +26,7 @@
             <tbody>
             {% for party in game.getParties() %}
                 <tr>
-                    <td>{{app['user.manager'].getUser(party.getUser_id()).getDisplayName()|default('N/A')}}</td>
+                    <td>{{party.getUserName()}}</td>
                     <td>{{party.getName()}}</td>
                     <td>
                         {% if party.getReadyToStart() %}
