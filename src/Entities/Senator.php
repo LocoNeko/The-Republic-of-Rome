@@ -288,5 +288,48 @@ class Senator extends Card
             return str_replace ( Array('A' , 'B' , 'C') , Array('' , '' , '') , $this->getSenatorID() );
         }
     }
+    
+    public function statesmanPlayable($user_id) {
+        if ($this->getPreciseType() != 'Statesman') {
+            return array('flag' => FALSE , 'message' => _('ERROR - The Statesman is not a statesman'));
+        }
+        $hand = $this->getDeck() ;
+        if (!method_exists($hand, 'getInHand')) {
+            return array('flag' => FALSE , 'message' => _('ERROR - The statesman is not in hand'));
+        }
+        $statesmanParty = $hand->getInHand() ;
+        if ($statesmanParty !=NULL) {
+            $game = $statesmanParty->getGame() ;
+            foreach ($game->getParties() as $party) {
+                foreach ($party->getSenators()->getCards() as $senator) {
+                    // Check if the family is already in play
+                    if ( ($senator->getPreciseType() == 'Senator') && ($senator->getSenatorID() == $this->statesmanFamily()) ) {
+                        if ($party->getUser_id() != $user_id) {
+                            return array('flag' => FALSE , 'message' => sprintf(_('The Family is already in party %s') , $party->getName()) );
+                        } else {
+                            return array('flag' => TRUE , 'message' => _('You have the family'));
+                        }
+                    }
+                    // Check if a related Statesman is already in play
+                    if ( ($senator->getPreciseType() == 'Statesman') && ($senator->statesmanFamily() == $this->statesmanFamily()) ) {
+                        if ( ($this->statesmanFamily()!=25) && ($this->statesmanFamily()!=29) ) {
+                            return array('flag' => FALSE , 'message' => sprintf(_('The related statesman %s is already in play.' , $senator->name)));
+                        } else {
+                            // The other brother is in play : this is valid
+                            return array('flag' => TRUE , 'message' => sprintf(_('%1$s playable, but the other brother %2$s is in play.') , $this->name , $senator->name));
+                        }
+                    }
+                }
+            }
+            foreach ($game->getDeck('forum')->getCards() as $card) {
+                if ($card->getPreciseType()=='Senator' && ($card->getSenatorID() == $this->statesmanFamily()) ) {
+                    return array('flag' => TRUE , 'message' => _('The corresponding family card is in the forum'));
+                }
+            }
+        } else {
+            return array('flag' => FALSE , 'message' => _('ERROR - This is not a hand'));
+        }
+        return array('flag' => TRUE , 'message' => _('The corresponding family card is not in play') );
+    }
 
 }

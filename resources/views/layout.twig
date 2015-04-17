@@ -40,6 +40,7 @@
             }
         </style>
     </head>
+    
     <body style="padding-top: 52px; margin-bottom: 150px; overflow-y: initial; ">
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container">
@@ -85,6 +86,11 @@
             </div><!-- /.container -->
         </nav>
 
+        <!--
+            - Flashbag messages
+            - Main content
+        -->
+
         <div class="container" style="overflow-y: auto;">
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
@@ -96,6 +102,11 @@
             {% endblock %}
         </div>
         
+        <!--
+            Footer with :
+            - Log
+        -->
+
         <div class="footer">
             <div class="container-fluid">
                 <p class="text-success">This will also contain the chat interface</p>
@@ -111,8 +122,17 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+        <!--
+            Scripts for :
+            - JqueryUI : Sortable lists
+            - SocketIO : reload window when 'Update' received
+            - Jquery - on POST : submit FORM data as Json array
+            - Jquery - on POST : include any sortable list data to the Json array
+            - Jquery - on POST : Post to a URL with the 'verb' as the last part of the route
+            - SocketIO - on POST : Emit 'Update'
+        -->
+
         <script>
-            
         /* jquery code for jqueryUI to handle :
          * - Sortable lists
          */

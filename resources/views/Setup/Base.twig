@@ -9,6 +9,12 @@
     {% set senators = game.getAllSenators() %}
     All Senators<br>
     {% for senator in senators %}
-        {{senator.getName()}} - {{senator.getLocation()['type']}} - {{senator.getLocation()['name']}}<br>
+        {{senator.getName()}} [{{senator.getSenatorID()}}] - {{senator.getLocation()['type']}} - {{senator.getLocation()['name']}}
+        {% if senator.getPreciseType() == 'Statesman' %}
+            <pre>
+                {{ dump(senator.statesmanPlayable(app.user.id)) }}
+            </pre>
+        {% endif %}
+        <br>
     {% endfor %}
 {% endblock %}
