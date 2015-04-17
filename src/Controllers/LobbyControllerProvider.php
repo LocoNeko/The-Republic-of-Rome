@@ -56,7 +56,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect('/Lobby/List') ;
             } elseif ($result[0]->gameStarted()) {
                 return $app->redirect('/Setup/'.$game_id) ;
@@ -79,7 +79,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect('/Lobby/List') ;
             } elseif ($result[0]->gameStarted()) {
                 return $app->redirect('/'.$result[0]->getPhase().'/'.$game_id) ;
@@ -99,7 +99,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect('/Lobby/List') ;
             } else {
                 return $app['twig']->render('Lobby/GameData.twig', array(
@@ -119,10 +119,9 @@ class LobbyControllerProvider implements ControllerProviderInterface
         {
             $partyName = $request->request->get('partyName') ;
             $game_id = (int)$game_id ;
-            $app['session']->set('game_id', $game_id);
             try {
                 $this->joinGame($game_id , $app['user']->getId() , $app['user']->getDisplayName() , $partyName) ;
-                $app['session']->getFlashBag()->add('alert', sprintf(_('You joined and named your party %s') , $partyName ));
+                $app['session']->getFlashBag()->add('success', sprintf(_('You joined and named your party %s') , $partyName ));
                 return $app->json( $partyName , 201);
             } catch (\Exception $e) {
                 $app['session']->getFlashBag()->add('error', $e->getMessage());
@@ -139,19 +138,19 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->post('/Join/{game_id}/Ready', function($game_id) use ($app)
         {
             $game_id = (int)$game_id ;
-            $app['session']->set('game_id', $game_id);
             $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
             $result = $query->getResult() ;
             if (count($result)!=1) {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect('/Lobby/List') ;
             } else {
                 if ($result[0]->setPartyToReady($app['user']->getId()) ) {
+                    $this->entityManager->persist($result[0]);
                     $this->entityManager->flush();
-                    $app['session']->getFlashBag()->add('alert', _('You are ready to start'));
+                    $app['session']->getFlashBag()->add('success', _('You are ready to start'));
                     return $app->json( _('You are ready to start') , 201);
                 } else {
-                    $app['session']->getFlashBag()->add('alert', _('Error - Invalid user.') );
+                    $app['session']->getFlashBag()->add('danger', _('Error - Invalid user.') );
                     return $app->redirect('/Lobby/List') ;
                 }
             }
@@ -165,13 +164,12 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/Create/Create', function(Request $request) use ($app)
         {
-            $app['session']->set('game_id', NULL);
             $result= $this->CreateGame($request->request->all()) ;
             if ( $result === TRUE ) {
-                $app['session']->getFlashBag()->add('alert', 'Game created');
+                $app['session']->getFlashBag()->add('success', 'Game created');
                 return $app->json( _('Game created') , 201);
             } else {
-                $app['session']->getFlashBag()->add('alert', $result);
+                $app['session']->getFlashBag()->add('danger', $result);
                 return $app->json( $result , 201);
             }
         })
@@ -233,17 +231,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $game->setTreasury(100) ;
             $game->setUnrest(0) ;
             $game->setScenario($data['scenario']) ;
-            $game->log(_('Game "%1$s" created. Scenario : %2$s'), 'log', array($data['gameName'] , $data['scenario']) ) ;
-            // Early Republic deck
-            $earlyRepublicDeck = $game->getDeck('earlyRepublic') ;
-            $game->populateDeckFromFile($this->entityManager, $game->getScenario() , $earlyRepublicDeck) ;
-            $this->entityManager->persist($earlyRepublicDeck);
-
-            // Unplayed provinces deck
-            $provinceDeck = $game->getDeck('unplayedProvinces') ;
-            $game->populateDeckFromFile($this->entityManager, 'Provinces' , $provinceDeck) ;
-            $this->entityManager->persist($provinceDeck);
-
+            $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();
             return TRUE ;

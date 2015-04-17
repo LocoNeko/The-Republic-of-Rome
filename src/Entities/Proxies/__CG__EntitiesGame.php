@@ -64,10 +64,10 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'decks', '' . "\0" . 'Entities\\Game' . "\0" . 'messages', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localized', '' . "\0" . 'Entities\\Game' . "\0" . 'currentBidder', 'initiative', '' . "\0" . 'Entities\\Game' . "\0" . 'persuasionTarget');
+            return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'decks', '' . "\0" . 'Entities\\Game' . "\0" . 'messages', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localised', '' . "\0" . 'Entities\\Game' . "\0" . 'currentBidder', 'initiative', '' . "\0" . 'Entities\\Game' . "\0" . 'persuasionTarget');
         }
 
-        return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'decks', '' . "\0" . 'Entities\\Game' . "\0" . 'messages', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localized', '' . "\0" . 'Entities\\Game' . "\0" . 'currentBidder', 'initiative', '' . "\0" . 'Entities\\Game' . "\0" . 'persuasionTarget');
+        return array('__isInitialized__', 'id', 'name', 'turn', 'phase', 'subPhase', 'censorIsDone', 'senateAdjourned', 'scenario', 'variants', 'unrest', 'treasury', '' . "\0" . 'Entities\\Game' . "\0" . 'parties', '' . "\0" . 'Entities\\Game' . "\0" . 'decks', '' . "\0" . 'Entities\\Game' . "\0" . 'messages', '' . "\0" . 'Entities\\Game' . "\0" . 'created', '' . "\0" . 'Entities\\Game' . "\0" . 'timezone', '' . "\0" . 'Entities\\Game' . "\0" . 'localised', '' . "\0" . 'Entities\\Game' . "\0" . 'currentBidder', 'initiative', '' . "\0" . 'Entities\\Game' . "\0" . 'persuasionTarget');
     }
 
     /**
@@ -660,12 +660,23 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function populateDeckFromFile($entityManager, $fileName, $deck)
+    public function doSetup()
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'populateDeckFromFile', array($entityManager, $fileName, $deck));
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'doSetup', array());
 
-        return parent::populateDeckFromFile($entityManager, $fileName, $deck);
+        return parent::doSetup();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function populateDeckFromFile($fileName, $deck)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'populateDeckFromFile', array($fileName, $deck));
+
+        return parent::populateDeckFromFile($fileName, $deck);
     }
 
     /**
@@ -677,6 +688,28 @@ class Game extends \Entities\Game implements \Doctrine\ORM\Proxy\Proxy
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'log', array($text, $type, $parameters, $recipients, $from));
 
         return parent::log($text, $type, $parameters, $recipients, $from);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getNewMessages($user_id)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getNewMessages', array($user_id));
+
+        return parent::getNewMessages($user_id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAllPartiesButOne($user_id)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAllPartiesButOne', array($user_id));
+
+        return parent::getAllPartiesButOne($user_id);
     }
 
 }

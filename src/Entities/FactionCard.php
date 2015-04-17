@@ -13,7 +13,7 @@ class FactionCard extends Card
      */
 
     public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Faction card') ;
     }
         
     public function saveData() {

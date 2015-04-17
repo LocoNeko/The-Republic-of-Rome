@@ -1,6 +1,8 @@
 <?php
 namespace Entities ;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Criteria;
+
 /**
  * @Entity @Table(name="games")
  **/
@@ -47,7 +49,7 @@ class Game
     protected $treasury ;
     
     // A Game has many parties
-    /** @OneToMany(targetEntity="Party", mappedBy="game") **/
+    /** @OneToMany(targetEntity="Party", mappedBy="game", cascade={"persist"} ) **/
     private $parties ;
     
     // A Game has many decks
@@ -65,7 +67,7 @@ class Game
     private $timezone;
     
     /** @Column(type="boolean") @var bool */
-    private $localized = false;
+    private $localised = false;
     
     /******************************************************
      * Forum related
@@ -126,7 +128,7 @@ class Game
 
     public function __construct() {
         $createDate = new \DateTime('NOW') ;
-        $this->localized = true;
+        $this->localised = true;
         $this->created = $createDate;
         $this->timezone = $createDate->getTimeZone()->getName();
         $this->parties = new ArrayCollection();
@@ -166,7 +168,7 @@ class Game
     public function getCreated()
     {
         if ($this->timezone==NULL) { $this->timezone = 'UTC' ; }
-        if (!$this->localized) { $this->created->setTimeZone(new \DateTimeZone($this->timezone)); }
+        if (!$this->localised) { $this->created->setTimeZone(new \DateTimeZone($this->timezone)); }
         return $this->created;
     }
     
@@ -174,6 +176,8 @@ class Game
         $data = array() ;
         $data['id'] = $this->getId() ;
         $data['created'] = $this->getCreated() ;
+        $data['timezone'] = $this->timezone ;
+        $data['localised'] = $this->localised;
         $data['name'] = $this->getName() ;
         $data['turn'] = $this->getTurn() ;
         $data['phase'] = $this->getPhase() ;
@@ -193,8 +197,8 @@ class Game
         foreach($this->getDecks() as $deck) {
             array_push($data['decks'] , $deck->saveData()) ;
         }
-        $data['currentBidder'] = $this->getCurrentBidder() ;
-        $data['persuasionTarget'] = $this->getPersuasionTarget() ;
+        $data['currentBidder_id'] = $this->getCurrentBidder()->getId() ; // NOTE : This is a Party id
+        $data['persuasionTarget_id'] = $this->getPersuasionTarget()->getId() ; // NOTE : This is a Card id
         return $data ;
     }
 
@@ -258,11 +262,8 @@ class Game
      * @return boolean 
      */
     public function userAlreadyJoined($user_id) {
-        return $this->parties->exists(
-            function($key, Party $element) use ($user_id) {
-                return $element->getUser_id() == $user_id ;
-            }
-        );
+        $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->eq('user_id', (int)$user_id)) );
+        return ( count($results)==1 ) ;
     }
 
     /**
@@ -271,11 +272,8 @@ class Game
      * @return boolean 
      */
     public function partyAlreadyExists($name) {
-        return $this->parties->exists(
-            function($key, Party $element) use ($name) {
-                return $element->getName() == $name ;
-            }
-        );
+        $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->eq('name', $name)) );
+        return ( count($results)==1 ) ;
     }
     
     public function getNumberOfPlayers() {
@@ -283,12 +281,12 @@ class Game
     }
     
     public function getDeck($deckName) {
-        foreach ($this->getDecks() as $deck) {
-            if ($deck->getName() == $deckName) {
-                return $deck ;
-            }
+        $results = $this->getDecks()->matching( Criteria::create()->where(Criteria::expr()->eq('name', $deckName)) );
+        if (count($results)==1) {
+            return $results->first() ;
+        } else {
+            return FALSE ;
         }
-        return FALSE ;
     }
     
     /**
@@ -317,6 +315,9 @@ class Game
         foreach($this->getParties() as $party) {
             if ($party->getUser_id() == $user_id) {
                 $party->setReadyToStart() ;
+                if ($this->gameStarted()) {
+                    $this->doSetup() ;
+                }
                 return TRUE ;
             }
         }
@@ -335,7 +336,78 @@ class Game
         return TRUE ;
     }
     
-    public function populateDeckFromFile($entityManager , $fileName , $deck) {
+    public function doSetup() {
+        // Early Republic deck
+        $earlyRepublicDeck = $this->getDeck('earlyRepublic') ;
+        $this->populateDeckFromFile($this->getScenario() , $earlyRepublicDeck) ;
+
+        // Unplayed provinces deck
+        $provinceDeck = $this->getDeck('unplayedProvinces') ;
+        $this->populateDeckFromFile('Provinces' , $provinceDeck) ;
+        
+        // Handle special cards : The First Punic war & Era ends
+        $this->log(_('The First Punic War goes to the "Inactive" Wars deck.') , 'alert' ) ;
+        $earlyRepublicDeck->getFirstCardByProperty('id' , 1 , $this->getDeck('inactiveWars')) ;
+        $this->log(_('The "Era Ends" card goes to the discard. (MUST FIX)') , 'error' ) ;
+        $earlyRepublicDeck->getFirstCardByProperty('id' , 65 , $this->getDeck('discard')) ;
+        
+        /*
+         * TO DO
+         */
+        // Then create 4 legions in Rome, the rest of the legions and all the fleets are non-existent (Legions and Fleet objects should never be created during a game)
+        // 
+        // Give initial senators & cards to parties
+        foreach ($this->getParties() as $party) {
+            
+            // Senators
+            $senatorsList = '' ;
+            for ($i=1 ; $i<=3 ; $i++) {
+                $earlyRepublicDeck->shuffle() ;
+                $card = $earlyRepublicDeck->getFirstCardByProperty('preciseType' , 'Senator' , $party->getSenators()) ;
+                $senatorsList.=$card->getName() ;
+                switch($i) {
+                    case 1  : $senatorsList.= ' , '   ; break ;
+                    case 2  : $senatorsList.= ' and ' ; break ;
+                    default : $senatorsList.= '.'     ;
+                }
+            }
+            $this->log(_('%1$s receives the following Senators : %2$s') , 'log' , array($party->getUserName() , $senatorsList) , $this->getAllPartiesButOne($party->getUser_id()) ) ;
+            $this->log(_('You receive the following Senators : %1$s') , 'log' , array($senatorsList) , new ArrayCollection(array($party)) ) ;
+            
+            //Cards
+            $cardsList = '' ;
+            $cardsLeftToDraw = 3 ;
+            while ($cardsLeftToDraw>0) {
+                $earlyRepublicDeck->shuffle() ;
+                $card = $earlyRepublicDeck->drawFirstCard() ;
+                switch ($card->getPreciseType()) {
+                    case 'Faction card' :
+                    case 'Statesman' :
+                    case 'Concession' :
+                        $party->getHand()->putCardOnTop($card);
+                        $cardsList.= $card->getName().' , ' ;
+                        $cardsLeftToDraw--;
+                        break ;
+                    default :
+                        $earlyRepublicDeck->putCardOnTop($card);
+                }
+            }
+            $this->log(_('%1$s receives three cards') , 'log' , array($party->getUserName()) , $this->getAllPartiesButOne($party->getUser_id()) ) ;
+            $this->log(_('You receive the following cards in hand : %1$s') , 'log' , array($cardsList) , new ArrayCollection(array($party)) ) ;
+
+        }
+        // Temporary Rome Consul
+        try {
+            $alignedSenators = $this->getAllSenators('alignedInRome') ;
+            $temporaryRomeConsul = $alignedSenators[rand(0 , count($alignedSenators)-1)] ;
+            $temporaryRomeConsul->appoint('Rome Consul') ;
+            $this->log(_('%1$s is appointed temporary Rome Consul') , 'log' , array($temporaryRomeConsul->getName())) ;
+        } catch (Exception $e) {
+            $result[0]->log($e->getMessage() , 'error') ;
+        }
+    }
+    
+    public function populateDeckFromFile($fileName , $deck) {
         $filePointer = fopen(dirname(__FILE__).'/../../resources/scenarios/'.$fileName.'.csv', 'r');
         if (!$filePointer) {
             throw new Exception(_('Could not open the file'));
@@ -346,22 +418,21 @@ class Game
                 if (\Entities\Card::isValidType($type)) {
                     $class = __NAMESPACE__.'\\'.$type ;
                     $card = new $class ($data);
-                    $entityManager->persist($card) ;
                     $deck->putCardOnTop($card) ;
                 }
             }
         }
         fclose($filePointer);
-        $entityManager->persist($deck) ;
     }
     
     public function log($text , $type='log' , $parameters=NULL , $recipients=NULL , $from=NULL) {
         try {
             $message = new \Entities\Message($this, $text, $type, $parameters, $recipients, $from) ;
-            $this->getMessages()->add($message) ;
         } catch (Exception $e) {
-            throw new \Exception($e->getMessage()) ;
+            $message = new \Entities\Message($this, 'ERROR creating message', 'error') ;
         }
+        $this->getMessages()->add($message) ;
+        return $message ;
     }
     
     public function getNewMessages ($user_id) {
@@ -375,9 +446,81 @@ class Game
                         }
                     }
                 }
+                $party->setLastUpdate(new \DateTime('NOW') ) ;
                 return $messages ;
             }
         }
         return FALSE ;
+    }
+    
+    public function getAllMessages ($user_id) {
+        $messages = array() ;
+        foreach($this->getParties() as $party) {
+            if ($party->getUser_id()==$user_id) {
+                foreach ($this->getMessages() as $message) {
+                    if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) {
+                        array_push($messages , $message) ;
+                    }
+                }
+            }
+        }
+        return $messages ;
+    }
+    
+    public function getAllPartiesButOne ($user_id) {
+        $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->neq('user_id', (int)$user_id)) );
+        return $results ;
+    }
+    
+    /**
+     * Goes through all decks in the game and returns an ArrayCollection of Senator Entitites satisfying an optional criteria (or all of them if no criteria)
+     * @param string $criteria
+     * @return ArrayCollection
+     * @throws Exception 'Error retrieving senators'
+     */
+    public function getAllSenators($criteria = TRUE) {
+
+        $result = new ArrayCollection() ;
+        try {
+            // Senators in Parties
+            foreach ($this->getParties() as $party) {
+                foreach($party->getSenators()->getCards() as $senator) {
+                    if ($senator->checkCriteria($criteria)) {
+                        $result->add($senator) ;
+                    }
+                    // Senators cards controlled by their Statesman
+                    if ($senator->getCardsControlled()!=NULL) {
+                        foreach ($senator->getCardsControlled()->getCards() as $card) {
+                            if($card->getPreciseType()=='Senator') {
+                                if ($card->checkCriteria($criteria)) {
+                                    $result->add($card) ;
+                                }
+                            }
+                        }
+                    }
+                }
+                // Statesmen in Hand
+                foreach($party->getHand()->getCards() as $card) {
+                    if($card->getPreciseType()=='Statesman') {
+                        if ($card->checkCriteria($criteria)) {
+                            $result->add($card) ;
+                        }
+                    }
+                }
+            }
+            // Game's main decks
+            foreach ($this->getDecks() as $deck) {
+                foreach($deck->getCards() as $card) {
+                    if (in_array($card->getPreciseType() , array('Senator' , 'Statesman'))) {
+                        if ($card->checkCriteria($criteria)) {
+                            $result->add($card) ;
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+             throw new \Exception(_('Error retrieving senators'));
+        }
+        return $result ;
     }
 }

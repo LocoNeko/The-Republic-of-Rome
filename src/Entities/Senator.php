@@ -152,7 +152,11 @@ class Senator extends Card
      */
 
     public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        parent::__construct(
+            (int)$data[0] ,
+            ( is_string($data[1]) ? $data[1] : NULL ) ,
+            ( preg_match('/\d{1,2}[a-cA-C]/' , (string)$data[3]) == 0 ? 'Senator' : 'Statesman')
+        ) ;
         $this->setSenatorID( (string)( preg_match('/\d?\d\w?/i',$data[3]) ? $data[3] : NULL) ) ;
         $this->setBaseMIL ( (int)($data[4]) ) ;
         $this->setBaseORA ( (int)($data[5]) ) ;
@@ -168,6 +172,121 @@ class Senator extends Card
         $this->setKnights (0);
         $this->setTreasury (0) ;
         $this->setPOP (0) ;
+    }
+    
+    public function changeINF($value) {
+        $this->INF += $value ;
+        if ( $this->INF < 0 ) { $this->INF = 0 ; }
+    }
+
+    public function changeORA($value) {
+        $this->ORA += $value ;
+        if ( $this->ORA < 0 ) { $this->ORA = 0 ; }
+    }
+
+    public function changePOP($value) {
+        $this->POP += $value ;
+        if ( $this->POP < -9 ) { $this->POP = -9 ; }
+        if ( $this->POP >  9 ) { $this->POP =  9 ; }
+    }
+    
+    /**
+     * Appoints this Senator to an Office
+     * @param string $office
+     * @throws Exception : Invalid Office , Already has non-Censor Office
+     */
+    public function appoint($office) {
+        if (!in_array($office, self::$VALID_OFFICES)) {
+            throw new Exception(sprintf(_('%s is not a valid office') , $office)) ;
+        }
+        $currentOffice = $this->getOffice() ;
+        if ($currentOffice!=NULL && $currentOffice!='Censor') {
+            throw new Exception(sprintf(_('The Senator cannot hold another office while he is %s') , $currentOffice)) ;
+        }
+        $this->setOffice($office) ;
+        switch ($office) {
+            case 'Dictator' :        $INFincrease = 7 ; break ;
+            case 'Master of Horse' : $INFincrease = 3 ; break ;
+            default :                $INFincrease = 5 ;
+        }
+        $this->changeINF($INFincrease) ;
+    }
+    
+    /**
+     * Return Boolean when testing the Senator against a Criteria 
+     * @param string $criteria TRUE | 'alignedInRome' | a deck name
+     * @return boolean
+     */
+    public function checkCriteria($criteria) {
+        if ($criteria===TRUE) {
+            return TRUE ;
+        } else {
+            switch($criteria) {
+                
+                // In a party & in Rome
+                case 'alignedInRome' : 
+                    return ( ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
+                    
+                // In a party, in Rome, not the Censor
+                case 'possibleProsecutor' :
+                    return ( ($this->getOffice() != 'Censor') && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
+                    
+                // In a Party, in Rome, not an Official except Censor
+                case 'possibleDictator' :
+                case 'possibleMastersOfHorse' :
+                    return ( ($this->getOffice() === 'Censor' || $this->getOffice() === NULL) && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
+                    
+                // In a party & either Rome Consul, Field Consul or Dictator
+                case 'possibleCommanders' :
+                    return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul' , 'Dictator')) && ($this->getDeck()->getInParty() != NULL) ) ;
+                    
+                // In a party, in Rome, & hasn't been assassination target yet
+                case 'assassinationTarget' :
+                    return ( ($this->getDeck()->getInParty() != NULL) && !($this->getDeck()->getInParty()->getAssassinationTarget()) && $this->inRome() ) ;
+                    
+                // In the Game's deck with the name $criteria
+                default : 
+                    $location = $this->getLocation() ;
+                    return ( ($location['type'] == 'game') && ($location['name'] == $criteria ) ) ;
+            }
+        }
+    }
+    
+    public function inRome() {
+        $result = TRUE ;
+        // Captive
+        if ($this->captive !== FALSE) {
+            $result = FALSE ;
+        }
+        // Governor
+        // TO DO : What about legates ?
+        if ($this->getCardsControlled()!=NULL) {
+            foreach ($this->getCardsControlled()->getCards() as $card) {
+                if($card->getPreciseType=='Province') {
+                    $result = FALSE ;
+                }
+            }
+        }
+        // Commander of an army & Proconsul
+        // TO DO
+        /*
+        if ($this->getConflict!=FALSE) {
+            $result = FALSE ;
+        }
+        */
+        return $result ;
+    }
+    
+    /**
+     * Returns the family number of a Statesman
+     * @return String Family number
+     */
+    public function statesmanFamily () {
+        if ($this->getPreciseType()!= 'Statesman') {
+            return (string)$this->getSenatorID() ;
+        } else {
+            return str_replace ( Array('A' , 'B' , 'C') , Array('' , '' , '') , $this->getSenatorID() );
+        }
     }
 
 }

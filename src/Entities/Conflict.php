@@ -209,7 +209,7 @@ class Conflict extends Card
      */
 
     public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Conflict' ) ;
         $this->setMatches ( (string)$data[3] ) ;
         $this->setNbOfMatch ( (int)$data[4]) ;
         $this->setDescription ( (string)$data[5] ) ;

@@ -79,7 +79,7 @@ class Leader extends Card
      */
 
     public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Leader' ) ;
         $this->setMatches ( is_string($data[3]) ? $data[3] : NULL ) ;
         $this->setDescription ((string)($data[4])) ;
         $this->setStrength ( (int)$data[5] ) ;

@@ -17,7 +17,7 @@ class Message
     protected $id ;
     
     // One Game has many messages
-    /** @ManyToOne(targetEntity="Game", inversedBy="messages") **/
+    /** @ManyToOne(targetEntity="Game", inversedBy="messages", cascade={"persist"}) **/
     private $game ;
     
     /** @Column(type="string") @var string */
@@ -32,50 +32,26 @@ class Message
     /** @ManyToMany(targetEntity="Party", inversedBy="messages" , cascade={"persist"}  ) **/
     protected $recipients = NULL ;
     
-    /** @OneToOne(targetEntity="Party") @JoinColumn(name="messageFrom_id", referencedColumnName="id" , nullable=true) **/
+    /** @OneToOne(targetEntity="Party", cascade={"persist"}) @JoinColumn(name="messageFrom_id", referencedColumnName="id" , nullable=true) **/
     protected $from ;
     
     /** @Column(type="datetime")  */
     protected $time ;
     
-    function getId() {
-        return $this->id;
-    }
+    public function getId() { return $this->id; }
+    public function getGame() { return $this->game; }
+    public function getText() { return $this->text; }
+    public function getParameters() { return $this->parameters; }
+    public function getType() { return $this->type; }
+    public function getRecipients() { return $this->recipients; }
+    public function getFrom() { return $this->from; }
+    public function getTime() { return $this->time ; }
 
-    function getGame() {
-        return $this->game;
-    }
-
-    function getText() {
-        return $this->text;
-    }
-
-    function getParameters() {
-        return $this->parameters;
-    }
-
-    function getType() {
-        return $this->type;
-    }
-
-    function getRecipients() {
-        return $this->recipients;
-    }
-
-    function getFrom() {
-        return $this->from;
-    }
-
-    public function getTime() {
-        return $this->time ;
-    }
-
-        
     /**
      * @param Entity\Game $game The Entity\Game to which this message belongs to
      * @param string $text A string with a sprintf format, including the order of parameters (%1$s , %2$d , etc) to handle possible mixing because of i18n
      * @param string $type message|alert|error|chat
-     * @param array|NULL $parameters An array of values to be used in the text or NULL if the text has no parameters
+     * @param mixed|NULL $parameters An array of values to be used in the text or NULL if the text has no parameters. If $parameters is not an array and not NULL, it's cast as array($parameters)
      * @param Entity\Party array|NULL $recipients An array of all the recipients parties or NULL if everyone
      * @param Entity\Party array|NULL $from Entity\Party of the sender or NULL if this is not a chat message
      * @throws Exception
@@ -114,7 +90,7 @@ class Message
         if ($recipients!=NULL) {
             $this->recipients = new ArrayCollection();
             foreach($recipients as $recipient) {
-                if (get_class($recipient)!= \Entities\Party) {
+                if (get_class($recipient)!= 'Entities\\Party' ) {
                     throw new \Exception(_('ERROR - Invalid recipient.'));
                 } else {
                     $this->recipients->add($recipient) ;
@@ -126,10 +102,46 @@ class Message
         }
         $this->game = $game ;
         $this->text = $text ;
-        $this->parameters= $parameters ;
+        if (is_array($parameters)) {
+            $this->parameters = $parameters ;
+        } else {
+            $this->parameters = array ($parameters) ;
+        }
         $this->type = $type ;
         $this->from = $from ;
         $this->time = new \DateTime('NOW') ;
+    }
+
+    public function setType($type) {
+        if (!in_array($type, self::$VALID_TYPES)) {
+            throw new \Exception(_('ERROR - Invalid message type.'));
+        } else {
+            $this->type = $type ;
+        }
+    }
+    
+    public function setParameters($parameters) {
+        if (is_array($parameters)) {
+            $this->parameters = $parameters ;
+        } else {
+            $this->parameters = array ($parameters) ;
+        }
+    }
+    
+    public function setRecipients($recipients) {
+        if ($recipients!=NULL) {
+            $this->recipients = new ArrayCollection();
+            foreach($recipients as $recipient) {
+                if (get_class($recipient)!= 'Entities\\Party' ) {
+                    throw new \Exception(_('ERROR - Invalid recipient.'));
+                } else {
+                    $this->recipients->add($recipient) ;
+                    $recipient->addMessage($this) ;
+                }
+            }
+        } else {
+            $this->recipients = NULL ;
+        }
     }
     
     /*
@@ -179,4 +191,5 @@ class Message
         }
         return FALSE ;
     }
+    
 }

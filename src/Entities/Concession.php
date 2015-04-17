@@ -93,7 +93,7 @@ class Concession extends Card
      */
 
     public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Concession' ) ;
         $this->setIncome((int)$data[4]) ;
         $this->setSpecial(($data[5]=='' ? NULL : $data[5])) ;
     }

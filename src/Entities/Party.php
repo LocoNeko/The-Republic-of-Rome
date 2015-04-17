@@ -28,13 +28,19 @@ class Party
     /** @Column(type="datetime")  */
     protected $lastUpdate ;
 
-    /** @OneToOne(targetEntity="Deck" , cascade={"persist"}) @JoinColumn(name="hand_deck_id", referencedColumnName="id") **/
+    /** @Column(type="boolean") @var int */
+    protected $assassinationAttempt = FALSE ;
+
+    /** @Column(type="boolean") @var int */
+    protected $assassinationTarget = FALSE ;
+
+    /** @OneToOne(targetEntity="Deck" , mappedBy="inHand" , cascade={"persist"}) **/
     private $hand ;
 
-    /** @OneToOne(targetEntity="Deck" , cascade={"persist"}) @JoinColumn(name="senators_deck_id", referencedColumnName="id") **/
+    /** @OneToOne(targetEntity="Deck" , mappedBy="inParty" , cascade={"persist"}) **/
     private $senators ;
     
-    /** @ManyToMany(targetEntity="Message", mappedBy="recipients" ) **/
+    /** @ManyToMany(targetEntity="Message", mappedBy="recipients" , cascade={"persist"} ) **/
     protected $messages ;
 
     /**
@@ -49,6 +55,8 @@ class Party
     public function setUserName($userName) { $this->userName = $userName; }
     public function setReadyToStart() { $this->readyToStart = TRUE ; }
     public function setLastUpdate($lastUpdate) { $this->lastUpdate = $lastUpdate ; }
+    public function setAssassinationAttempt($assassinationAttempt) { $this->assassinationAttempt = $assassinationAttempt; }
+    public function setAssassinationTarget($assassinationTarget) {  $this->assassinationTarget = $assassinationTarget; }
 
     public function getId() { return $this->id; }
     public function getGame() { return $this->game ; }
@@ -60,6 +68,8 @@ class Party
     public function getSenators() { return $this->senators ; }
     public function getMessages() { return $this->messages ; }
     public function getLastUpdate() { return $this->lastUpdate ; }
+    public function getAssassinationAttempt() { return $this->assassinationAttempt; }
+    public function getAssassinationTarget() { return $this->assassinationTarget; }
 
      public function __construct($user_id , $userName , $name) {
         $this->setName($name) ;
@@ -67,7 +77,9 @@ class Party
         $this->setUserName($userName) ;
         $this->messages = new ArrayCollection();
         $this->hand = new \Entities\Deck($this->getName().' - Cards in hand') ;
+        $this->hand->setInHand($this) ;
         $this->senators = new \Entities\Deck($this->getName().' - Senators') ;
+        $this->senators->setInParty($this) ;
     }
 
     public function saveData() {
@@ -104,7 +116,10 @@ class Party
             $this->setGame($game) ;
             $game->getParties()->add($this) ;
             $this->setLastUpdate(new \DateTime('NOW') ) ;
-            $game->log(_('%1$s joins the game as "%2$s"') , 'log' , array($this->getUserName() , $this->getName()) ) ;
+            if (count($game->getParties())>1) {
+                $game->log(_('%1$s joins the game as "%2$s"') , 'log' , array($this->getUserName() , $this->getName()) , $game->getAllPartiesButOne($this->getUser_id()) ) ;
+            }
+            $game->log(_('You join the game as "%1$s"') , 'log' , array($this->getName()) , new ArrayCollection(array($this)) ) ;
         }
     }
 

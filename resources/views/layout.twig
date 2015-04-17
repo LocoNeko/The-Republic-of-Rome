@@ -6,19 +6,43 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         {% block title %}{% endblock %}
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
-        <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css"></style>
+        <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
         <style>
-            .sortable-list-placeholder {
-                background-color: #bbb;
-                border: 1px dashed #666;
-                margin-bottom: -1px;
-                padding: 10px 15px;
+            .sortable-list-placeholder { background-color: #bbb; border: 1px dashed #666; margin-bottom: -1px; padding: 10px 15px; }
+            .ui-resizable { position: relative;}
+            .ui-resizable-handle { position: absolute;font-size: 0.1px; display: block; }
+            .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
+            .ui-resizable-n { cursor: n-resize; height: 7px; width: 100%; top: -5px; left: 0; }
+            .ui-resizable-s { cursor: s-resize; height: 7px; width: 100%; bottom: -5px; left: 0; }
+            .ui-resizable-e { cursor: e-resize; width: 7px; right: -5px; top: 0; height: 100%; }
+            .ui-resizable-w { cursor: w-resize; width: 7px; left: -5px; top: 0; height: 100%; }
+            .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
+            .ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: -5px; bottom: -5px; }
+            .ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
+            .ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
+            /* Sticky footer styles
+            -------------------------------------------------- */
+            html {
+                position: relative;
+                min-height: 100%;
+            }
+            .footer {
+                position: fixed;
+                bottom: 0;
+                width: 100%;
+                /* Set the fixed height of the footer here */
+                height: 150px;
+                background-color: #f5f5f5;
+                border: 5px solid #b5b5b5;
+                border-radius: 3px;
+                padding: 5px;
+                overflow-y: scroll;
             }
         </style>
     </head>
-    <body>
-        <nav class="navbar navbar-default" role="navigation">
-            <div class="container-fluid">
+    <body style="padding-top: 52px; margin-bottom: 150px; overflow-y: initial; ">
+        <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -28,11 +52,16 @@
                         <span class="icon-bar"></span>
                     </button>
                     <a class="navbar-brand" href="/">Home</a>
+                    {% if game is defined %}
+                        <span class="navbar-brand">
+                            {{game.getName()}}
+                        </span>
+                    {% endif %}
                     {% block menu %}{% endblock %}
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
-                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <div class="navbar-collapse collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="{{ path('user.list') }}">List users</a></li>
                         {% if app.user %}
@@ -53,17 +82,29 @@
                         {% endif %}
                     </ul>
                 </div><!-- /.navbar-collapse -->
-            </div><!-- /.container-fluid -->
+            </div><!-- /.container -->
         </nav>
 
-        <div class="container">
+        <div class="container" style="overflow-y: auto;">
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
-                    <div class="alert alert-info alert-dismissible">{{message}}</div>
+                    <div class="alert alert-{{type}} alert-dismissible">{{message}}</div>
                 {% endfor %}
             {% endfor %}
 
-            {% block content %}{% endblock %}
+            {% block content %}
+            {% endblock %}
+        </div>
+        
+        <div class="footer">
+            <div class="container-fluid">
+                <p class="text-success">This will also contain the chat interface</p>
+                {% if game is defined %}
+                    {% for message in game.getAllMessages(app.user.id)%}
+                        {{message.show()}}<br>
+                    {% endfor %}
+                {% endif %}
+            </div>
         </div>
         
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
@@ -71,11 +112,14 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
         <script>
-        // jquery code for jqueryUI to handle sortable lists
+            
+        /* jquery code for jqueryUI to handle :
+         * - Sortable lists
+         */
         $(document).ready(function(){
             $('.sortable-list').sortable({
                 connectWith: '.sortable-list',
-                placeholder: 'sortable-list-placeholder',
+                placeholder: 'sortable-list-placeholder'
             });
         });
         // Connecting to the socket.io server :

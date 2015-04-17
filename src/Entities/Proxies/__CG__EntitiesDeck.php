@@ -209,6 +209,17 @@ class Deck extends \Entities\Deck implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
+    public function setOrder($order)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setOrder', array($order));
+
+        return parent::setOrder($order);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function getCards()
     {
 
@@ -323,6 +334,17 @@ class Deck extends \Entities\Deck implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
+    public function removeCard($card)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'removeCard', array($card));
+
+        return parent::removeCard($card);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function shuffle()
     {
 
@@ -334,12 +356,12 @@ class Deck extends \Entities\Deck implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getFirstCardByProperty($property, $value)
+    public function getFirstCardByProperty($property, $value, $target = NULL)
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getFirstCardByProperty', array($property, $value));
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getFirstCardByProperty', array($property, $value, $target));
 
-        return parent::getFirstCardByProperty($property, $value);
+        return parent::getFirstCardByProperty($property, $value, $target);
     }
 
 }

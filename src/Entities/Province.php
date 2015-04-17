@@ -58,7 +58,7 @@ class Province extends Card
     public function getForces () { return $this->forces ; }
 
     public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) ) ;
+        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Province' ) ;
         $this->setMandate (0) ;
         $this->setDeveloped (FALSE) ;
         $this->setOverrun (FALSE) ;

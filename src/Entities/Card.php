@@ -10,9 +10,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 abstract class Card
 {
-    // TO DO : ADD 
     public static $VALID_TYPES = array('Concession' , 'Conflict' , 'Senator' , 'Leader' , 'FactionCard' , 'EraEnds' , 'Province') ;
-    public static $VALID_DECKS = array('Draw' , 'Discard' , 'Forum', 'Curia' , 'Unplayed Provinces' , 'Early Republic' , 'Middle Republic' , 'Late Republic' , 'Inactive Wars' , 'Active Wars' , 'Imminent Wars' , 'Unprosecuted Wars') ;
     
     /**
      * @Id @Column(type="integer") @GeneratedValue
@@ -26,9 +24,14 @@ abstract class Card
     protected $id ;
     // One Deck has many cards
     /**
-     * @ManyToOne(targetEntity="Deck", inversedBy="cards")
+     * @ManyToOne(targetEntity="Deck", inversedBy="cards", cascade={"persist"})
      **/
     private $deck ;
+    /**
+    * @Column(type="string", name="preciseType")
+    * @var string
+     */
+    private $preciseType ;
     /**
     * @Column(type="string")
     * @var string
@@ -36,7 +39,7 @@ abstract class Card
     protected $name ;
     // A Card can have a deck (of controlled cards)
     /**
-     * @OneToOne(targetEntity="Deck", mappedBy="controlled_by")
+     * @OneToOne(targetEntity="Deck", inversedBy="controlled_by", cascade={"persist"})
      **/
     private $cards_controlled ;
 
@@ -53,15 +56,18 @@ abstract class Card
     public function setId($id) { $this->id = (int)$id ; }
     public function setName($name) { $this->name = (string)$name ; }
     public function setDeck($deck) { $this->deck = $deck ; }
+    public function setPreciseType($preciseType) { $this->preciseType = $preciseType ; }
     
     public function getId() { return $this->id ; }
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
+    public function getPreciseType() { return $this->preciseType ; }
     public function getCardsControlled() { return $this->cards_controlled ; }
     
-    public function __construct($id , $name) {
+    public function __construct($id , $name , $preciseType) {
         $this->setId($id) ;
         $this->setName($name) ;
+        $this->setPreciseType($preciseType) ;
     }
 
     /**
@@ -77,5 +83,24 @@ abstract class Card
         } else {
             throw new Exception(sprintf(_('Property %1$s doesn\'t exist.') , $property));
         }
+    }
+    
+    /**
+     * Returns an array giving the type & name of its location and the location itself when it's a card or a party
+     * This is entirely based on the Deck the card belongs to
+     * @return array ('type' => 'game|card|party|hand' , 'name' , 'value' => NULL|(card)|(party)|(party) )
+     */
+    public function getLocation() {
+        $deck = $this->getDeck() ;
+        if ($deck->getGame() != NULL) {
+            $result = array ('type' => 'game' , 'value' => NULL , 'name' => $deck->getName()) ;
+        } elseif ($deck->getControlled_by() != NULL) {
+            $result = array ('type' => 'card' , 'value' => $deck->getControlled_by() , 'name' => $deck->getControlled_by()->getName()) ;
+        } elseif ($deck->getInParty() != NULL) {
+            $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;
+        } elseif ($deck->getInHand() != NULL) {
+            $result = array ('type' => 'hand' , 'value' => $deck->getInHand() , 'name' => $deck->getInHand()->getName()) ;
+        }
+        return $result ;
     }
 }

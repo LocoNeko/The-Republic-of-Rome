@@ -12,16 +12,16 @@
 
     $app['debug'] = true;
 
-    // JSON middleware
+    // JSON middleware and loading messages as flash bags
     use Symfony\Component\HttpFoundation\Request;
     $app->before(function (Request $request) use ($app) {
+        $request->getSession()->start();
         if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
         }
-        $request->getSession()->start();
         $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
-        if (count($messages)>0) {
+        if ($messages && count($messages)>0) {
             foreach($messages as $key=>$message) {
                 $app['session']->getFlashBag()->add($message->getFlashType(), $message->show());
             }
@@ -48,7 +48,10 @@
         $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
         $result = $query->getResult() ;
         if (count($result)==1) {
-            return $result[0]->getNewMessages($user_id) ;
+            $messages = $result[0]->getNewMessages($user_id) ;
+            $entityManager->persist($result[0]) ;
+            $entityManager->flush() ;
+            return $messages ;
         } else {
             return FALSE ;
         }
