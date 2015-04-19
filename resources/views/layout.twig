@@ -52,13 +52,13 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="/">Home</a>
+                    <a class="navbar-brand" href="{{app['BASE_URL']}}">Home</a>
+                    {% block menu %}{% endblock %}
                     {% if game is defined %}
-                        <span class="navbar-brand">
+                        <span class="navbar-brand" style="color: darkblue ;">
                             {{game.getName()}}
                         </span>
                     {% endif %}
-                    {% block menu %}{% endblock %}
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
@@ -107,16 +107,16 @@
             - Log
         -->
 
-        <div class="footer">
-            <div class="container-fluid">
-                <p class="text-success">This will also contain the chat interface</p>
-                {% if game is defined %}
-                    {% for message in game.getAllMessages(app.user.id)%}
-                        {{message.show()}}<br>
-                    {% endfor %}
-                {% endif %}
+        {% if game is defined %}
+            <div class="footer">
+                <div class="container-fluid">
+                    <p class="text-success">This will also contain the chat interface</p>
+                        {% for message in game.getAllMessages(app.user.id)%}
+                            {{message.show()}}<br>
+                        {% endfor %}
+                </div>
             </div>
-        </div>
+        {% endif %}
         
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -145,7 +145,8 @@
         // Connecting to the socket.io server :
         // - Port is the client's port
         // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
-        var socket = io.connect('http://silex-test:8081');
+        //var socket = io.connect('http://silex-test:8081');
+        var socket = io.connect('http://loconeko.dyndns.org:8080');
         socket.on('Update', function(realm){
             if ( realm === $("title").attr('realm') ) {
                 window.location.reload(true) ;

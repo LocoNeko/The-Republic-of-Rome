@@ -7,21 +7,21 @@
     // Simple user - Firewalls
     $app['security.firewalls'] = array(
         'login' => array(
-            'pattern' => '^/user/login$',
+            'pattern' => '^'.$app['BASE_URL'].'/user/login$',
         ),
         'register' => array(
-            'pattern' => '^/user/register$',
+            'pattern' => '^'.$app['BASE_URL'].'/user/register$',
         ),
         'secured_area' => array(
             'pattern' => '^.*$',
             'anonymous' => false,
             'remember_me' => array(),
             'form' => array(
-                'login_path' => '/user/login',
-                'check_path' => '/user/login_check',
+                'login_path' => $app['BASE_URL'].'/user/login',
+                'check_path' => $app['BASE_URL'].'/user/login_check',
             ),
             'logout' => array(
-                'logout_path' => '/user/logout',
+                'logout_path' => $app['BASE_URL'].'/user/logout',
             ),
             'users' => $app->share(function($app) { return $app['user.manager']; }),
         ),
@@ -45,4 +45,4 @@
     );
     
     // Mount SimpleUser routes.
-    $app->mount('/user', $userServiceProvider);
+    $app->mount($app['BASE_URL'].'/user', $userServiceProvider);

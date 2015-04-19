@@ -57,9 +57,9 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $result = $query->getResult() ;
             if (count($result)!=1) {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->redirect('/Lobby/List') ;
+                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             } elseif ($result[0]->gameStarted()) {
-                return $app->redirect('/Setup/'.$game_id) ;
+                return $app->redirect($app['BASE_URL'].'/Setup/'.$game_id) ;
             } else {
                 return $app['twig']->render('Lobby/Join.twig', array(
                    'layout_template' => 'layout.twig' ,
@@ -80,11 +80,11 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $result = $query->getResult() ;
             if (count($result)!=1) {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->redirect('/Lobby/List') ;
+                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             } elseif ($result[0]->gameStarted()) {
-                return $app->redirect('/'.$result[0]->getPhase().'/'.$game_id) ;
+                return $app->redirect($app['BASE_URL'].'/'.$result[0]->getPhase().'/'.$game_id) ;
             } else {
-                return $app->redirect('/Lobby/List') ;
+                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
         })
         ->bind('PlayGame');
@@ -100,7 +100,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $result = $query->getResult() ;
             if (count($result)!=1) {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->redirect('/Lobby/List') ;
+                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             } else {
                 return $app['twig']->render('Lobby/GameData.twig', array(
                    'layout_template' => 'layout.twig' ,
@@ -142,7 +142,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $result = $query->getResult() ;
             if (count($result)!=1) {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->redirect('/Lobby/List') ;
+                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             } else {
                 if ($result[0]->setPartyToReady($app['user']->getId()) ) {
                     $this->entityManager->persist($result[0]);
@@ -151,7 +151,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                     return $app->json( _('You are ready to start') , 201);
                 } else {
                     $app['session']->getFlashBag()->add('danger', _('Error - Invalid user.') );
-                    return $app->redirect('/Lobby/List') ;
+                    return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
                 }
             }
         })

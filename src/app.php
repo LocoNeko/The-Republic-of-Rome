@@ -11,6 +11,7 @@
     $app->register(new Provider\DoctrineServiceProvider());
 
     $app['debug'] = true;
+    $app['BASE_URL'] = '/ROR_V2' ;
 
     // JSON middleware and loading messages as flash bags
     use Symfony\Component\HttpFoundation\Request;
@@ -20,10 +21,12 @@
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
         }
-        $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
-        if ($messages && count($messages)>0) {
-            foreach($messages as $key=>$message) {
-                $app['session']->getFlashBag()->add($message->getFlashType(), $message->show());
+        if ($app['user'] !== NULL) {
+            $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
+            if ($messages && count($messages)>0) {
+                foreach($messages as $key=>$message) {
+                    $app['session']->getFlashBag()->add($message->getFlashType(), $message->show());
+                }
             }
         }
     });
@@ -35,14 +38,14 @@
     require __DIR__.'/../src/appDatabase.php';
     require __DIR__.'/../src/appSimpleUser.php';
 
-    $app->get('/', function () use ($app) {
+    $app->get($app['BASE_URL'].'/', function () use ($app) {
         return $app['twig']->render('hello.twig', array(
             'layout_template' => 'layout.twig',
         ));
     });
 
-    $app->mount('/Lobby', new Controllers\LobbyControllerProvider($app) );
-    $app->mount('/Setup', new Controllers\SetupControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Lobby', new Controllers\LobbyControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Setup', new Controllers\SetupControllerProvider($app) );
     
     function getNewMessages($user_id , $game_id , $entityManager) {
         $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
