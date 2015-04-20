@@ -7,6 +7,7 @@
         {% block title %}{% endblock %}
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
         <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
+        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/../resources/css/sprite.css">
         <style>
             .sortable-list-placeholder { background-color: #bbb; border: 1px dashed #666; margin-bottom: -1px; padding: 10px 15px; }
             .ui-resizable { position: relative;}
@@ -20,30 +21,12 @@
             .ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: -5px; bottom: -5px; }
             .ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
             .ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
-            /* Sticky footer styles
-            -------------------------------------------------- */
-            html {
-                position: relative;
-                min-height: 100%;
-            }
-            .footer {
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                /* Set the fixed height of the footer here */
-                height: 150px;
-                background-color: #f5f5f5;
-                border: 5px solid #b5b5b5;
-                border-radius: 3px;
-                padding: 5px;
-                overflow-y: scroll;
-            }
         </style>
     </head>
     
-    <body style="padding-top: 52px; margin-bottom: 150px; overflow-y: initial; ">
+    <body style="padding-top: 52px;">
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-            <div class="container">
+            <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
                 <div class="navbar-header">
                     <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -52,7 +35,7 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="{{app['BASE_URL']}}">Home</a>
+                    <a class="navbar-brand" href="{{app['BASE_URL']~'/'}}">Home</a>
                     {% block menu %}{% endblock %}
                     {% if game is defined %}
                         <span class="navbar-brand" style="color: darkblue ;">
@@ -91,7 +74,7 @@
             - Main content
         -->
 
-        <div class="container" style="overflow-y: auto;">
+        <div class="container" style="top:52px; padding-bottom: 150px; overflow-y: auto;">
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
                     <div class="alert alert-{{type}} alert-dismissible">{{message}}</div>
@@ -108,12 +91,21 @@
         -->
 
         {% if game is defined %}
-            <div class="footer">
+            <div class="footer" style="overflow-y: auto; height: 150px; position: fixed; bottom: 0; width: 100%; background-color: #f5f5f5; border: 5px solid #b5b5b5; border-radius: 3px; padding: 5px;">
                 <div class="container-fluid">
                     <p class="text-success">This will also contain the chat interface</p>
+                    <table class="table table-stripped">
                         {% for message in game.getAllMessages(app.user.id)%}
-                            {{message.show()}}<br>
+                            <tr>
+                                <th style="white-space: nowrap;">
+                                    {{message.getTime()|date('Y/m/d H:i')}}
+                                </th>
+                                <td style="color: {{message.getColour()}}; width:100%; ">
+                                    {{message.show()}}
+                                </td>
+                            </tr>
                         {% endfor %}
+                    </table>
                 </div>
             </div>
         {% endif %}
@@ -145,8 +137,8 @@
         // Connecting to the socket.io server :
         // - Port is the client's port
         // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
-        //var socket = io.connect('http://silex-test:8081');
-        var socket = io.connect('http://loconeko.dyndns.org:8080');
+        var socket = io.connect('http://silex-test:8081');
+        //var socket = io.connect('http://loconeko.dyndns.org:8080');
         socket.on('Update', function(realm){
             if ( realm === $("title").attr('realm') ) {
                 window.location.reload(true) ;

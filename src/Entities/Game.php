@@ -350,7 +350,7 @@ class Game
         $earlyRepublicDeck->getFirstCardByProperty('id' , 1 , $this->getDeck('inactiveWars')) ;
         $this->log(_('The "Era Ends" card goes to the discard. (MUST FIX)') , 'error' ) ;
         $earlyRepublicDeck->getFirstCardByProperty('id' , 65 , $this->getDeck('discard')) ;
-        
+
         /*
          * TO DO
          */
@@ -457,7 +457,7 @@ class Game
         $messages = array() ;
         foreach($this->getParties() as $party) {
             if ($party->getUser_id()==$user_id) {
-                foreach ($this->getMessages() as $message) {
+                foreach (array_reverse($this->getMessages()->toArray()) as $message) {
                     if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) {
                         array_push($messages , $message) ;
                     }

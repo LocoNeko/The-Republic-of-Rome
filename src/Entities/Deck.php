@@ -43,12 +43,6 @@ class Deck
     * @OneToOne(targetEntity="Party", inversedBy="hand")
     **/
     private $inHand ;
-    /**
-    * @Column(name="`order`" , type="array")
-    * @var array
-    */
-    protected $order = array() ;
-
 
     /**
      * ----------------------------------------------------
@@ -59,7 +53,6 @@ class Deck
     public function setName($name) { $this->name = $name ; }
     public function setGame($game) { $this->game = $game ; }
     public function setControlled_by($card) { $this->controlled_by = $card ; }
-    public function setOrder($order) { $this->order = $order; }
     public function setInParty($inParty) { $this->inParty = $inParty; }
     public function setInHand($inHand) { $this->inHand = $inHand; }
  
@@ -68,7 +61,6 @@ class Deck
     public function getId() { return $this->id; }
     public function getGame() { return $this->game; }
     public function getControlled_by() { return $this->controlled_by; }
-    public function getOrder() { return $this->order; }
     public function getInParty() { return $this->inParty; }
     public function getInHand() { return $this->inHand; }
  
@@ -80,7 +72,6 @@ class Deck
     public function saveData() {
         $data = array() ;
         $data['name'] = $this->getName() ;
-        $data['order'] = $this->getOrder() ;
         $data['cards'] = array () ;
         foreach ($this->getCards() as $key=>$card) {
             $data['cards'][$key] = $card->saveData() ;
@@ -108,25 +99,25 @@ class Deck
     public function putCardOnTop($card) {
         $this->getCards()->add($card) ;
         $card->setDeck($this) ;
-        array_unshift($this->order , $card->getId()) ;
     }
     
     public function removeCard($card) {
         $this->getCards()->removeElement($card) ;
-        $this->setOrder(array_diff($this->getOrder(), array($card->getId())));
     }
 
+    public function getNumberOfCards() {
+        return count($this->getCards()) ;
+    }
+    
     /**
      * Draws the first card of the deck
      * @return Card
      * @throws Exception Deck empty
      */
     public function drawFirstCard() {
-        $results = $this->getCards()->matching( Criteria::create()->where(Criteria::expr()->eq('id', (int)$this->getOrder()[0])) );
-        $card = $results->first() ;
+        $card = $this->getCards()->first() ;
         if ($card!=NULL) {
             $this->getCards()->removeElement($card) ;
-            $this->setOrder(array_diff($this->getOrder(), array($card->getId())));
             return $card ;
         } else {
             throw new Exception(sprintf(_('ERROR - Can\'t draw first card : deck %1$d is empty') , $this->getName() )) ;
@@ -134,7 +125,9 @@ class Deck
     }
 
     public function shuffle() {
-        shuffle($this->order) ;
+        $arrayValues = $this->getCards()->toArray() ;
+        shuffle($arrayValues) ;
+        $this->cards = new ArrayCollection( $arrayValues );
     }
     
     /**

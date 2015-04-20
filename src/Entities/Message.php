@@ -170,7 +170,7 @@ class Message
         return vsprintf($formattedMessage, $this->parameters) ;
     }
     
-    public function colour() {
+    public function getColour() {
         switch($this->type) {
             case 'chat'     : $result='seagreen' ;  break ;
             case 'alert'    : $result='orange' ;    break ;

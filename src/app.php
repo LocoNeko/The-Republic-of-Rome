@@ -11,7 +11,7 @@
     $app->register(new Provider\DoctrineServiceProvider());
 
     $app['debug'] = true;
-    $app['BASE_URL'] = '/ROR_V2' ;
+    $app['BASE_URL'] = '' ;
 
     // JSON middleware and loading messages as flash bags
     use Symfony\Component\HttpFoundation\Request;
