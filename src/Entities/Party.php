@@ -43,6 +43,12 @@ class Party
     /** @ManyToMany(targetEntity="Message", mappedBy="recipients" , cascade={"persist"} ) **/
     protected $messages ;
 
+    /** @OneToOne(targetEntity="Senator" , mappedBy="leaderOf" , cascade={"persist"}) **/
+    private $leader ;
+
+    /** @Column(type="integer") @var int */
+    protected $treasury = 0 ;
+    
     /**
      * ----------------------------------------------------
      * Getters & Setters
@@ -57,6 +63,8 @@ class Party
     public function setLastUpdate($lastUpdate) { $this->lastUpdate = $lastUpdate ; }
     public function setAssassinationAttempt($assassinationAttempt) { $this->assassinationAttempt = $assassinationAttempt; }
     public function setAssassinationTarget($assassinationTarget) {  $this->assassinationTarget = $assassinationTarget; }
+    public function setLeader($leader) { $this->leader = $leader; }
+    public function setTreasury($treasury) { $this->treasury = $treasury; }
 
     public function getId() { return $this->id; }
     public function getGame() { return $this->game ; }
@@ -70,8 +78,10 @@ class Party
     public function getLastUpdate() { return $this->lastUpdate ; }
     public function getAssassinationAttempt() { return $this->assassinationAttempt; }
     public function getAssassinationTarget() { return $this->assassinationTarget; }
+    public function getLeader() { return $this->leader; }
+    public function getTreasury() { return $this->treasury; }
 
-     public function __construct($user_id , $userName , $name) {
+    public function __construct($user_id , $userName , $name) {
         $this->setName($name) ;
         $this->setUser_id($user_id) ;
         $this->setUserName($userName) ;
@@ -116,11 +126,21 @@ class Party
             $this->setGame($game) ;
             $game->getParties()->add($this) ;
             $this->setLastUpdate(new \DateTime('NOW') ) ;
-            if (count($game->getParties())>1) {
-                $game->log(_('%1$s joins the game as "%2$s"') , 'log' , array($this->getUserName() , $this->getName()) , $game->getAllPartiesButOne($this->getUser_id()) ) ;
-            }
-            $game->log(_('You join the game as "%1$s"') , 'log' , array($this->getName()) , new ArrayCollection(array($this)) ) ;
+            $game->log(_('[['.$this->getUser_id().']] {join,joins} the game as "%1$s"') , 'log' , array($this->getName()) ) ;
         }
     }
+    
+    public function getFullName() {
+        return $this->getName().' ['.$this->getUserName().']';
+    }
 
+    public function getTotalVotes() {
+        $total = 0 ;
+        foreach ($this->getSenators()->getCards() as $senator) {
+            if ($senator->inRome()) {
+                $total+=$senator->getORA() + $senator->getKnights();
+            }
+        }
+        return $total ;
+    }
 }

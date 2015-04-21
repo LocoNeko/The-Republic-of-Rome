@@ -23,9 +23,12 @@
         }
         if ($app['user'] !== NULL) {
             $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
-            if ($messages && count($messages)>0) {
-                foreach($messages as $key=>$message) {
-                    $app['session']->getFlashBag()->add($message->getFlashType(), $message->show());
+            if ($messages!=FALSE && count($messages['messages'])>0) {
+                foreach($messages['messages'] as $key=>$message) {
+                    $app['session']->getFlashBag()->add(
+                        $message->getFlashType(),
+                        $message->show($app['user']->getId() , $messages['parties_names'])
+                    );
                 }
             }
         }
@@ -54,7 +57,7 @@
             $messages = $result[0]->getNewMessages($user_id) ;
             $entityManager->persist($result[0]) ;
             $entityManager->flush() ;
-            return $messages ;
+            return array('messages' => $messages , 'parties_names' => $result[0]->getPartiesNames()) ;
         } else {
             return FALSE ;
         }

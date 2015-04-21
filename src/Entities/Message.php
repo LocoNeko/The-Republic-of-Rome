@@ -151,8 +151,37 @@ class Message
         return (in_array($this->type , self::$VALID_TYPES) ? self::$FLASH_TYPES[$this->type] : self::$FLASH_TYPES['error']) ;
     }
     
-    public function show() {
+    /**
+     * Displays the message, taking $user_id into account<br>
+     * NOTE : The following special tags will be replaced :<br>
+     * - [[$id]], will be replaced by the party & name of the player with id $id, or "You" if the $id is the same as $user_id<br>
+     * - {receive,receives} only works if a previous [[]] tag exists, in which case "do" will be used if $id = $user_id and "does" otherwise<br>
+     * 
+     * How it works : It goes through each user_id in the partiesNames array, if it finds [[$id]], it replaces it with<br>
+     * the name of the party or 'you', based on the $user_id parameter (which tells us who is reading the message)<br>
+     * it then searches for an optional plural (like {get,gets}) to change <br>
+     * @param integer $user_id
+     * @param array $partiesNames ('id' => 'Full Name')
+     * @return string Message formatted for output
+     */
+    public function show($user_id , $partiesNames) {
         $formattedMessage = $this->text ;
+        foreach($partiesNames as $party_id => $party_name) {
+            if (strpos($formattedMessage, '[['.$party_id.']]') !==FALSE) {
+                $name = ( ($party_id==$user_id) ? 'you' : $party_name ) ;
+                $formattedMessage = str_replace('[['.$party_id.']]' , $name , $formattedMessage);
+                // Replace the optional {receive,receives} value
+                $plural_pos = strpos($formattedMessage , '{') ;
+                $plural_pos2 = strpos($formattedMessage , '}' , $plural_pos) ;
+                if ($plural_pos!=FALSE && $plural_pos2!=FALSE) {
+                    $plural = substr($formattedMessage, $plural_pos, $plural_pos2-$plural_pos+1) ;
+                    $plurals = explode(',', substr(substr($plural,1),0,-1)) ;
+                    $plural_text = ( ($party_id==$user_id) ? $plurals[0] : $plurals[1]) ;
+                    $formattedMessage = str_replace($plural , $plural_text , $formattedMessage);
+                }
+            }
+        }
+        
         /*
         if ($this->type=='chat') {
             $recipientsList = '' ;
@@ -167,7 +196,7 @@ class Message
             $formattedMessage = $playerNames[$this->from].' says to '.$recipientsList.' : '.$this->text ;
         }
         */
-        return vsprintf($formattedMessage, $this->parameters) ;
+        return ucfirst( vsprintf($formattedMessage, $this->parameters) );
     }
     
     public function getColour() {

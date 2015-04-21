@@ -64,10 +64,10 @@ class Party extends \Entities\Party implements \Doctrine\ORM\Proxy\Proxy
     public function __sleep()
     {
         if ($this->__isInitialized__) {
-            return array('__isInitialized__', 'id', '' . "\0" . 'Entities\\Party' . "\0" . 'game', 'name', 'user_id');
+            return array('__isInitialized__', 'id', '' . "\0" . 'Entities\\Party' . "\0" . 'game', 'name', 'user_id', 'userName', 'readyToStart', 'lastUpdate', 'assassinationAttempt', 'assassinationTarget', '' . "\0" . 'Entities\\Party' . "\0" . 'hand', '' . "\0" . 'Entities\\Party' . "\0" . 'senators', 'messages', '' . "\0" . 'Entities\\Party' . "\0" . 'leader', 'treasury');
         }
 
-        return array('__isInitialized__', 'id', '' . "\0" . 'Entities\\Party' . "\0" . 'game', 'name', 'user_id');
+        return array('__isInitialized__', 'id', '' . "\0" . 'Entities\\Party' . "\0" . 'game', 'name', 'user_id', 'userName', 'readyToStart', 'lastUpdate', 'assassinationAttempt', 'assassinationTarget', '' . "\0" . 'Entities\\Party' . "\0" . 'hand', '' . "\0" . 'Entities\\Party' . "\0" . 'senators', 'messages', '' . "\0" . 'Entities\\Party' . "\0" . 'leader', 'treasury');
     }
 
     /**
@@ -176,12 +176,12 @@ class Party extends \Entities\Party implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function getName()
+    public function setGame($game)
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getName', array());
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setGame', array($game));
 
-        return parent::getName();
+        return parent::setGame($game);
     }
 
     /**
@@ -198,12 +198,126 @@ class Party extends \Entities\Party implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setGame($game)
+    public function setUser_id($user_id)
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setGame', array($game));
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUser_id', array($user_id));
 
-        return parent::setGame($game);
+        return parent::setUser_id($user_id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setUserName($userName)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUserName', array($userName));
+
+        return parent::setUserName($userName);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setReadyToStart()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setReadyToStart', array());
+
+        return parent::setReadyToStart();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setLastUpdate($lastUpdate)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setLastUpdate', array($lastUpdate));
+
+        return parent::setLastUpdate($lastUpdate);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAssassinationAttempt($assassinationAttempt)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setAssassinationAttempt', array($assassinationAttempt));
+
+        return parent::setAssassinationAttempt($assassinationAttempt);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setAssassinationTarget($assassinationTarget)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setAssassinationTarget', array($assassinationTarget));
+
+        return parent::setAssassinationTarget($assassinationTarget);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setLeader($leader)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setLeader', array($leader));
+
+        return parent::setLeader($leader);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function setTreasury($treasury)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setTreasury', array($treasury));
+
+        return parent::setTreasury($treasury);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getId()
+    {
+        if ($this->__isInitialized__ === false) {
+            return (int)  parent::getId();
+        }
+
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getId', array());
+
+        return parent::getId();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getGame()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getGame', array());
+
+        return parent::getGame();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getName()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getName', array());
+
+        return parent::getName();
     }
 
     /**
@@ -220,12 +334,133 @@ class Party extends \Entities\Party implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
-    public function setUser_id($user_id)
+    public function getUserName()
     {
 
-        $this->__initializer__ && $this->__initializer__->__invoke($this, 'setUser_id', array($user_id));
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getUserName', array());
 
-        return parent::setUser_id($user_id);
+        return parent::getUserName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getReadyToStart()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getReadyToStart', array());
+
+        return parent::getReadyToStart();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getHand()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getHand', array());
+
+        return parent::getHand();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSenators()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getSenators', array());
+
+        return parent::getSenators();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getMessages()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getMessages', array());
+
+        return parent::getMessages();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getLastUpdate()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getLastUpdate', array());
+
+        return parent::getLastUpdate();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAssassinationAttempt()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAssassinationAttempt', array());
+
+        return parent::getAssassinationAttempt();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getAssassinationTarget()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getAssassinationTarget', array());
+
+        return parent::getAssassinationTarget();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getLeader()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getLeader', array());
+
+        return parent::getLeader();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTreasury()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTreasury', array());
+
+        return parent::getTreasury();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function saveData()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'saveData', array());
+
+        return parent::saveData();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addMessage($message)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'addMessage', array($message));
+
+        return parent::addMessage($message);
     }
 
     /**
@@ -237,6 +472,28 @@ class Party extends \Entities\Party implements \Doctrine\ORM\Proxy\Proxy
         $this->__initializer__ && $this->__initializer__->__invoke($this, 'joinGame', array($game));
 
         return parent::joinGame($game);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getFullName()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getFullName', array());
+
+        return parent::getFullName();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getTotalVotes()
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'getTotalVotes', array());
+
+        return parent::getTotalVotes();
     }
 
 }

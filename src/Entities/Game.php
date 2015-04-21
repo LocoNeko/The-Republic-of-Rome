@@ -371,8 +371,7 @@ class Game
                     default : $senatorsList.= '.'     ;
                 }
             }
-            $this->log(_('%1$s receives the following Senators : %2$s') , 'log' , array($party->getUserName() , $senatorsList) , $this->getAllPartiesButOne($party->getUser_id()) ) ;
-            $this->log(_('You receive the following Senators : %1$s') , 'log' , array($senatorsList) , new ArrayCollection(array($party)) ) ;
+            $this->log(_('[['.$party->getUser_id().']] {receive,receives} the following Senators : %1$s') , 'log' , array($senatorsList) ) ;
             
             //Cards
             $cardsList = '' ;
@@ -392,7 +391,7 @@ class Game
                         $earlyRepublicDeck->putCardOnTop($card);
                 }
             }
-            $this->log(_('%1$s receives three cards') , 'log' , array($party->getUserName()) , $this->getAllPartiesButOne($party->getUser_id()) ) ;
+            $this->log(_('[['.$party->getUser_id().']] receives three cards') , 'log' , NULL , $this->getAllPartiesButOne($party->getUser_id()) ) ;
             $this->log(_('You receive the following cards in hand : %1$s') , 'log' , array($cardsList) , new ArrayCollection(array($party)) ) ;
 
         }
@@ -401,6 +400,7 @@ class Game
             $alignedSenators = $this->getAllSenators('alignedInRome') ;
             $temporaryRomeConsul = $alignedSenators[rand(0 , count($alignedSenators)-1)] ;
             $temporaryRomeConsul->appoint('Rome Consul') ;
+            $temporaryRomeConsul->setPriorConsul(TRUE) ;
             $this->log(_('%1$s is appointed temporary Rome Consul') , 'log' , array($temporaryRomeConsul->getName())) ;
         } catch (Exception $e) {
             $result[0]->log($e->getMessage() , 'error') ;
@@ -467,11 +467,27 @@ class Game
         return $messages ;
     }
     
+    public function getParty ($user_id) {
+        $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->eq('user_id', (int)$user_id)) );
+        return $results->first() ;
+    }
+    
     public function getAllPartiesButOne ($user_id) {
         $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->neq('user_id', (int)$user_id)) );
         return $results ;
     }
     
+    /**
+     * 
+     * @return array of [$user_id] => 'party name [user name]'
+     */
+    public function getPartiesNames() {
+        $result=array() ;
+        foreach($this->getParties() as $party) {
+            $result[$party->getUser_id()] = $party->getFullName() ;
+        }
+        return $result ;
+    }
     /**
      * Goes through all decks in the game and returns an ArrayCollection of Senator Entitites satisfying an optional criteria (or all of them if no criteria)
      * @param string $criteria

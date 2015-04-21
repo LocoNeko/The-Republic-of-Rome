@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="height: 100%;">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -24,7 +24,7 @@
         </style>
     </head>
     
-    <body style="padding-top: 52px;">
+    <body style="padding-bottom: 150px; height: 100%;">
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
@@ -74,7 +74,19 @@
             - Main content
         -->
 
-        <div class="container" style="top:52px; padding-bottom: 150px; overflow-y: auto;">
+        <div class="container-fluid" style="
+             top:52px;
+             height:100%;
+             width:100%;
+             border-top:52px solid transparent;
+             -webkit-box-sizing:border-box;
+             -moz-box-sizing:border-box;
+             box-sizing:border-box;
+             overflow-y:auto;
+             overflow-x:hidden;
+             padding-left: 80px;
+             padding-right: 80px;
+        ">
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
                     <div class="alert alert-{{type}} alert-dismissible">{{message}}</div>
@@ -91,17 +103,17 @@
         -->
 
         {% if game is defined %}
-            <div class="footer" style="overflow-y: auto; height: 150px; position: fixed; bottom: 0; width: 100%; background-color: #f5f5f5; border: 5px solid #b5b5b5; border-radius: 3px; padding: 5px;">
+            <div class="footer" style="overflow-y: auto; height: 150px; position: fixed; bottom: 0px; width: 100%; background-color: #f5f5f5; padding: 5px;">
                 <div class="container-fluid">
                     <p class="text-success">This will also contain the chat interface</p>
                     <table class="table table-stripped">
                         {% for message in game.getAllMessages(app.user.id)%}
                             <tr>
                                 <th style="white-space: nowrap;">
-                                    {{message.getTime()|date('Y/m/d H:i')}}
+                                    {{message.getTime()|date('Y/m/d H:i:s')}}
                                 </th>
                                 <td style="color: {{message.getColour()}}; width:100%; ">
-                                    {{message.show()}}
+                                    {{message.show(app.user.id , game.getPartiesNames())}}
                                 </td>
                             </tr>
                         {% endfor %}
@@ -127,13 +139,37 @@
         <script>
         /* jquery code for jqueryUI to handle :
          * - Sortable lists
+         * - Draggable cards
+         * - Droppable card Slots
          */
         $(document).ready(function(){
             $('.sortable-list').sortable({
                 connectWith: '.sortable-list',
                 placeholder: 'sortable-list-placeholder'
             });
+            
+            $('div[id^="Card_"]').each(function() {
+                $(this).draggable({
+                    scroll:true,
+                    start: function (event, ui) {
+                       $(this).data("startingScrollTop",window.pageYOffset);
+                    },
+                    drag: function(event,ui){
+                       var st = parseInt($(this).data("startingScrollTop"));
+                       ui.position.top -= st;
+                    },
+                    cursor: 'move' ,
+                    helper: 'clone'
+                });
+            });
+            
+            $('div[id^="CardSlot"]').droppable( {
+                drop: handleDropEvent
+            } );
+
+
         });
+        
         // Connecting to the socket.io server :
         // - Port is the client's port
         // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
@@ -144,6 +180,7 @@
                 window.location.reload(true) ;
             }
         });
+        
         // any submit of a form with the 'json-submit' property will result is submitting data in json to the current route + '/verb'
         $(function(){
             $('.json-submit').submit(function(e){
@@ -183,6 +220,15 @@
                 );
             });
         });
+        
+        // Drop event when card dragged & dropped
+        function handleDropEvent( event, ui ) {
+            $(event.target).find('div[id^="Card_"]').remove();
+            var clonedDraggable = ui.draggable.clone();
+            clonedDraggable.css({'margin-left':'0px'});
+            $(this).append(clonedDraggable);
+        }
+        
         </script>
         {% block scripts %}{% endblock %}
 

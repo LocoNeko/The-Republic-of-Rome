@@ -5,16 +5,8 @@
 {% endblock %}
 
 {% block content %}
-    <h2>Setup Base</h2>
-    {% set senators = game.getAllSenators() %}
-    All Senators<br>
-    {% for senator in senators %}
-        {{senator.getName()}} [{{senator.getSenatorID()}}] - {{senator.getLocation()['type']}} - {{senator.getLocation()['name']}}
-        {% if senator.getPreciseType() == 'Statesman' %}
-            <pre>
-                {{ dump(senator.statesmanPlayable(app.user.id)) }}
-            </pre>
-        {% endif %}
-        <br>
-    {% endfor %}
+
+    {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id)} %}
+    {% endembed %}
+    
 {% endblock %}

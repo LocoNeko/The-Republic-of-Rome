@@ -60,6 +60,10 @@ class Senator extends Card
     /** @Column(type="boolean") @var int */
     protected $returningGovernor = FALSE ;
     //protected $conflict ; // the card ID of the conflict this Senator is fighting or FALSE
+    /** @OneToOne(targetEntity="Party" , inversedBy="leader") **/
+    private $leaderOf ;
+    
+
 
     /**
      * ----------------------------------------------------
