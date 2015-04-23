@@ -22,6 +22,7 @@
                     <th>Variants</th>
                     <th>Turn</th>
                     <th>Phase</th>
+                    <th>Game data</th>
                     <th>Created</th>
                     <th></th>
                 </tr>
@@ -33,18 +34,21 @@
                     {% set partieslist = partieslist ~ party.getName() ~ ' (' ~ app['user.manager'].getUser(party.getUser_id()).getDisplayName()|default('N/A') ~ ')<br>' %}
                 {% endfor %}
                 <tr>
-                    <th scope="row">{{game.getId()}}</th>
+                    <th scope="row">{{ game.getId() }}</th>
+                    <td><strong>{{ game.getName() }}</strong></td>
+                    <td>{{ game.getScenario() }}</td>
                     <td>
-                        <a href="{{ path('SaveGame' , {'game_id' : game.getId() }) }}">
-                            {{game.getName()}}
-                        </a>
+                        <button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs">{{game.getNumberOfPlayers()}}</button>
                     </td>
-                    <td>{{game.getScenario()}}</td>
-                    <td><button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs">{{game.getNumberOfPlayers()}}</button></td>
-                    <td>{{game.getVariants()|join(', ')}}</td>
-                    <td>{{game.getTurn()}}</td>
-                    <td>{{game.getPhase()}}</td>
-                    <td>{{game.getCreated()|date('Y/m/d H:i')}}</td>
+                    <td>
+                        <button data-toggle="tooltip" data-html="true" href="#" title="{{game.getVariants()|join(',')}}" class="btn btn-success btn-xs">{{ game.getVariants()|length }}</button>
+                    </td>
+                    <td>{{ game.getTurn() }}</td>
+                    <td>{{ game.getPhase() }}</td>
+                    <td>
+                        <a href="{{ path('SaveGame' , {'game_id' : game.getId() }) }}">Load</a>
+                    </td>
+                    <td>{{ game.getCreated()|date('Y/m/d H:i') }}</td>
                     <td>
                         {% set gamestate = game.getGameState(app.user.id) %}
                         {% if gamestate == 'CAN_JOIN' %}

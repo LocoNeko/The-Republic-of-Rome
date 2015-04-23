@@ -89,7 +89,6 @@ class Game
      */
 
     public function setName($name) { $this->name = $name ; }
-    public function setSubPhase($subPhase) { $this->subPhase = $subPhase ; }
     public function setCensorIsDone($flag) { $this->censorIsDone = $flag ; }
     public function setSenateAdjourned($flag) { $this->senateAdjourned = $flag ; }
     public function setUnrest($unrest) { $this->unrest = $unrest ; }
@@ -98,8 +97,8 @@ class Game
     private function setCreated($created) { $this->created = $created ; }
     public function setCurrentBidder($currentBidder) { $this->currentBidder = $currentBidder; }
     public function setPersuasionTarget($persuasionTarget) { $this->persuasionTarget = $persuasionTarget; }
+    public function setVariants($variants) { $this->variants = $variants; }
 
- 
     /**
      * @param string $scenario
      * @throws Exception
@@ -121,9 +120,15 @@ class Game
     {
         if (in_array($phase, self::$VALID_PHASES)) {
             $this->phase = $phase ;
+            $this->log(_('Phase : %1$s') , 'alert' , array($phase) ) ;
         } else {
             throw new \Exception(_('Invalid phase'));
         }
+    }
+
+    public function setSubPhase($subPhase) {
+        $this->subPhase = $subPhase ;
+        $this->log(_('Sub Phase : %1$s.') , 'alert' , array($subPhase) ) ;
     }
 
     public function __construct() {
@@ -197,8 +202,12 @@ class Game
         foreach($this->getDecks() as $deck) {
             array_push($data['decks'] , $deck->saveData()) ;
         }
-        $data['currentBidder_id'] = $this->getCurrentBidder()->getId() ; // NOTE : This is a Party id
-        $data['persuasionTarget_id'] = $this->getPersuasionTarget()->getId() ; // NOTE : This is a Card id
+        $data['messages'] = array() ;
+        foreach($this->getMessages() as $message) {
+            array_push($data['messages'] , $message->saveData()) ;
+        }
+        $data['currentBidder_id'] = ($this->getCurrentBidder() === NULL ? NULL : $this->getCurrentBidder()->getId() ) ; // NOTE : This is a Party id
+        $data['persuasionTarget_id'] = ($this->getPersuasionTarget() === NULL ? NULL : $this->getPersuasionTarget()->getId() ) ; // NOTE : This is a Card id
         return $data ;
     }
 
@@ -337,6 +346,8 @@ class Game
     }
     
     public function doSetup() {
+        $this->setPhase('Setup') ;
+
         // Early Republic deck
         $earlyRepublicDeck = $this->getDeck('earlyRepublic') ;
         $this->populateDeckFromFile($this->getScenario() , $earlyRepublicDeck) ;
@@ -405,6 +416,7 @@ class Game
         } catch (Exception $e) {
             $result[0]->log($e->getMessage() , 'error') ;
         }
+        $this->setSubPhase('Pick leaders') ;
     }
     
     public function populateDeckFromFile($fileName , $deck) {
@@ -425,6 +437,16 @@ class Game
         fclose($filePointer);
     }
     
+    /**
+     * Logs a message
+     * @param string $text A string with a sprintf format, including the order of parameters (%1$s , %2$d , etc) to handle possible mixing because of i18n
+     * @param string $type message|alert|error|chat
+     * @param mixed|NULL $parameters An array of values to be used in the text or NULL if the text has no parameters. If $parameters is not an array and not NULL, it's cast as array($parameters)
+     * @param Entity\Party array|NULL $recipients An array of all the recipients parties or NULL if everyone
+     * @param Entity\Party array|NULL $from Entity\Party of the sender or NULL if this is not a chat message
+     * @throws Exception
+     * @return \Entities\Message
+     */
     public function log($text , $type='log' , $parameters=NULL , $recipients=NULL , $from=NULL) {
         try {
             $message = new \Entities\Message($this, $text, $type, $parameters, $recipients, $from) ;
@@ -488,6 +510,7 @@ class Game
         }
         return $result ;
     }
+    
     /**
      * Goes through all decks in the game and returns an ArrayCollection of Senator Entitites satisfying an optional criteria (or all of them if no criteria)
      * @param string $criteria

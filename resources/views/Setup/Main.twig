@@ -6,6 +6,17 @@
 
 {% block content %}
 
+    {% if game.getSubPhase() == 'Pick leaders' %}
+        <h2>Pick Leaders</h2>
+        {% embed 'Setup/PickLeaders.twig' %}
+        {% endembed %}
+    {% endif %}
+
+    {% if game.getSubPhase() == 'Play cards' %}
+        <h2>Play cards</h2>
+    {% endif %}
+
+    <h3>Your Party</h3>
     {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id)} %}
     {% endembed %}
     

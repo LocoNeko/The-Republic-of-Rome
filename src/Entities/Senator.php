@@ -94,6 +94,7 @@ class Senator extends Card
     public function setCaptive ($captive) { $this->captive = $captive ; }
     public function setFreeTribune ($freeTribune) { $this->freeTribune = $freeTribune ; }
     public function setReturningGovernor ($returningGovernor) { $this->returningGovernor = $returningGovernor ; }      
+    public function setLeaderOf($leaderOf) { $this->leaderOf = $leaderOf; }
 
     public function getSenatorID() { return $this->senatorID ; }      
     public function getBaseMIL() { return $this->baseMIL ; }
@@ -118,8 +119,9 @@ class Senator extends Card
     public function getCaptive () { return $this->captive ; }
     public function getFreeTribune () { return $this->freeTribune ; }
     public function getReturningGovernor () { return $this->returningGovernor ; }      
-    
-    public function saveData() {
+    public function getLeaderOf() { return $this->leaderOf; }
+
+     public function saveData() {
         $data = array() ;
         $data['id'] = $this->getId() ;
         $data['name'] = $this->getName() ;
@@ -248,6 +250,9 @@ class Senator extends Card
                 case 'assassinationTarget' :
                     return ( ($this->getDeck()->getInParty() != NULL) && !($this->getDeck()->getInParty()->getAssassinationTarget()) && $this->inRome() ) ;
                     
+                case 'isStatesman' :
+                    return ($this->getPreciseType()=='Statesman') ;
+                    
                 // In the Game's deck with the name $criteria
                 default : 
                     $location = $this->getLocation() ;
@@ -293,7 +298,30 @@ class Senator extends Card
         }
     }
     
+    public function getFullName() {
+        $result = $this->getName() ;
+        $location = $this->getLocation() ;
+        switch ($location['type']) {
+            case 'game' :
+            case 'card' :
+                $result.=' [under '.$location['name'].']' ;
+                break ;
+            case 'party' :
+                $partyName = $result['value']->getName() ;
+                $user_id = $result['value']->getUser_id() ;
+                $result.=' ['.$partyName.'] ([['.$user_id.']])';
+            case 'hand' :
+                $partyName = $result['value']->getName() ;
+                $user_id = $result['value']->getUser_id() ;
+                $result.=' [in the hand of '.$partyName.'] ([['.$user_id.']])';
+        }
+        return $result ;
+    }
+    
     public function statesmanPlayable($user_id) {
+        if ($this->checkCriteria('isStatesman')===FALSE) {
+            return array('flag' => FALSE , 'message' => _('Senator'));
+        }
         if ($this->getPreciseType() != 'Statesman') {
             return array('flag' => FALSE , 'message' => _('ERROR - The Statesman is not a statesman'));
         }

@@ -44,7 +44,7 @@ class Party
     protected $messages ;
 
     /** @OneToOne(targetEntity="Senator" , mappedBy="leaderOf" , cascade={"persist"}) **/
-    private $leader ;
+    private $leader = NULL ;
 
     /** @Column(type="integer") @var int */
     protected $treasury = 0 ;
@@ -63,7 +63,10 @@ class Party
     public function setLastUpdate($lastUpdate) { $this->lastUpdate = $lastUpdate ; }
     public function setAssassinationAttempt($assassinationAttempt) { $this->assassinationAttempt = $assassinationAttempt; }
     public function setAssassinationTarget($assassinationTarget) {  $this->assassinationTarget = $assassinationTarget; }
-    public function setLeader($leader) { $this->leader = $leader; }
+    public function setLeader($leader) {
+        $this->leader = $leader;
+        $leader->setLeaderOf($this) ;
+    }
     public function setTreasury($treasury) { $this->treasury = $treasury; }
 
     public function getId() { return $this->id; }
@@ -99,10 +102,6 @@ class Party
         $data['readyToStart'] = $this->getReadyToStart() ;
         $data['hand'] = $this->getHand()->saveData() ;
         $data['senators'] = $this->getSenators()->saveData() ;
-        $data['messages'] = array() ;
-        foreach($this->getMessages() as $message) {
-            array_push($data['messages'] , $message->saveData()) ;
-        }
         return $data ;
     }
 

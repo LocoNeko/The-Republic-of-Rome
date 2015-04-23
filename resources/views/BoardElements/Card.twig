@@ -1,5 +1,5 @@
     {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
-        <div class="span3 sprite sprite-Senator col-md-1" id="Card_{{card.getId()}}">
+        <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}'>
             {# Senator's name :
                 - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
                 - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message
@@ -39,7 +39,7 @@
         </div>
             {#
     {% elseif card.type=='Conflict' %}
-        <div class="span3 sprite sprite-BlankCard" id="Card_{{card.id}}">
+        <div class="span3 sprite sprite-BlankCard" card_id='{{card.getId()}}'>
             <div class="sprite-position-card-name">{{card.name}}</div>
             <div class="sprite-position-card-subname">{{card.description}} (1 of {{card.nbOfMatch}} {{card.matches}})</div>
             <div class="sprite-position-card-text">Inactive until attacked or Matched.
@@ -49,7 +49,7 @@
             <div class="sprite-position-card-attacks">Attacks :{{card.attacks}}</div>
         </div>
     {% else %}
-        <div class="span3 sprite sprite-BlankCard" id="Card_{{card.id}}">
+        <div class="span3 sprite sprite-BlankCard" card_id='{{card.getId()}}'>
             <div class="sprite-position-card-name">{{card.name}}</div>
         </div>#}
     {% endif %}

@@ -100,6 +100,8 @@ abstract class Card
             $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;
         } elseif ($deck->getInHand() != NULL) {
             $result = array ('type' => 'hand' , 'value' => $deck->getInHand() , 'name' => $deck->getInHand()->getName()) ;
+        } else {
+            $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'Unknown location') ;
         }
         return $result ;
     }

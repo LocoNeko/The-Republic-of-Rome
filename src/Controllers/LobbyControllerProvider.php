@@ -231,6 +231,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $game->setTreasury(100) ;
             $game->setUnrest(0) ;
             $game->setScenario($data['scenario']) ;
+            $game->setVariants($data['variants']) ;
             $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();

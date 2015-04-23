@@ -1,6 +1,6 @@
 {# PARTY NAME #}
 {% if self %}
-    YOUR PARTY : <b>{{party.getName()}}</b>
+    <b>{{party.getName()}}</b>
 {% else %}
     <b>{{party.getFullName()}}</b>
 {% endif %}
@@ -32,7 +32,7 @@
 <br>
 <div class="row">
 {% for senator in party.getSenators().getCards() %}
-    {% embed "BoardElements/Card.twig" with {'card': senator , 'leader' : FALSE } only %}
+    {% embed "BoardElements/Card.twig" with {'card': senator , 'leader' : (party.getLeader()==NULL ? FALSE : party.getLeader().getId() == senator.getId()) } only %}
     {% endembed %}
 {% endfor %}
 </div>

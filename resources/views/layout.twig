@@ -24,7 +24,7 @@
         </style>
     </head>
     
-    <body style="padding-bottom: 150px; height: 100%;">
+    <body style="{{  game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%;">
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
@@ -39,7 +39,7 @@
                     {% block menu %}{% endblock %}
                     {% if game is defined %}
                         <span class="navbar-brand" style="color: darkblue ;">
-                            {{game.getName()}}
+                            {{game.getName()}} - {{game.getPhase()}}
                         </span>
                     {% endif %}
                 </div>
@@ -141,6 +141,7 @@
          * - Sortable lists
          * - Draggable cards
          * - Droppable card Slots
+         * - Droppable Senator cards
          */
         $(document).ready(function(){
             $('.sortable-list').sortable({
@@ -148,8 +149,13 @@
                 placeholder: 'sortable-list-placeholder'
             });
             
-            $('div[id^="Card_"]').each(function() {
+            /* Draggable with a clone as a helper :
+             * - All Senators (class sprite-Senator)
+             * - All cards with the draggable class
+             */
+            $('.sprite-Senator , .draggable').each(function() {
                 $(this).draggable({
+                    zIndex: 500,
                     scroll:true,
                     start: function (event, ui) {
                        $(this).data("startingScrollTop",window.pageYOffset);
@@ -162,10 +168,45 @@
                     helper: 'clone'
                 });
             });
-            
-            $('div[id^="CardSlot"]').droppable( {
-                drop: handleDropEvent
+
+            /* Droppables (something can be dropped on it) based on classes :
+             * - Card slots
+             * - Senator cards
+             */
+            $('.sprite-CardSlot').droppable( {
+                drop: function ( event, ui ) {
+                    /*
+                    $(event.target).find('div[id^="Card_"]').remove(); // WARNING : I Stopped using id = Card_XX
+                    var clonedDraggable = ui.draggable.clone();
+                    clonedDraggable.css({'margin-left':'0px'});
+                    $(this).append(clonedDraggable);
+                    */
+                }
             } );
+            
+            $('.sprite-Senator').each( function() {
+                $(this).droppable( {
+                    drop: function ( event, ui ) {
+                        var json = {} ;
+                        json['card_id'] = $(event.target).attr('card_id') ;
+        
+                        /* Emit the Update event to socket.io
+                         * This requires a gameId attribute on the draggable (not the droppable as there would be too many)
+                         */
+                        socket.emit('Update', ui.draggable.attr('gameId'));
+
+                        $.post(
+                            window.location.pathname + '/' + ui.draggable.attr('verb') ,
+                            json ,
+                            function( data ) {
+                                window.location.reload(true) ;
+                            } ,
+                            "json"
+                        );
+
+                    }
+                });
+            });
 
 
         });
@@ -221,16 +262,6 @@
             });
         });
         
-        // Drop event when card dragged & dropped
-        function handleDropEvent( event, ui ) {
-            $(event.target).find('div[id^="Card_"]').remove();
-            var clonedDraggable = ui.draggable.clone();
-            clonedDraggable.css({'margin-left':'0px'});
-            $(this).append(clonedDraggable);
-        }
-        
         </script>
-        {% block scripts %}{% endblock %}
-
     </body>
 </html>

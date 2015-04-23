@@ -1,6 +1,7 @@
 <?php
     use Silex\Provider;
     use Symfony\Component\HttpFoundation\Response;
+    use Doctrine\Common\Collections\ArrayCollection;
 
     $app->register(new Provider\ServiceControllerServiceProvider());
     $app->register(new Provider\SessionServiceProvider());
@@ -20,15 +21,17 @@
         if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
-        }
-        if ($app['user'] !== NULL) {
-            $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
-            if ($messages!=FALSE && count($messages['messages'])>0) {
-                foreach($messages['messages'] as $key=>$message) {
-                    $app['session']->getFlashBag()->add(
-                        $message->getFlashType(),
-                        $message->show($app['user']->getId() , $messages['parties_names'])
-                    );
+        } else {
+            // Getting new messages should never be done for json requests, as they don't trigger display
+            if ($app['user'] !== NULL) {
+                $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
+                if ($messages!=FALSE && count($messages['messages'])>0) {
+                    foreach($messages['messages'] as $key=>$message) {
+                        $app['session']->getFlashBag()->add(
+                            $message->getFlashType(),
+                            $message->show($app['user']->getId() , $messages['parties_names'])
+                        );
+                    }
                 }
             }
         }
