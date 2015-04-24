@@ -128,7 +128,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 return $app->json( $e->getMessage() , 201);
             }
         })
-        ->bind('JoinGameAction');
+        ->bind('verb_JoinGame');
 
         /*
         * POST target
@@ -155,7 +155,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 }
             }
         })
-        ->bind('ReadyAction');
+        ->bind('verb_Ready');
 
         /*
         * POST target
@@ -173,7 +173,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 return $app->json( $result , 201);
             }
         })
-        ->bind('CreateAction');
+        ->bind('verb_Create');
 
         return $controllers ;
     }

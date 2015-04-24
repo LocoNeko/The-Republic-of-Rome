@@ -15,15 +15,17 @@
     margin: 15px 15px 15px 15px;
     background-position: -663px -5px;
     z-index: 1;
+    text-align: center;
 }
 
-.sprite-BlankCard {
+.sprite-Card {
     position: relative;
     width: 400px;
     height: 287px;
     margin: 15px 15px 15px 15px;
     background-position: -5px -5px;
     z-index: 1;
+    text-align: center;
 }
 
 .sprite-CardSlot {
@@ -35,6 +37,7 @@
     -moz-border-radius: 15px;
     border-radius: 15px;
     box-shadow: 5px 5px 5px #888888;
+    text-align: center;
 }
 
 /*

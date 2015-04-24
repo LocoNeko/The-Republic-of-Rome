@@ -49,6 +49,9 @@ class Party
     /** @Column(type="integer") @var int */
     protected $treasury = 0 ;
     
+    /** @Column(type="boolean") @var boolean */
+    protected $isDone = FALSE ;
+
     /**
      * ----------------------------------------------------
      * Getters & Setters
@@ -68,6 +71,7 @@ class Party
         $leader->setLeaderOf($this) ;
     }
     public function setTreasury($treasury) { $this->treasury = $treasury; }
+    public function setIsDone($isDone) { $this->isDone = $isDone; }
 
     public function getId() { return $this->id; }
     public function getGame() { return $this->game ; }
@@ -83,7 +87,8 @@ class Party
     public function getAssassinationTarget() { return $this->assassinationTarget; }
     public function getLeader() { return $this->leader; }
     public function getTreasury() { return $this->treasury; }
-
+    public function getIsDone() { return $this->isDone; }
+ 
     public function __construct($user_id , $userName , $name) {
         $this->setName($name) ;
         $this->setUser_id($user_id) ;
@@ -141,5 +146,26 @@ class Party
             }
         }
         return $total ;
+    }
+    
+    /**
+     * Returns TRUE if this party has cards in hand that can be played during the Setup/Revolution phases :
+     * - Concessions
+     * - A Playable Statesman
+     * @return boolean
+     */
+    public function hasPlayableCards() {
+        try {
+            foreach($this->getHand()->getCards() as $card) {
+                if (    ($card->getPreciseType()=='Statesman' && $card->statesmanPlayable($this->getUser_id())['flag']==TRUE)
+                    ||  ($card->getPreciseType()=='Concession')
+                ) {
+                    return TRUE ;
+                }
+            }
+        } catch (Exception $e) {
+            return FALSE ;
+        }
+        return FALSE ;
     }
 }

@@ -271,7 +271,7 @@ class Senator extends Card
         // TO DO : What about legates ?
         if ($this->getCardsControlled()!=NULL) {
             foreach ($this->getCardsControlled()->getCards() as $card) {
-                if($card->getPreciseType=='Province') {
+                if($card->getPreciseType()=='Province') {
                     $result = FALSE ;
                 }
             }

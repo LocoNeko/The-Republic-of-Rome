@@ -2,6 +2,8 @@
     use Silex\Provider;
     use Symfony\Component\HttpFoundation\Response;
     use Doctrine\Common\Collections\ArrayCollection;
+    use Symfony\Component\Debug\ErrorHandler;
+    use Symfony\Component\Debug\ExceptionHandler;
 
     $app->register(new Provider\ServiceControllerServiceProvider());
     $app->register(new Provider\SessionServiceProvider());
@@ -10,7 +12,9 @@
     $app->register(new Provider\SwiftmailerServiceProvider());
     $app->register(new Provider\SecurityServiceProvider());
     $app->register(new Provider\DoctrineServiceProvider());
-
+    ErrorHandler::register();
+    ExceptionHandler::register();
+    
     $app['debug'] = true;
     $app['BASE_URL'] = '' ;
 
@@ -25,7 +29,7 @@
             // Getting new messages should never be done for json requests, as they don't trigger display
             if ($app['user'] !== NULL) {
                 $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
-                if ($messages!=FALSE && count($messages['messages'])>0) {
+                if ($messages!==FALSE && count($messages['messages'])>0) {
                     foreach($messages['messages'] as $key=>$message) {
                         $app['session']->getFlashBag()->add(
                             $message->getFlashType(),

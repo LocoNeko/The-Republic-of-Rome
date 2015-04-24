@@ -1,5 +1,5 @@
     {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
-        <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}'>
+        <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}' gameId='{{gameId}}' >
             {# Senator's name :
                 - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
                 - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message
@@ -36,10 +36,9 @@
                 <div class="sprite sprite-Office_{{card.getOffice()|replace({' ': '-'})}} sprite-position-office"></div>
             {% endif %}
             <div class="sprite-position-card-id">{{"%03d"|format(card.getId())}}</div>
-        </div>
             {#
     {% elseif card.type=='Conflict' %}
-        <div class="span3 sprite sprite-BlankCard" card_id='{{card.getId()}}'>
+        <div class="span3 sprite sprite-Card" card_id='{{card.getId()}}'>
             <div class="sprite-position-card-name">{{card.name}}</div>
             <div class="sprite-position-card-subname">{{card.description}} (1 of {{card.nbOfMatch}} {{card.matches}})</div>
             <div class="sprite-position-card-text">Inactive until attacked or Matched.
@@ -48,8 +47,17 @@
                 {% endif %}
             <div class="sprite-position-card-attacks">Attacks :{{card.attacks}}</div>
         </div>
+    #}
     {% else %}
-        <div class="span3 sprite sprite-BlankCard" card_id='{{card.getId()}}'>
-            <div class="sprite-position-card-name">{{card.name}}</div>
-        </div>#}
+        <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{cardVerb|default()}}' gameId='{{gameId}}'>
+            <div class="sprite-position-card-name">{{card.getName()}}</div>
     {% endif %}
+        {% if buttonVerb|default(FALSE) != FALSE %}
+            <div style=" width: 140px; height: 60px; margin: auto; position: absolute; top: 0; left: 0; bottom: 0; right: 0;">
+                <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
+                    <input type="hidden" name="card_id" value="{{card.getId()}}">
+                    <button type="submit" class="btn btn-lg btn-success">{{buttonVerb}}</button>
+                </form>
+            </div>
+        {% endif %}
+        </div>

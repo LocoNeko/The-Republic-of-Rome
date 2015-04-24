@@ -231,6 +231,12 @@ class Game
         $this->initiative++;
     }
 
+    public function resetAllIsDone() {
+        foreach($this->getParties() as $party) {
+            $party->setIsDone(FALSE) ;
+        }
+    }
+    
     public function addVariant($variant)
     {
         if (in_array($variant, self::$VALID_VARIANTS)) {
@@ -472,7 +478,7 @@ class Game
                 return $messages ;
             }
         }
-        return FALSE ;
+        return array() ;
     }
     
     public function getAllMessages ($user_id) {
@@ -527,7 +533,7 @@ class Game
                     if ($senator->checkCriteria($criteria)) {
                         $result->add($senator) ;
                     }
-                    // Senators cards controlled by their Statesman
+                    // Senator cards controlled by their Statesman
                     if ($senator->getCardsControlled()!=NULL) {
                         foreach ($senator->getCardsControlled()->getCards() as $card) {
                             if($card->getPreciseType()=='Senator') {
@@ -537,6 +543,7 @@ class Game
                             }
                         }
                     }
+
                 }
                 // Statesmen in Hand
                 foreach($party->getHand()->getCards() as $card) {

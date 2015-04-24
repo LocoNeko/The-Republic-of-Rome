@@ -62,7 +62,14 @@ abstract class Card
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
     public function getPreciseType() { return $this->preciseType ; }
-    public function getCardsControlled() { return $this->cards_controlled ; }
+    // Only create the cards_controlled deck when it becomes necessary
+    public function getCardsControlled() {
+        if ($this->cards_controlled === NULL) {
+            $this->cards_controlled = new \Entities\Deck('Cards controlled by '.$this->getName()) ;
+            $this->cards_controlled->setControlled_by($this) ;
+        }
+        return $this->cards_controlled ;
+    }
     
     public function __construct($id , $name , $preciseType) {
         $this->setId($id) ;

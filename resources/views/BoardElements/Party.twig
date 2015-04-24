@@ -32,7 +32,13 @@
 <br>
 <div class="row">
 {% for senator in party.getSenators().getCards() %}
-    {% embed "BoardElements/Card.twig" with {'card': senator , 'leader' : (party.getLeader()==NULL ? FALSE : party.getLeader().getId() == senator.getId()) } only %}
+    {% embed "BoardElements/Card.twig" with
+        {
+            'card': senator ,
+            'leader' : (party.getLeader()==NULL ? FALSE : party.getLeader().getId() == senator.getId()) ,
+            'gameId': game.getId()
+        } only 
+    %}
     {% endembed %}
 {% endfor %}
 </div>
