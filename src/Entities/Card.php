@@ -112,4 +112,8 @@ abstract class Card
         }
         return $result ;
     }
+    
+    public function hasControlledCards() {
+        return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
+    }
 }

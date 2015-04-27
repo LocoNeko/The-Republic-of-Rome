@@ -52,12 +52,37 @@
         <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{cardVerb|default()}}' gameId='{{gameId}}'>
             <div class="sprite-position-card-name">{{card.getName()}}</div>
     {% endif %}
+        {#
+            Is there a "buttonVerb" for this card ? In which case, display a drop down with the verb(s)
+        #}
         {% if buttonVerb|default(FALSE) != FALSE %}
-            <div style=" width: 140px; height: 60px; margin: auto; position: absolute; top: 0; left: 0; bottom: 0; right: 0;">
+            <div class="dropdown closed " style="margin: auto; position: absolute; top: 0; right: 0;">
                 <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
                     <input type="hidden" name="card_id" value="{{card.getId()}}">
-                    <button type="submit" class="btn btn-lg btn-success">{{buttonVerb}}</button>
+                        <span href="#" class="dropdown-toggle glyphicon glyphicon-collapse-down" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false" aria-hidden="true" style="font-size: 3em;"></span>
+                        <ul class="dropdown-menu" role="menu">
+                        <li>
+                            <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-warning">{{buttonVerb}}</button>
+                        </li>
+                        </ul>
                 </form>
             </div>
         {% endif %}
+        {#
+            Does this card have other cards under its control ? If yes, display them in a collapsable row
+        #}
+        {% if card.hasControlledCards() %}
+            <div class="sprite-position-topleft">
+                <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                </a>
+                <div id="CardsControlledBy_{{card.getId()}}" class="row collapse">
+                    {% for slave in card.getCardsControlled().getCards() %}
+                        {% embed "BoardElements/Card.twig" with {'card': slave , 'gameId': gameId } only %}
+                        {% endembed %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
         </div>

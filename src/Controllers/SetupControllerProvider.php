@@ -50,10 +50,10 @@ class SetupControllerProvider implements ControllerProviderInterface
             if ($game!==FALSE) {
                 try {
                     // Find the Senator on which the pick leader verb was dropped
+                    $user_id = (int)$app['user']->getId() ;
                     $leader = $game->getParty($user_id)->getSenators()->getFirstCardByProperty('id', $request->request->get('dropOn')) ;
                     if ($leader!=FALSE) {
                         // Find the user_id and the location of the Senator
-                        $user_id = (int)$app['user']->getId() ;
                         $location = $leader->getLocation() ;
                         if ($location['type'] == 'party' && $user_id == $location['value']->getUser_id()) {
                             $party = $location['value'] ;

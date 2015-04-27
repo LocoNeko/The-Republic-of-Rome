@@ -23,20 +23,24 @@
     {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id) , 'gameId': game.getId() } %}
     {% endembed %}
 
-    <h3>Your Hand</h3>
-    <div class="row">
-        {% for card in game.getParty(app.user.id).getHand().getCards() %}
-            {% if card.statesmanPlayable(app.user.id)['flag']|default(FALSE) and verbForHand=='Play cards' %}
-                {% embed "BoardElements/Card.twig" with {'card': card , 'buttonVerb': 'Play Statesman' , 'gameId': game.getId() } only %}
-                {% endembed %}
-            {% elseif card.getPreciseType()=='Concession'|default(FALSE) and verbForHand=='Play cards' %}
-                {% embed "BoardElements/Card.twig" with {'card': card , 'cardVerb': 'Play Concession' , 'gameId': game.getId() } only %}
-                {% endembed %}
-            {% else%}
-                {% embed "BoardElements/Card.twig" with {'card': card , 'gameId': game.getId() } only %}
-                {% endembed %}
-            {% endif %}
-        {% endfor %}
-    </div>
+    {% if game.getParty(app.user.id).getHand().getNumberOfCards() == 0 %}
+        <h3>Your Hand is empty</h3>
+    {% else%}
+        <h3>Your Hand</h3>
+        <div class="row">
+            {% for card in game.getParty(app.user.id).getHand().getCards() %}
+                {% if card.statesmanPlayable(app.user.id)['flag']|default(FALSE) and verbForHand|default(FALSE)=='Play cards' %}
+                    {% embed "BoardElements/Card.twig" with {'card': card , 'buttonVerb': 'Play Statesman' , 'gameId': game.getId() } only %}
+                    {% endembed %}
+                {% elseif card.getPreciseType()=='Concession'|default(FALSE) and verbForHand|default(FALSE)=='Play cards' %}
+                    {% embed "BoardElements/Card.twig" with {'card': card , 'cardVerb': 'Play Concession' , 'gameId': game.getId() } only %}
+                    {% endembed %}
+                {% else%}
+                    {% embed "BoardElements/Card.twig" with {'card': card , 'gameId': game.getId() } only %}
+                    {% endembed %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
     
 {% endblock %}

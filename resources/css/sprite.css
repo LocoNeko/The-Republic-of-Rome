@@ -316,6 +316,18 @@
     Positions (Senator)
 */
 
+.sprite-position-topleft {
+    position: absolute;
+    margin-left: 0px;
+    top: 15px;
+}
+
+.sprite-position-topright {
+    position: absolute;
+    margin-right: 0px;
+    top: 15px;
+}
+
 .sprite-position-name {
     position: absolute;
     width: 90%;

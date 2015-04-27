@@ -534,7 +534,7 @@ class Game
                         $result->add($senator) ;
                     }
                     // Senator cards controlled by their Statesman
-                    if ($senator->getCardsControlled()!=NULL) {
+                    if ($senator->hasControlledCards()) {
                         foreach ($senator->getCardsControlled()->getCards() as $card) {
                             if($card->getPreciseType()=='Senator') {
                                 if ($card->checkCriteria($criteria)) {
