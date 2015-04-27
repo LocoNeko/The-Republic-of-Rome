@@ -56,6 +56,7 @@
             Is there a "buttonVerb" for this card ? In which case, display a drop down with the verb(s)
         #}
         {% if buttonVerb|default(FALSE) != FALSE %}
+            {#
             <div class="dropdown closed " style="margin: auto; position: absolute; top: 0; right: 0;">
                 <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
                     <input type="hidden" name="card_id" value="{{card.getId()}}">
@@ -66,6 +67,22 @@
                         </li>
                         </ul>
                 </form>
+            </div>
+            #}    
+            <div class="sprite-position-topright">
+                <a href="#buttonVerb_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
+                    <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
+                </a>
+                <div id="buttonVerb_{{card.getId()}}" class="collapse">
+                    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
+                        <input type="hidden" name="card_id" value="{{card.getId()}}">
+                        <ul role="menu">
+                            <li>
+                                <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-primary">{{buttonVerb}}</button>
+                            </li>
+                        </ul>
+                    </form>
+                </div>
             </div>
         {% endif %}
         {#

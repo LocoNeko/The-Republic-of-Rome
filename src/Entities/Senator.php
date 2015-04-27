@@ -55,6 +55,8 @@ class Senator extends Card
     protected $rebel = FALSE ;
     /** @Column(type="boolean") @var int */
     protected $captive = FALSE ;
+    /** @Column(type="boolean") @var int */
+    protected $steppedDown = FALSE ;
     /** @Column(type="integer") @var int */
     protected $freeTribune = 0 ;
     /** @Column(type="boolean") @var int */
@@ -62,6 +64,10 @@ class Senator extends Card
     //protected $conflict ; // the card ID of the conflict this Senator is fighting or FALSE
     /** @OneToOne(targetEntity="Party" , inversedBy="leader") **/
     private $leaderOf ;
+    // A Senator can have any number of loyal legions
+    /** @OneToMany(targetEntity="Legion", mappedBy="loyalTo") **/
+    private $loyalLegions ;
+
     
 
 
@@ -95,6 +101,7 @@ class Senator extends Card
     public function setFreeTribune ($freeTribune) { $this->freeTribune = $freeTribune ; }
     public function setReturningGovernor ($returningGovernor) { $this->returningGovernor = $returningGovernor ; }      
     public function setLeaderOf($leaderOf) { $this->leaderOf = $leaderOf; }
+    public function setSteppedDown($steppedDown) { $this->steppedDown = $steppedDown; }
 
     public function getSenatorID() { return $this->senatorID ; }      
     public function getBaseMIL() { return $this->baseMIL ; }
@@ -120,8 +127,9 @@ class Senator extends Card
     public function getFreeTribune () { return $this->freeTribune ; }
     public function getReturningGovernor () { return $this->returningGovernor ; }      
     public function getLeaderOf() { return $this->leaderOf; }
+    public function getSteppedDown() { return $this->steppedDown; }
 
-     public function saveData() {
+    public function saveData() {
         $data = array() ;
         $data['id'] = $this->getId() ;
         $data['name'] = $this->getName() ;
@@ -233,6 +241,10 @@ class Senator extends Card
                 case 'alignedInRome' : 
                     return ( ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
                     
+                // Holding an office & in Rome
+                case 'hasOfficeInRome' : 
+                    return ( $this->getOffice() !== NULL && $this->inRome() ) ;
+
                 // In a party, in Rome, not the Censor
                 case 'possibleProsecutor' :
                     return ( ($this->getOffice() != 'Censor') && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
@@ -307,12 +319,13 @@ class Senator extends Card
                 $result.=' [under '.$location['name'].']' ;
                 break ;
             case 'party' :
-                $partyName = $result['value']->getName() ;
-                $user_id = $result['value']->getUser_id() ;
-                $result.=' ['.$partyName.'] ([['.$user_id.']])';
+                $partyName = $location['value']->getName() ;
+                $user_id = $location['value']->getUser_id() ;
+                $result.=' [in '.$partyName.' ([['.$user_id.']]) ]';
+                break;
             case 'hand' :
-                $partyName = $result['value']->getName() ;
-                $user_id = $result['value']->getUser_id() ;
+                $partyName = $location['value']->getName() ;
+                $user_id = $location['value']->getUser_id() ;
                 $result.=' [in the hand of '.$partyName.'] ([['.$user_id.']])';
         }
         return $result ;

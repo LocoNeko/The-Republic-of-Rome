@@ -55,6 +55,10 @@ class Game
     // A Game has many decks
     /** @OneToMany(targetEntity="Deck", mappedBy="game", cascade={"persist"} ) **/
     private $decks ;
+
+    // A Game has many legions
+    /** @OneToMany(targetEntity="Legion", mappedBy="game", cascade={"persist"} ) **/
+    private $legions ;
     
     // A Game has many messages
     /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist"} ) **/
@@ -126,20 +130,24 @@ class Game
         }
     }
 
-    public function setSubPhase($subPhase) {
+    public function setSubPhase($subPhase)
+    {
         $this->subPhase = $subPhase ;
         $this->log(_('Sub Phase : %1$s.') , 'alert' , array($subPhase) ) ;
     }
 
-    public function __construct() {
+    public function __construct()
+    {
         $createDate = new \DateTime('NOW') ;
         $this->localised = true;
         $this->created = $createDate;
         $this->timezone = $createDate->getTimeZone()->getName();
         $this->parties = new ArrayCollection();
         $this->decks = new ArrayCollection();
+        $this->legions = new ArrayCollection();
         $this->messages = new ArrayCollection();
-        foreach (self::$VALID_DECKS as $deckName) {
+        foreach (self::$VALID_DECKS as $deckName)
+        {
             $deck = new \Entities\Deck($deckName) ;
             $deck->attachToGame($this) ;
         }
@@ -165,6 +173,7 @@ class Game
     public function getTreasury() { return $this->treasury ; }
     public function getParties() { return $this->parties ; }
     public function getDecks() { return $this->decks ; }
+    public function getLegions() { return $this->legions; }
     public function getMessages() { return $this->messages; }
     public function getTimezone() { return $this->timezone ; }
     public function getCurrentBidder() { return $this->currentBidder; }
@@ -177,7 +186,8 @@ class Game
         return $this->created;
     }
     
-    public function saveData() {
+    public function saveData()
+    {
         $data = array() ;
         $data['id'] = $this->getId() ;
         $data['created'] = $this->getCreated() ;
@@ -195,15 +205,18 @@ class Game
         $data['unrest'] = $this->getUnrest() ;
         $data['treasury'] = $this->getTreasury() ;
         $data['parties'] = array() ;
-        foreach($this->getParties() as $key=>$party) {
+        foreach($this->getParties() as $key=>$party)
+        {
             $data['parties'][$key] = $party->saveData() ;
         }
         $data['decks'] = array() ;
-        foreach($this->getDecks() as $deck) {
+        foreach($this->getDecks() as $deck)
+        {
             array_push($data['decks'] , $deck->saveData()) ;
         }
         $data['messages'] = array() ;
-        foreach($this->getMessages() as $message) {
+        foreach($this->getMessages() as $message)
+        {
             array_push($data['messages'] , $message->saveData()) ;
         }
         $data['currentBidder_id'] = ($this->getCurrentBidder() === NULL ? NULL : $this->getCurrentBidder()->getId() ) ; // NOTE : This is a Party id
@@ -217,7 +230,8 @@ class Game
      * ----------------------------------------------------
      */
     
-    public static function getAllVariants() {
+    public static function getAllVariants()
+    {
         return self::$VALID_VARIANTS ;
     }
        
@@ -231,21 +245,29 @@ class Game
         $this->initiative++;
     }
 
-    public function resetAllIsDone() {
-        foreach($this->getParties() as $party) {
+    public function resetAllIsDone()
+    {
+        foreach($this->getParties() as $party)
+        {
             $party->setIsDone(FALSE) ;
         }
     }
     
     public function addVariant($variant)
     {
-        if (in_array($variant, self::$VALID_VARIANTS)) {
-            if (!in_array($variant, $this->variants)) {
+        if (in_array($variant, self::$VALID_VARIANTS))
+        {
+            if (!in_array($variant, $this->variants))
+            {
                 $this->variants[] = $variant ;
-            } else {
+            }
+            else
+            {
                 throw new \Exception(_('Variant already included'));
             }
-        } else {
+        }
+        else
+        {
             throw new \Exception(sprintf(_('Invalid variant %1$s') , $variant));
         }
     }
@@ -256,7 +278,9 @@ class Game
         if ($key !== FALSE)
         {
             unset($this->variants[$key]);
-        } else {
+        }
+        else
+        {
             throw new \Exception(sprintf(_('Variant %1$s was not found.') , $variant));
         }
     }
@@ -276,7 +300,8 @@ class Game
      * @param int $user_id
      * @return boolean 
      */
-    public function userAlreadyJoined($user_id) {
+    public function userAlreadyJoined($user_id)
+    {
         $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->eq('user_id', (int)$user_id)) );
         return ( count($results)==1 ) ;
     }
@@ -286,22 +311,21 @@ class Game
      * @param string $name
      * @return boolean 
      */
-    public function partyAlreadyExists($name) {
+    public function partyAlreadyExists($name)
+    {
         $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->eq('name', $name)) );
         return ( count($results)==1 ) ;
     }
     
-    public function getNumberOfPlayers() {
+    public function getNumberOfPlayers()
+    {
         return count($this->parties) ;
     }
     
-    public function getDeck($deckName) {
+    public function getDeck($deckName)
+    {
         $results = $this->getDecks()->matching( Criteria::create()->where(Criteria::expr()->eq('name', $deckName)) );
-        if (count($results)==1) {
-            return $results->first() ;
-        } else {
-            return FALSE ;
-        }
+        return ( (count($results)==1) ? $results->first() : FALSE ) ;
     }
     
     /**
@@ -309,16 +333,24 @@ class Game
      * @param int $user_id
      * @return string JOINED|CAN_JOIN|STARTED|READY|FULL
      */
-    public function getGameState($user_id) {
+    public function getGameState($user_id)
+    {
         $parties = $this->getParties() ;
         $result = $this->userAlreadyJoined($user_id) ? 'JOINED' : 'CAN_JOIN' ;
-        if ($this->gameStarted()) {
+        if ($this->gameStarted())
+        {
             $result ='STARTED' ;
-        } elseif (count($parties) == $this::$MAX_PLAYERS) {
+        }
+        elseif (count($parties) == $this::$MAX_PLAYERS)
+        {
             $result = 'FULL' ;
-        } elseif($result == 'JOINED') {
-            foreach($parties as $party) {
-                if ($party->getUser_id() == $user_id && $party->getReadyToStart()) {
+        }
+        elseif($result == 'JOINED')
+        {
+            foreach($parties as $party)
+            {
+                if ($party->getUser_id() == $user_id && $party->getReadyToStart())
+                {
                     $result = 'READY' ;
                 }
             }
@@ -326,11 +358,15 @@ class Game
         return $result ;
     }
     
-    public function setPartyToReady($user_id) {
-        foreach($this->getParties() as $party) {
-            if ($party->getUser_id() == $user_id) {
+    public function setPartyToReady($user_id)
+    {
+        foreach($this->getParties() as $party)
+        {
+            if ($party->getUser_id() == $user_id)
+            {
                 $party->setReadyToStart() ;
-                if ($this->gameStarted()) {
+                if ($this->gameStarted())
+                {
                     $this->doSetup() ;
                 }
                 return TRUE ;
@@ -339,19 +375,24 @@ class Game
         return FALSE ;
     }
 
-    public function gameStarted() {
-        if ($this->getNumberOfPlayers()<self::$MIN_PLAYERS) {
+    public function gameStarted()
+    {
+        if ($this->getNumberOfPlayers()<self::$MIN_PLAYERS)
+        {
                 return FALSE ;
         }
-        foreach($this->getParties() as $party) {
-            if (!$party->getReadyToStart()) {
+        foreach($this->getParties() as $party)
+        {
+            if (!$party->getReadyToStart())
+            {
                 return FALSE ;
             }
         }
         return TRUE ;
     }
     
-    public function doSetup() {
+    public function doSetup()
+    {
         $this->setPhase('Setup') ;
 
         // Early Republic deck
@@ -372,13 +413,25 @@ class Game
          * TO DO
          */
         // Then create 4 legions in Rome, the rest of the legions and all the fleets are non-existent (Legions and Fleet objects should never be created during a game)
-        // 
+        for($i=1;$i<=25;$i++) 
+        {
+            $legion = new \Entities\Legion($this,$i) ;
+            $this->getLegions()->add($legion) ;
+            if ($i<=4) 
+            {
+                $legion->setOtherLocation('Rome') ;
+            }
+        }
+        $this->log(_('Rome starts with 4 regular Legions.') ) ;
+        
         // Give initial senators & cards to parties
-        foreach ($this->getParties() as $party) {
+        foreach ($this->getParties() as $party)
+        {
             
             // Senators
             $senatorsList = '' ;
-            for ($i=1 ; $i<=3 ; $i++) {
+            for ($i=1 ; $i<=3 ; $i++)
+            {
                 $earlyRepublicDeck->shuffle() ;
                 $card = $earlyRepublicDeck->getFirstCardByProperty('preciseType' , 'Senator' , $party->getSenators()) ;
                 $senatorsList.=$card->getName() ;
@@ -393,10 +446,12 @@ class Game
             //Cards
             $cardsList = '' ;
             $cardsLeftToDraw = 3 ;
-            while ($cardsLeftToDraw>0) {
+            while ($cardsLeftToDraw>0)
+            {
                 $earlyRepublicDeck->shuffle() ;
                 $card = $earlyRepublicDeck->drawFirstCard() ;
-                switch ($card->getPreciseType()) {
+                switch ($card->getPreciseType())
+            {
                     case 'Faction card' :
                     case 'Statesman' :
                     case 'Concession' :
@@ -413,27 +468,41 @@ class Game
 
         }
         // Temporary Rome Consul
-        try {
+        try
+        {
             $alignedSenators = $this->getAllSenators('alignedInRome') ;
             $temporaryRomeConsul = $alignedSenators[rand(0 , count($alignedSenators)-1)] ;
             $temporaryRomeConsul->appoint('Rome Consul') ;
             $temporaryRomeConsul->setPriorConsul(TRUE) ;
             $this->log(_('%1$s is appointed temporary Rome Consul') , 'log' , array($temporaryRomeConsul->getName())) ;
-        } catch (Exception $e) {
+        }
+        catch (Exception $e)
+        {
             $result[0]->log($e->getMessage() , 'error') ;
         }
         $this->setSubPhase('Pick leaders') ;
     }
     
-    public function populateDeckFromFile($fileName , $deck) {
+    /**
+     * Looks for a file in resources/scenarios and creates a Deck based on it, by creating Cards as long as they have a valid type
+     * @param string $fileName
+     * @param Deck $deck
+     * @throws Exception When couldn't open file
+     */
+    public function populateDeckFromFile($fileName , $deck)
+    {
         $filePointer = fopen(dirname(__FILE__).'/../../resources/scenarios/'.$fileName.'.csv', 'r');
-        if (!$filePointer) {
+        if (!$filePointer)
+        {
             throw new Exception(_('Could not open the file'));
         }
-        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
-            if ($data[0]!='') {
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE)
+        {
+            if ($data[0]!='')
+            {
                 $type = $data[2] ;
-                if (\Entities\Card::isValidType($type)) {
+                if (\Entities\Card::isValidType($type))
+                {
                     $class = __NAMESPACE__.'\\'.$type ;
                     $card = new $class ($data);
                     $deck->putCardOnTop($card) ;
@@ -453,23 +522,33 @@ class Game
      * @throws Exception
      * @return \Entities\Message
      */
-    public function log($text , $type='log' , $parameters=NULL , $recipients=NULL , $from=NULL) {
-        try {
+    public function log($text , $type='log' , $parameters=NULL , $recipients=NULL , $from=NULL)
+    {
+        try
+        {
             $message = new \Entities\Message($this, $text, $type, $parameters, $recipients, $from) ;
-        } catch (Exception $e) {
+        }
+        catch (Exception $e) 
+        {
             $message = new \Entities\Message($this, 'ERROR creating message', 'error') ;
         }
         $this->getMessages()->add($message) ;
         return $message ;
     }
     
-    public function getNewMessages ($user_id) {
-        foreach($this->getParties() as $party) {
-            if ($party->getUser_id()==$user_id) {
+    public function getNewMessages ($user_id) 
+    {
+        foreach($this->getParties() as $party) 
+        {
+            if ($party->getUser_id()==$user_id) 
+            {
                 $messages = array() ;
-                foreach ($this->getMessages() as $message) {
-                    if ($message->getTime() > $party->getLastUpdate()) {
-                        if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) {
+                foreach ($this->getMessages() as $message) 
+                {
+                    if ($message->getTime() > $party->getLastUpdate()) 
+                    {
+                        if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) 
+                        {
                             array_push($messages , $message) ;
                         }
                     }
@@ -481,12 +560,22 @@ class Game
         return array() ;
     }
     
-    public function getAllMessages ($user_id) {
+    /**
+     * Returns all the messages in this Game which have $user_id or NULL as a recipient (NULL means everybody)
+     * @param int $user_id
+     * @return array of messages
+     */
+    public function getAllMessages ($user_id) 
+    {
         $messages = array() ;
-        foreach($this->getParties() as $party) {
-            if ($party->getUser_id()==$user_id) {
-                foreach (array_reverse($this->getMessages()->toArray()) as $message) {
-                    if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) {
+        foreach($this->getParties() as $party) 
+        {
+            if ($party->getUser_id()==(int)$user_id) 
+            {
+                foreach (array_reverse($this->getMessages()->toArray()) as $message) 
+                {
+                    if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) 
+                    {
                         array_push($messages , $message) ;
                     }
                 }
@@ -495,26 +584,60 @@ class Game
         return $messages ;
     }
     
-    public function getParty ($user_id) {
+    /**
+     * Gets a specific Party by its user_id
+     * @param int $user_id
+     * @return Party
+     */
+    public function getParty ($user_id)
+    {
         $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->eq('user_id', (int)$user_id)) );
         return $results->first() ;
     }
     
-    public function getAllPartiesButOne ($user_id) {
+    /**
+     * Gets all parties except the party of $user_id
+     * @param int $user_id
+     * @return ArrayCollection of Parties
+     */
+    public function getAllPartiesButOne ($user_id)
+    {
         $results = $this->getParties()->matching( Criteria::create()->where(Criteria::expr()->neq('user_id', (int)$user_id)) );
         return $results ;
     }
     
     /**
-     * 
+     * Get all parties names
      * @return array of [$user_id] => 'party name [user name]'
      */
-    public function getPartiesNames() {
+    public function getPartiesNames()
+    {
         $result=array() ;
-        foreach($this->getParties() as $party) {
+        foreach($this->getParties() as $party)
+        {
             $result[$party->getUser_id()] = $party->getFullName() ;
         }
         return $result ;
+    }
+
+    /**
+     * Replaces all instances of [[X]] by the name of party X or 'you' if party X is played by $user_id
+     * @param string $input
+     * @param int $user_id
+     * @return string
+     */
+    public function displayContextualName($input , $user_id)
+    {
+        $output = $input ;
+        foreach($this->getParties() as $party) 
+        {
+            $party_userId = $party->getUser_id() ;
+            if (strpos($output, '[['.$party_userId.']]') !==FALSE) 
+            {
+                $output = str_replace('[['.$party_userId.']]' , ( ($party_userId==$user_id) ? 'you' : $party->getUserName() ) , $output);
+            }
+        }
+        return $output ;
     }
     
     /**
@@ -523,50 +646,187 @@ class Game
      * @return ArrayCollection
      * @throws Exception 'Error retrieving senators'
      */
-    public function getAllSenators($criteria = TRUE) {
+    public function getAllSenators($criteria = TRUE)
+    {
 
         $result = new ArrayCollection() ;
-        try {
+        try
+        {
             // Senators in Parties
-            foreach ($this->getParties() as $party) {
-                foreach($party->getSenators()->getCards() as $senator) {
-                    if ($senator->checkCriteria($criteria)) {
-                        $result->add($senator) ;
-                    }
+            foreach ($this->getParties() as $party) 
+            {
+                foreach($party->getSenators()->getCards() as $senator) 
+                {
+                    $result->add($senator) ;
+                    
                     // Senator cards controlled by their Statesman
-                    if ($senator->hasControlledCards()) {
-                        foreach ($senator->getCardsControlled()->getCards() as $card) {
-                            if($card->getPreciseType()=='Senator') {
-                                if ($card->checkCriteria($criteria)) {
-                                    $result->add($card) ;
-                                }
+                    if ($senator->hasControlledCards()) 
+                    {
+                        foreach ($senator->getCardsControlled()->getCards() as $card) 
+                        {
+                            if($card->getPreciseType()=='Senator') 
+                            {
+                                $result->add($card) ;
                             }
                         }
                     }
 
                 }
+            
                 // Statesmen in Hand
-                foreach($party->getHand()->getCards() as $card) {
-                    if($card->getPreciseType()=='Statesman') {
-                        if ($card->checkCriteria($criteria)) {
-                            $result->add($card) ;
-                        }
+                foreach($party->getHand()->getCards() as $card) 
+                {
+                    if($card->getPreciseType()=='Statesman') 
+                    {
+                        $result->add($card) ;
                     }
                 }
             }
+            
             // Game's main decks
-            foreach ($this->getDecks() as $deck) {
-                foreach($deck->getCards() as $card) {
-                    if (in_array($card->getPreciseType() , array('Senator' , 'Statesman'))) {
-                        if ($card->checkCriteria($criteria)) {
-                            $result->add($card) ;
-                        }
+            foreach ($this->getDecks() as $deck) 
+            {
+                foreach($deck->getCards() as $card) 
+                {
+                    if (in_array($card->getPreciseType() , array('Senator' , 'Statesman'))) 
+                    {
+                        $result->add($card) ;
                     }
                 }
             }
-        } catch (Exception $e) {
+            
+            // Filters the results based on criteria
+            $result->filter(
+                function ($card) use ($criteria) {
+                    $card->checkCriteria($criteria) ;
+                }
+            );
+        }
+        catch (Exception $e) 
+        {
              throw new \Exception(_('Error retrieving senators'));
         }
         return $result ;
+    }
+    
+    function getHRAO($presiding=FALSE)
+    {
+        
+        // We rank all senators in Rome with an Office by order of VALID_OFFICES key (Dictator is before Rome Consul which is before Field Consul, etc)
+        // Reminder : $VALID_OFFICES = array('Dictator', 'Rome Consul' , 'Field Consul' , 'Censor' , 'Master of Horse' , 'Pontifex Maximus');
+        $rankedSenators = Array() ;
+        foreach($this->getAllSenators('hasOfficeInRome') as $senator) 
+        {
+            if (!$presiding || $senator->getSteppedDown()===FALSE) 
+            {
+                $rankedSenators[array_search($senator->getOffice(), \Entities\Senator::$VALID_OFFICES)] = $senator ;
+            }
+        }
+        ksort($rankedSenators) ;
+        
+        // We found at least one ranked Senator
+        if (count($rankedSenators)>0) 
+        {
+            // If we are looking for the presiding magistrate, The Censor must be returned during the Senate phase if the latest proposal was a prosecution
+            // TO DO : what if the all thing was interupted by a Special Assassin Prosecution ?
+            if ( $presiding && $this->getPhase()=='Senate' && count($this->getProposals())>0 && end($this->getProposals()->last())->getType()=='Prosecutions' && isset($rankedSenators[3]) ) 
+            {
+                return $rankedSenators[3] ;
+            // Otherwise, the HRAO
+            }
+            else
+            {
+                return array_shift($rankedSenators) ;
+            }
+        }
+            
+        /* If we reach this part, the HRAO couldn't be determined because there is no Official present in Rome
+         * So we check highest INF, break ties with Oratory then lowest ID
+         * I'm very proud of this function ! ;-)
+         */
+        $allSenators = $this->getAllSenators() ;
+        usort ($allSenators, function($a, $b)
+        {
+            if (($a->getINF()) != ($b->getINF())) 
+            {
+                return (($a->getINF()) < ($b->getINF())) ;
+            }
+            elseif (($a->getORA()) != ($b->getORA())) 
+            {
+                return (($a->getORA()) < ($b->getORA())) ;
+            }
+            else
+            {
+                return strcmp($a->getSenatorID() , $b->getSenatorID());
+            }
+        });
+        
+        // If we are looking for the Presiding Magistrate, we must ignore senators who have stepped down
+        // The censor for prosecutions is completely irrelevant, since if we are here, there is no Censor, therefore no prosecutions...
+        if ($presiding) 
+        {
+            while ($allSenators[0]->getSteppedDown()) 
+            {
+                array_shift($allSenators) ;
+            }
+        }
+        return $allSenators[0] ;
+    }
+    
+    /**
+     * 
+     * @param int $user_id The user_id of the player playing the Statesman
+     * @param string $statesmanId The card id of the Statesman being played
+     * @return boolean Sucess or Failure
+     */
+    public function playStatesman($user_id , $statesmanId) 
+    {
+        $party=$this->getParty($user_id) ;
+        $statesman = $this->getParty($user_id)->getHand()->getFirstCardByProperty('id', $statesmanId) ;
+        if ($statesman->getPreciseType()!=='Statesman') 
+        {
+            $this->log(sprintf(_('ERROR - %1$s is not a Statesman') , 'error' , array($statesman->getName()))) ;
+            return FALSE ;
+        }
+        $location = $statesman->getLocation() ;
+        if ($location['type']!=='hand' || $location['value']->getUser_id()!=$party->getUser_id()) 
+        {
+            $this->log(sprintf(_('ERROR - %1$s is not in [['.$party->getUser_id().']]\'s hand') , 'error', array($statesman->getName()) )) ;
+            return FALSE ;
+        }
+        // Put the Statesman in the party
+        $party->getHand()->getFirstCardByProperty('id', $statesman->getId() , $party->getSenators()) ;
+
+        // Handle the family
+        $familyMessage='' ;
+        $familyID = $statesman->statesmanFamily() ;
+        foreach($this->getAllSenators() as $aSenator) 
+        {
+            if ($aSenator->getSenatorID()==$familyID) 
+            {
+                $family=$aSenator ;
+                break ;
+            }
+        }
+        
+        if (isset($family)) {
+            $familyLocation = $family->getLocation() ;
+
+            // The family was found in the player's party - Play the Statesman and make him control the Family
+            if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()!=$party->getUser_id()) 
+            {
+                $familyLocation['value']->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
+                $familyMessage=_(' He has the Family and puts it under the Statesman.');
+                
+            // The Family was found in the forum - Play the Statesman and make him control the Family
+            } elseif (($familyLocation['type']=='game') && ($familyLocation['name']=='forum') ) 
+            {
+                $this->getDeck('forum')->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
+                $familyMessage=_(' He takes the Family from the forum and puts it under the Statesman.');
+
+            }
+        }
+        $this->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()));
+        return $statesman ;
     }
 }

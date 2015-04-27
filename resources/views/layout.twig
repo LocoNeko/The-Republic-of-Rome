@@ -45,7 +45,7 @@
                 </div>
 
                 <!-- Collect the nav links, forms, and other content for toggling -->
-                <div class="navbar-collapse collapse" id="bs-example-navbar-collapse-1">
+                <div class="navbar-collapse collapse">
                     <ul class="nav navbar-nav navbar-right">
                         <li><a href="{{ path('user.list') }}">List users</a></li>
                         {% if app.user %}
@@ -73,7 +73,6 @@
             - Flashbag messages
             - Main content
         -->
-
         <div class="container-fluid" style="
              top:52px;
              height:100%;
@@ -96,6 +95,28 @@
             {% block content %}
             {% endblock %}
         </div>
+
+        <!--
+            - Forces
+        -->
+        {% if game is defined %}
+            <div style="position: absolute; right:15px; top:52px;">
+                    <a href="#Forces" class="btn btn-default" data-toggle="collapse">
+                        FORCES
+                    </a>
+                    <div id="Forces" class="collapse">
+                        <ul class="list-unstyled">
+                        {% for legion in game.getLegions() %}
+                            {% if legion.getOtherLocation=='Rome' %}
+                                <li>Legion {{legion.getName()}}</li>
+                            {% endif %}
+                        {% endfor %}
+                        </ul>
+                    </div>
+
+            </div>
+        {% endif %}
+        
         
         <!--
             Footer with :

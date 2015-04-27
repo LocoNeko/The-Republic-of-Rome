@@ -42,7 +42,12 @@ abstract class Card
      * @OneToOne(targetEntity="Deck", inversedBy="controlled_by", cascade={"persist"})
      **/
     private $cards_controlled ;
+    
+    // A Card can be the location of any number of Legions
+    /** @OneToMany(targetEntity="Legion", mappedBy="cardLocation") **/
+    private $withLegions ;
 
+    
     public static function isValidType($type) {
         return in_array($type , self::$VALID_TYPES) ;
     }

@@ -318,14 +318,18 @@
 
 .sprite-position-topleft {
     position: absolute;
+    text-align: left ;
+    width: 400px;
     margin-left: 0px;
     top: 15px;
 }
 
 .sprite-position-topright {
     position: absolute;
-    margin-right: 0px;
-    top: 15px;
+    text-align: right ;
+    width: 385px;
+    margin-right: 15px;
+    top: 0px;
 }
 
 .sprite-position-name {

@@ -20,20 +20,23 @@ class SetupControllerProvider implements ControllerProviderInterface
          */
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
-            $game_id = (int)$game_id ;
-            $app['session']->set('game_id', $game_id);
-            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-            $result = $query->getResult() ;
-            if (count($result)!=1) {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+            $app['session']->set('game_id', (int)$game_id);
+            $game = $this->getGame((int)$game_id) ;
+            if ($game===FALSE)
+            {
+                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , (int)$game_id ));
                 return $app->redirect('/') ;
-            } elseif(!$result[0]->gameStarted()) {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , $game_id ));
+            }
+            elseif(!$game->gameStarted())
+            {
+                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , (int)$game_id ));
                 return $app->redirect('/') ;
-            } else {
+            }
+            else
+            {
                 return $app['twig']->render('Setup/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
-                    'game' => $result[0]
+                    'game' => $game
                 ));
             }
         })
@@ -47,46 +50,61 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->post('/{game_id}/PickLeader', function($game_id , Request $request) use ($app)
         {
             $game = $this->getGame((int)$game_id) ;
-            if ($game!==FALSE) {
-                try {
+            if ($game!==FALSE)
+            {
+                try
+                {
                     // Find the Senator on which the pick leader verb was dropped
                     $user_id = (int)$app['user']->getId() ;
                     $leader = $game->getParty($user_id)->getSenators()->getFirstCardByProperty('id', $request->request->get('dropOn')) ;
-                    if ($leader!=FALSE) {
+                    if ($leader!=FALSE)
+                    {
                         // Find the user_id and the location of the Senator
                         $location = $leader->getLocation() ;
-                        if ($location['type'] == 'party' && $user_id == $location['value']->getUser_id()) {
+                        if ($location['type'] == 'party' && $user_id == $location['value']->getUser_id())
+                        {
                             $party = $location['value'] ;
                             $party->setLeader($leader) ;
                             $game->log( _('%1$s is appointed leader of %2$s').' ([['.$user_id.']])','log',array($leader->getName() , $party->getName()) );
                             // If veryone has picked a leader, move to next phase
                             $finished = TRUE ;
-                            foreach ($game->getParties() as $aParty) {
-                                if ($aParty->getLeader() == NULL) {
+                            foreach ($game->getParties() as $aParty)
+                            {
+                                if ($aParty->getLeader() == NULL)
+                                {
                                     $finished = FALSE ;
                                 }
                             }
-                            if ($finished) {
+                            if ($finished)
+                            {
                                 $game->setSubPhase('Play cards') ;
                                 $game->resetAllIsDone() ;
                             }
                             $this->entityManager->persist($game);
                             $this->entityManager->flush();
                             return $app->json( 'SUCCESS' , 201);
-                        } else {
+                        }
+                        else
+                        {
                             $app['session']->getFlashBag()->add('error', _('ERROR - Wrong user or Senator not in a party'));
                             return $app->json( _('ERROR - Wrong user or Senator not in a party') , 201);
                         }
-                    } else {
+                    }
+                    else
+                    {
                         // The Senator was not found
                         $app['session']->getFlashBag()->add('error', _('ERROR - Senator not found'));
                         return $app->json( _('ERROR - Senator not found') , 201);
                     }
-                } catch (\Exception $e) {
+                }
+                catch (\Exception $e)
+                {
                     $app['session']->getFlashBag()->add('error', $e->getMessage());
                     return $app->json( $e->getMessage() , 201);
                 }
-            } else {
+            }
+            else
+            {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
             }
@@ -101,13 +119,16 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->post('/{game_id}/DonePlayingCards', function($game_id , Request $request) use ($app)
         {
             $game = $this->getGame((int)$game_id) ;
-            if ($game!==FALSE) {
+            if ($game!==FALSE)
+            {
                 $game->getParty($user_id)->setIsDone(TRUE) ;
                 $game->log('[['.$user_id.']] '._('{are,is} done playing cards.')) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
-            } else {
+            }
+            else
+            {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
             }
@@ -122,14 +143,21 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->post('/{game_id}/Play Statesman', function($game_id , Request $request) use ($app)
         {
             $game = $this->getGame((int)$game_id) ;
-            if ($game!==FALSE) {
+            if ($game!==FALSE)
+            {
                 $user_id = (int)$app['user']->getId() ;
-                $statesman = $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $request->request->get('card_id') , $game->getParty($user_id)->getSenators()) ;
-                $game->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s') , 'log' , array($statesman->getName()));
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
+                $statesmanId = $request->request->get('card_id') ;
+                $statesman = $game->playStatesman($user_id , $statesmanId ) ;
+                //$statesman = $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $request->request->get('card_id') , $game->getParty($user_id)->getSenators()) ;
+                if ($statesman!==FALSE)
+                {
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                }
                 return $app->json( 'SUCCESS' , 201);
-            } else {
+            }
+            else
+            {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
             }
@@ -144,29 +172,38 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->post('/{game_id}/Play Concession', function($game_id , Request $request) use ($app)
         {
             $game = $this->getGame((int)$game_id) ;
-            if ($game!==FALSE) {
+            if ($game!==FALSE)
+            {
                 $user_id = (int)$app['user']->getId() ;
                 $recipient = $game->getParty($user_id)->getSenators()->getFirstCardByProperty('id', $request->request->get('dropOn')) ;
-                if ($recipient!=FALSE) {
+                if ($recipient!=FALSE)
+                {
                     $concession = $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $request->request->get('dragFrom')) ;
-                    if($concession!=FALSE) {
+                    if($concession!=FALSE)
+                    {
                         error_log($concession->getName().' dropped on '.$recipient->getName() ) ;
                         $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $request->request->get('dragFrom') , $recipient->getCardsControlled()) ;
                         $game->log(_('[['.$user_id.']]'.' {play,plays} %1$s on %2$s.') , 'log' , array($concession->getName() , $recipient->getName()));
                         $this->entityManager->persist($game);
                         $this->entityManager->flush();
                         return $app->json( 'SUCCESS' , 201);
-                    } else {
+                    }
+                    else
+                    {
                         // The Concession was not found
                         $app['session']->getFlashBag()->add('error', _('ERROR - Concession not found'));
                         return $app->json( _('ERROR - Concession not found') , 201);
                     }
-                } else {
+                }
+                else
+                {
                     // The Senator was not found
                     $app['session']->getFlashBag()->add('error', _('ERROR - Senator not found'));
                     return $app->json( _('ERROR - Senator not found') , 201);
                 }
-            } else {
+            }
+            else
+            {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
             }
@@ -175,16 +212,17 @@ class SetupControllerProvider implements ControllerProviderInterface
 
         return $controllers ;
     }
-    
+
     /**
      * Returns a Game entity corresponding to this $game_id, or FALSE if not found
      * @param int $game_id
      * @return Entity\Game | FALSE
      */
-    function getGame($game_id) {
+    function getGame($game_id)
+    {
         $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
         $result = $query->getResult() ;
         return ( (count($result)==1) ? $result[0] : FALSE ) ;
     }
-    
+
 }

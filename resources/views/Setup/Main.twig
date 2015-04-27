@@ -6,6 +6,9 @@
 
 {% block content %}
 
+    <h4>
+        Current HRAO: <strong>{{game.displayContextualName(game.getHRAO().getFullName() , app.user.id)}}</strong>
+    </h4>
     {% if game.getSubPhase() == 'Pick leaders' %}
         <h2>Pick Leaders</h2>
         {% embed 'Setup/PickLeaders.twig' %}
