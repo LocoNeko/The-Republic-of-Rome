@@ -242,8 +242,8 @@ class Senator extends Card
                     return ( ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
                     
                 // Holding an office & in Rome
-                case 'hasOfficeInRome' : 
-                    return ( $this->getOffice() !== NULL && $this->inRome() ) ;
+                case 'hasOfficeInRome' :
+                    return ( in_array($this->getOffice() , \Entities\Senator::$VALID_OFFICES )&& $this->inRome() ) ;
 
                 // In a party, in Rome, not the Censor
                 case 'possibleProsecutor' :
@@ -375,6 +375,28 @@ class Senator extends Card
             return array('flag' => FALSE , 'message' => _('ERROR - This is not a hand'));
         }
         return array('flag' => TRUE , 'message' => _('The corresponding family card is not in play') );
+    }
+    
+    /**
+     * Resets a Senator card to the default
+     */
+    public function resetSenator()
+    {
+        $this->setMIL($this->getBaseMIL()) ;
+        $this->setORA($this->getBaseORA()) ;
+        $this->setLOY($this->getBaseLOY()) ;
+        $this->setINF($this->getBaseINF()) ;
+        $this->setKnights(0) ;
+        $this->setTreasury(0) ;
+        $this->setPOP(0) ;
+        $this->setOffice(NULL) ;
+        $this->setPriorConsul(FALSE) ;		
+        $this->setCorrupt(FALSE) ;
+        $this->setMajor(FALSE) ;
+        $this->setFreeTribune(0) ;
+        $this->setRebel(FALSE) ;
+        $this->setCaptive(FALSE) ;
+        $this->setReturningGovernor(FALSE) ;
     }
 
 }

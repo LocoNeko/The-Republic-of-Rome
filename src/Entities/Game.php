@@ -252,7 +252,22 @@ class Game
             $party->setIsDone(FALSE) ;
         }
     }
-    
+
+    /**
+     * @return boolean TRUE if isDone() is TRUE for all parties | FALSE otherwise
+     */
+    public function isEveryoneDone()
+    {
+        foreach($this->getParties() as $party)
+        {
+            if ($party->getIsDone()===FALSE)
+            {
+                return FALSE ;
+            }
+        }
+        return TRUE ;
+    }
+
     public function addVariant($variant)
     {
         if (in_array($variant, self::$VALID_VARIANTS))
@@ -696,9 +711,9 @@ class Game
             }
             
             // Filters the results based on criteria
-            $result->filter(
+            $result = $result->filter(
                 function ($card) use ($criteria) {
-                    $card->checkCriteria($criteria) ;
+                    return $card->checkCriteria($criteria) ;
                 }
             );
         }
@@ -744,7 +759,7 @@ class Game
          * So we check highest INF, break ties with Oratory then lowest ID
          * I'm very proud of this function ! ;-)
          */
-        $allSenators = $this->getAllSenators() ;
+        $allSenators = $this->getAllSenators()->toArray() ;
         usort ($allSenators, function($a, $b)
         {
             if (($a->getINF()) != ($b->getINF())) 
@@ -813,9 +828,9 @@ class Game
             $familyLocation = $family->getLocation() ;
 
             // The family was found in the player's party - Play the Statesman and make him control the Family
-            if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()!=$party->getUser_id()) 
+            if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()==$party->getUser_id())
             {
-                $familyLocation['value']->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
+                $familyLocation['value']->getSenators()->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
                 $familyMessage=_(' He has the Family and puts it under the Statesman.');
                 
             // The Family was found in the forum - Play the Statesman and make him control the Family
@@ -829,4 +844,224 @@ class Game
         $this->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()));
         return $statesman ;
     }
+
+    /**
+     * ----------------------------------------------------
+     * Mortality
+     * ----------------------------------------------------
+     */
+    
+    public function mortality_chits( $qty )
+    {
+        $result = array() ;
+        $chits = array() ;
+        for ($i=1 ; $i<=30 ; $i++) { $chits[$i] = $i ; }
+        for ($i=31 ; $i<=34 ; $i++) { $chits[$i] = 0 ; }
+        $chits [35] = -1 ; $chits [36] = -1 ;
+        for ($i=(int)$qty ; $i>0 ; $i--)
+        {
+            $pick = array_rand($chits) ;
+            if ($chits[$pick]==-1)
+            {
+                $i+=2;
+                array_push($result , "DRAW 2");
+            }
+            else
+            {
+                if (($key = array_search($chits[$pick], $chits)) !== false)
+                {
+                    if ($chits[$pick]!=0)
+                    {
+                        array_push($result , $chits[$pick]);
+                    }
+                    else
+                    {
+                        array_push($result , "NONE");
+                    }
+                    unset($chits[$key]);
+                }
+            }
+            if (count($chits)==2)
+            {
+                break;
+            }
+        }
+        return $result;
+    }
+    
+    /**
+     * Kills the senator with $senatorID. This function handles :<br>
+     * - Brothers<br>
+     * - Statemen<br>
+     * - Party leader<br>
+     * - Where senator and controlled cards go (forum, curia, discard)<br>
+     * @param string $senatorID The SenatorID of the dead senator
+     * @param specificID TRUE if the Senator with this specific ID should be killed,<br>FALSE if the ID is a family, and Statesmen must be tested (default)
+     * @param specificParty FALSE or equal to the $user_id of the party to which the dead Senator must belong<br>
+     * @param POPThreshold FALSE or equal to the level of POP at which a Senator is safe
+     * @param epidemic FALSE or equal to either 'domestic' or 'foreign'
+     * senators from other parties will not be killed.<br>
+     * FALSE (default)
+     * @return array Just a one message-array, not an array of messages
+     */
+    public function killSenator($senatorID , $specificID=FALSE , $specificParty_UserId=FALSE , $POPThreshold=FALSE , $epidemic=FALSE) {
+        $message = '' ;
+        
+        // Case of a random mortality chit
+        if (!$specificID)
+        {
+            // Creates an array of potentially dead senators, to handle both Statesmen & Families
+            $deadSenators = array() ;
+            foreach($this->getParties() as $party)
+            {
+                // If no party is targetted put any senator in the array, otherwise only put senators belonging to that party
+                if ($specificParty_UserId===FALSE || ($specificParty_UserId!=FALSE && $specificParty_UserId==$party->getUser_id()))
+                {
+                    foreach ($party->getSenators()->getCards() as $senator)
+                    {
+                        // On top of that, if the $specificParty_UserId flag is set, we only consider senators in Rome
+                        // And if the POPThreshold is set, only kill senators with POP below that
+                        if 
+                        (
+                            ( $specificParty_UserId===FALSE || ($specificParty_UserId && $senator->inRome()) )
+                            &&
+                            ( $POPThreshold===FALSE || ($senator->getPOP()<$POPThreshold && $senator->inRome()) )
+                            &&
+                            ( $epidemic===FALSE || (($epidemic='domestic' && $senator->inRome()) || ($epidemic='foreign' && !$senator->inRome())) )
+                        )
+                        {
+                            if ( ($senator->getPreciseType() == 'Statesman') && ($senator->statesmanFamily() == $senatorID ) )
+                            {
+                                array_push($deadSenators , $senator) ;
+                            }
+                            elseif ( ($senator->getPreciseType() == 'Senator') && ($senator->getSenatorID() == $senatorID) )
+                            {
+                                array_push($deadSenators , $senator) ;
+                            }
+                        } 
+                    }
+                }
+            }
+            
+            // Returns either no dead (Senator not in play), 1 dead (found just 1 senator matching the chit), or pick 1 of two brothers if they are both legally in play
+            if (count($deadSenators)==0 && $specificID===FALSE && $specificParty_UserId===FALSE)
+            {
+                return array(_('This senator is not in Play, nobody dies.')) ;
+            }
+            elseif (count($deadSenators)>1)
+            {
+                // Pick one of two brothers
+                $deadSenator = array_rand($deadSenators) ;
+                $senatorID=$deadSenator->getSenatorID() ;
+                $message.=_(' The two brothers are in play. ') ;
+            }
+            else
+            {
+                $deadSenator = $deadSenators[0];
+            }
+            
+        }
+        // Case of a specific Senator being targeted
+        else
+        {
+            foreach($this->getAllSenators() as $senator)
+            {
+                if ($senator->getSenatorID()==$senatorID)
+                {
+                    $deadSenator = $senator ;
+                }
+            }
+        }
+        
+        // Now that the dead Senator has been determined, kill him dead
+        if (isset($deadSenator))
+        {
+            $location = $deadSenator->getLocation() ;
+            
+            if ($location['type']!== 'party')
+            {
+                return array(_('ERROR retrieving the party of the dead Senator') , 'error' );
+            }
+
+            // Death of a Statesman
+            if ($deadSenator->getPreciseType() == 'Statesman')
+            {
+                $deadStatesman = $party->getSenators()->getFirstCardByProperty('senatorID' , $deadSenator->getSenatorID() , $this->getDeck('Discard')) ;
+                $deadStatesman->resetSenator();
+                $message.=sprintf(_('%s of party {%s} dies. The card is discarded. ') , $deadStatesman->getName() , $party->getUser_id()) ;
+            }
+            
+            // Death of a normal Senator
+            else
+            {
+                $deadSenator->resetSenator() ;
+                if ($party->getLeader()->getSenatorID() == $senatorID)
+                {
+                    $message.=sprintf(_('%s of party {%s} dies. This senator was party leader, the family stays in the party. ') , $deadSenator->getName() , $party->getUser_id());
+                }
+                else
+                {
+                    $deadSenator = $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID , $this->getDeck('Curia')) ;
+                    $message.=sprintf(_('%s of party {%s} dies. The family goes to the curia. ') , $deadSenator->getName() , $party->getUser_id());
+                }
+            }
+            
+            // Handle dead senators' controlled cards : Concessions, Provinces, Senators
+            if ($deadSenator->hasControlledCards())
+            {
+                foreach($deadSenator->getControlledCards()->getCards() as $card)
+                {
+                    
+                    // Concession -> Curia
+                    if ($card->getPreciseType()=='Concession')
+                    {
+                        $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                        $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
+                    }
+                    
+                    // Province -> Forum
+                    elseif ($card->getPreciseType()=='Province')
+                    {
+                        $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('forum')) ;
+                        $message.=sprintf(_('%s goes to the forum. ') , $card->getName());
+                    }
+                    
+                    // Senator
+                    elseif ($card->getPreciseType()=='Senator')
+                    {
+                        
+                        // Was leader -> Party
+                        if ($party->getLeader()->getSenatorID() == $deadStatesman->getSenatorID() )
+                        {
+                            // Now that the Satesman is dead, the family is the party leader
+                            $party->setLeader($card) ;
+                            $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $party->getSenators()) ;
+                            $message.=sprintf(_('%s stays in the party and is now leader. ') , $card->getName());
+                        }
+                        
+                        // Was not leader -> Curia
+                        else
+                        {
+                            $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                            $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
+                        }
+                    }
+                    
+                    // Strange Card
+                    else
+                    {
+                        return array(_('Error - A card controlled by the dead Senator was neither a Family, a Concession nor a Province.') , 'error');
+                    }
+                }
+                
+            }
+        }
+        else
+        {
+            return array(_('ERROR retrieving dead Senator data') , 'error' );
+        }
+        return array($message) ;
+    }
+
+
 }

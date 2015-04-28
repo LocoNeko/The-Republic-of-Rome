@@ -1,0 +1,12 @@
+{% if game.getSubPhase() == 'Pick leaders' %}
+    <h2>Pick Leaders</h2>
+    {% embed 'Setup/PickLeaders.twig' %}
+    {% endembed %}
+{% endif %}
+
+{% if game.getSubPhase() == 'Play cards' %}
+    <h2>Play cards</h2>
+    {% set verbForHand = 'Play cards' %}
+    {% embed 'Setup/PlayCards.twig' %}
+    {% endembed %}
+{% endif %}

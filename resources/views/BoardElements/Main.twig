@@ -1,7 +1,7 @@
 {% extends layout_template  %}
 
 {% block title %}
-    <title realm="{{game.getId()}}">Setup Base</title>
+    <title realm="{{game.getId()}}">{{game.getPhase()}}</title>
 {% endblock %}
 
 {% block content %}
@@ -9,18 +9,9 @@
     <h4>
         Current HRAO: <strong>{{game.displayContextualName(game.getHRAO().getFullName() , app.user.id)}}</strong>
     </h4>
-    {% if game.getSubPhase() == 'Pick leaders' %}
-        <h2>Pick Leaders</h2>
-        {% embed 'Setup/PickLeaders.twig' %}
-        {% endembed %}
-    {% endif %}
-
-    {% if game.getSubPhase() == 'Play cards' %}
-        <h2>Play cards</h2>
-        {% set verbForHand = 'Play cards' %}
-        {% embed 'Setup/PlayCards.twig' %}
-        {% endembed %}
-    {% endif %}
+    
+    {% embed game.getPhase() ~ '/phaseMain.twig' with {'game' : game } %}
+    {% endembed %}
 
     <h3>Your Party</h3>
     {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id) , 'gameId': game.getId() } %}
@@ -29,6 +20,10 @@
     {% if game.getParty(app.user.id).getHand().getNumberOfCards() == 0 %}
         <h3>Your Hand is empty</h3>
     {% else%}
+        {% if game.getPhase()=='Setup' and game.getSubPhase() == 'Play cards' %}
+            {% set verbForHand = 'Play cards' %}
+        {% endif %}
+
         <h3>Your Hand</h3>
         <div class="row">
             {% for card in game.getParty(app.user.id).getHand().getCards() %}
@@ -45,5 +40,11 @@
             {% endfor %}
         </div>
     {% endif %}
+
+    <h3>Other Parties</h3>
+    {% for party in game.getAllPartiesButOne(app.user.id).toArray() %}
+        {% embed 'BoardElements/Party.twig' with {'self' : FALSE , 'party' : party , 'gameId': game.getId() } %}
+        {% endembed %}
+    {% endfor %}
     
 {% endblock %}

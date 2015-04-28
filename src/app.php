@@ -2,6 +2,7 @@
     use Silex\Provider;
     use Symfony\Component\HttpFoundation\Response;
     use Doctrine\Common\Collections\ArrayCollection;
+    use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\Debug\ErrorHandler;
     use Symfony\Component\Debug\ExceptionHandler;
 
@@ -18,19 +19,45 @@
     $app['debug'] = true;
     $app['BASE_URL'] = '' ;
 
+    // If the route starts with the name of a Valid Phase, but the game is in a different phase, replace the phase in the route 
+    $app->before(function (Request $request) use ($app)
+    {
+        $route = explode('/', $request->getRequestUri()) ;
+        if (in_array($route[1], \Entities\Game::$VALID_PHASES))
+        {
+            $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$route[2]);
+            $result = $query->getResult() ;
+            if (count($result)==1)
+            {
+                $game = $result[0] ;
+                if ($game->getPhase() != $route[1])
+                {
+                    error_log('redirecting') ;
+                    return $app->redirect( str_replace( $route[1] , $game->getPhase() , $request->getRequestUri() ) ) ;
+                }
+            }
+        }
+    });
+
     // JSON middleware and loading messages as flash bags
-    use Symfony\Component\HttpFoundation\Request;
-    $app->before(function (Request $request) use ($app) {
+    $app->before(function (Request $request) use ($app)
+    {
         $request->getSession()->start();
-        if (0 === strpos($request->headers->get('Content-Type'), 'application/json')) {
+        if (0 === strpos($request->headers->get('Content-Type'), 'application/json'))
+        {
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
-        } else {
+        }
+        else
+        {
             // Getting new messages should never be done for json requests, as they don't trigger display
-            if ($app['user'] !== NULL) {
+            if ($app['user'] !== NULL)
+            {
                 $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
-                if ($messages!==FALSE && count($messages['messages'])>0) {
-                    foreach($messages['messages'] as $key=>$message) {
+                if ($messages!==FALSE && count($messages['messages'])>0)
+                {
+                    foreach($messages['messages'] as $key=>$message)
+                    {
                         $app['session']->getFlashBag()->add(
                             $message->getFlashType(),
                             $message->show($app['user']->getId() , $messages['parties_names'])
@@ -56,6 +83,7 @@
 
     $app->mount($app['BASE_URL'].'/Lobby', new Controllers\LobbyControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Setup', new Controllers\SetupControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Revenue', new Controllers\RevenueControllerProvider($app) );
     
     function getNewMessages($user_id , $game_id , $entityManager) {
         $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);

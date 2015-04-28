@@ -34,7 +34,7 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             else
             {
-                return $app['twig']->render('Setup/Main.twig', array(
+                return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
                     'game' => $game
                 ));
@@ -113,30 +113,6 @@ class SetupControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
-        * Verb : DonePlayingCards
-        * JSON data : user_id
-        */
-        $controllers->post('/{game_id}/DonePlayingCards', function($game_id , Request $request) use ($app)
-        {
-            $game = $this->getGame((int)$game_id) ;
-            if ($game!==FALSE)
-            {
-                $game->getParty($user_id)->setIsDone(TRUE) ;
-                $game->log('[['.$user_id.']] '._('{are,is} done playing cards.')) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
-        })
-        ->bind('verb_DonePlayingCards');
-
-        /*
-        * POST target
         * Verb : Play Statesman
         * JSON data : card_id
         */
@@ -210,6 +186,38 @@ class SetupControllerProvider implements ControllerProviderInterface
         })
         ->bind('Play Concession');
 
+        /*
+        * POST target
+        * Verb : DonePlayingCards
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/DonePlayingCards', function($game_id , Request $request) use ($app)
+        {
+            $game = $this->getGame((int)$game_id) ;
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                $game->log('[['.$user_id.']] '._('{are,is} done playing cards.')) ;
+                if ($game->isEveryoneDone())
+                {
+                    $game->log(_('Everyone is done playing cards.'));
+                    $game->setPhase('Mortality') ;
+                    $this->doMortality($game) ;
+                    $game->setPhase('Revenue') ;
+                }
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_DonePlayingCards');
+
         return $controllers ;
     }
 
@@ -225,4 +233,59 @@ class SetupControllerProvider implements ControllerProviderInterface
         return ( (count($result)==1) ? $result[0] : FALSE ) ;
     }
 
+    function doMortality($game)
+    {
+        // First, handle Imminent Wars activation
+        if ($game->getDeck('imminentWars')->getNumberOfCards() > 0)
+        {
+            $game->log(_('There is no imminent conflicts to activate.')) ;
+        }
+        else
+        {
+            // Get imminent Wars in an array and sort it by card id
+            $imminentWars = $game->getDeck('imminentWars')->getCards()->toArray() ;
+            usort ($imminentWars , function ($a,$b)
+            {
+                return ($a->getId() < $b->getId()) ;
+            });
+            
+            foreach ($imminentWars as $conflict)
+            {
+                // Activate the first imminent War
+                $game->getDeck('imminentWars')->getFirstCardByProperty('id' , $conflict->getId() , $game->getDeck('activeWars')) ;
+                $game->log(_('Imminent conflict %1$s has been activated.') , 'alert' , array($conflict->getName()) );
+                    
+                // Remove all other matching wars from $imminentWars
+                $matchingName = $conflict->getMatches() ;
+                foreach($imminentWars as $key => $matchingConflict)
+                {
+                    if ($matchingConflict->getMatches() == $matchingName)
+                    {
+                        unset($imminentWars[$key]) ;
+                    }
+                }
+            }
+        }
+        
+        // Second, draw mortality chits
+        $chits = $game->mortality_chits(1) ;
+        foreach ($chits as $chit)
+        {
+            if ($chit!='NONE' && $chit!='DRAW 2')
+            {
+                $returnedMessage= $game->killSenator((string)$chit) ;
+                $game->log 
+                (
+                    _('Chit drawn : %1$s. %2$s') ,
+                    (isset($returnedMessage[1]) ? $returnedMessage[1] : 'log') ,
+                    array($chit , $returnedMessage[0])
+                );
+            }
+            else
+            {
+                $game->log(_('Chit drawn : %1$s') , 'log' , array($chit)) ;
+            }
+        }
+
+    }
 }

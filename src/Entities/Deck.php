@@ -50,6 +50,7 @@ class Deck
      * ----------------------------------------------------
      */
 
+    private function setCards($cards) { $this->cards = $cards; }
     public function setName($name) { $this->name = $name ; }
     public function setGame($game) { $this->game = $game ; }
     public function setControlled_by($card) { $this->controlled_by = $card ; }
@@ -152,4 +153,5 @@ class Deck
         }
         return FALSE ;
     }
+    
 }
