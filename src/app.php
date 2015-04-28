@@ -16,8 +16,11 @@
     ErrorHandler::register();
     ExceptionHandler::register();
     
+    $config = parse_ini_file(__DIR__.'/../src/ROR_V2.ini') ;
+    
     $app['debug'] = true;
-    $app['BASE_URL'] = '' ;
+    $app['BASE_URL'] = $config['BASE_URL'] ;
+    $app['WS_CLIENT'] = $config['WS_CLIENT'] ;
 
     // If the route starts with the name of a Valid Phase, but the game is in a different phase, replace the phase in the route 
     $app->before(function (Request $request) use ($app)

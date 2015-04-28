@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en" style="height: 100%;" ws_client="{{app['WS_CLIENT']|default('')}}">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,7 +7,7 @@
         {% block title %}{% endblock %}
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
         <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/../resources/css/sprite.css">
+        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/css/sprite.css">
         <style>
             .sortable-list-placeholder { background-color: #bbb; border: 1px dashed #666; margin-bottom: -1px; padding: 10px 15px; }
             .ui-resizable { position: relative;}
@@ -250,10 +250,9 @@
         });
         
         // Connecting to the socket.io server :
-        // - Port is the client's port
+        // - The socket.io server is connected to a URL given as an attribute to the HTML tag 
         // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
-        var socket = io.connect('http://silex-test:8081');
-        //var socket = io.connect('http://loconeko.dyndns.org:8080');
+        var socket = io.connect($("html").attr('ws_client'));
         socket.on('Update', function(realm){
             if ( realm === $("title").attr('realm') ) {
                 window.location.reload(true) ;
