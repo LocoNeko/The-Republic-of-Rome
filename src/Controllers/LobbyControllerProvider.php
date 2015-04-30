@@ -5,6 +5,7 @@ use Silex\Application;
 use Silex\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Doctrine\Common\Collections\ArrayCollection;
 
 
 class LobbyControllerProvider implements ControllerProviderInterface
@@ -25,7 +26,8 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $app['session']->set('game_id', NULL);
             return $app['twig']->render('Lobby/List.twig', array(
                'layout_template' => 'layout.twig' ,
-               'list' => $this->getGamesList($app['user']->getId()) ,
+               'list' => $this->getGamesList() ,
+               'savedGamesList' => $this->getSavedGamesList() ,
                'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
             ));
         })
@@ -165,6 +167,11 @@ class LobbyControllerProvider implements ControllerProviderInterface
             {
                 if ($result[0]->setPartyToReady($app['user']->getId()) )
                 {
+                    // If the game was started, save it
+                    if ($result[0]->gameStarted())
+                    {
+                        $app['saveGame']($result[0]) ;
+                    }
                     $this->entityManager->persist($result[0]);
                     $this->entityManager->flush();
                     $app['session']->getFlashBag()->add('success', _('You are ready to start'));
@@ -187,10 +194,10 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->post('/Create/Create', function(Request $request) use ($app)
         {
             $result= $this->CreateGame($request->request->all()) ;
-            if ( $result === TRUE )
+            if ( $result === TRUE)
             {
                 $app['session']->getFlashBag()->add('success', 'Game created');
-                return $app->json( _('Game created') , 201);
+                return $app->json( 'Game created' , 201);
             }
             else
             {
@@ -200,18 +207,59 @@ class LobbyControllerProvider implements ControllerProviderInterface
         })
         ->bind('verb_Create');
 
+        /*
+        * POST target
+        * Verb : Load
+        * JSON data : 
+        */
+        $controllers->post('/List/LoadGame', function(Request $request) use ($app)
+        {
+            error_log('Load Game data : '.print_r($request->request->all() , true));
+            die() ;
+            try
+            {
+                $app['session']->getFlashBag()->add('success', _('Game loaded'));
+                return $app->json( 'Game loaded' , 201);
+            }
+            catch (\Exception $e)
+            {
+                $app['session']->getFlashBag()->add('error', $e->getMessage());
+                return $app->json( $e->getMessage() , 201);
+            }
+        })
+        ->bind('verb_JoinGame');
+
         return $controllers ;
     }
     
     /**
      * Returns a list of all Games in an array. Includes a 'canJoin' flag based on $user_id
-     * @param int $user_id
      * @return array
      */
-    public function getGamesList($user_id)
+    public function getGamesList()
     {
         $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g');
         $result = $query->getResult() ;
+        return $result ;
+    }
+
+    public function getSavedGamesList()
+    {
+        $query = $this->entityManager->createQuery('SELECT s FROM Entities\SavedGame s ORDER BY s.savedTime DESC');
+        $result = array() ;
+        foreach ($query->getResult() as $savedGame)
+        {
+            if (!isset($result[$savedGame->getGame_id()]))
+            {
+                $result[$savedGame->getGame_id()] = array() ;
+            }
+            array_push(
+                $result[$savedGame->getGame_id()] ,
+                array (
+                    'savedGameId' => $savedGame->getSavedGameId() ,
+                    'name' => $savedGame->getSavedTime()->format('Y-m-d H:i:s').', Turn '.$savedGame->getTurn().' - '.$savedGame->getPhase().' - '.$savedGame->getSubPhase())
+                );
+        }
         return $result ;
     }
 
@@ -260,6 +308,8 @@ class LobbyControllerProvider implements ControllerProviderInterface
                     return sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
                 }
             }
+        } else {
+            $data['variants']=array();
         }
         
         $game = new \Entities\Game();

@@ -1,7 +1,7 @@
 {% extends layout_template  %}
 
 {% block title %}
-    <title realm="Lobby">List TEPEKS</title>
+    <title realm="Lobby">List Games</title>
 {% endblock %}
 
 {% block menu %}
@@ -22,7 +22,8 @@
                     <th>Variants</th>
                     <th>Turn</th>
                     <th>Phase</th>
-                    <th>Game data</th>
+                    <th>Reload game data</th>
+                    <th></th>
                     <th>Created</th>
                     <th></th>
                 </tr>
@@ -46,7 +47,22 @@
                     <td>{{ game.getTurn() }}</td>
                     <td>{{ game.getPhase() }}</td>
                     <td>
-                        <a href="{{ path('SaveGame' , {'game_id' : game.getId() }) }}">Load</a>
+                        {% if savedGamesList[game.getId()] is defined %}
+                            <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='LoadGame' gameId='{{game.getId()}}'>
+                                <select class="form-control" name="savedGameId">
+                                    {% for gameId , savedGame in savedGamesList[game.getId()] %}
+                                        <option value="{{savedGame['savedGameId']}}">{{savedGame['name']}}</option>
+                                    {% endfor %}
+                                </select>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                                <button type="submit" class="btn">
+                                    <span class="glyphicon glyphicon-floppy-open" aria-hidden="true" style="font-size: 16px;"></span>
+                                </button>
+                            </form>
                     </td>
                     <td>{{ game.getCreated()|date('Y/m/d H:i') }}</td>
                     <td>

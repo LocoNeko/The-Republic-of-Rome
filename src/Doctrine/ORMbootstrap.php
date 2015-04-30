@@ -4,7 +4,7 @@
 
     require_once "../../vendor/autoload.php";
 
-    $config = parse_ini_file(__DIR__.'/../ROR_V2.ini') ;
+    $config_php = parse_ini_file(__DIR__.'/../ROR_V2.ini') ;
 
     // Create a simple "default" Doctrine ORM configuration for Annotations
     $isDevMode = true;
@@ -13,10 +13,10 @@
     // database configuration parameters
     $conn = array(
         'driver'   => 'pdo_mysql',
-        'dbname' => $config['MYSQL_DB'],
-        'host' => $config['MYSQL_HOST'],
-        'user' => $config['MYSQL_USER'],
-        'password' => $config['MYSQL_PASSWORD'],
+        'dbname' => $config_php['MYSQL_DB'],
+        'host' => $config_php['MYSQL_HOST'],
+        'user' => $config_php['MYSQL_USER'],
+        'password' => $config_php['MYSQL_PASSWORD'],
     );
 
     // obtaining the entity manager

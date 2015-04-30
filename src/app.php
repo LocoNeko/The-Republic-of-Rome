@@ -5,7 +5,7 @@
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\Debug\ErrorHandler;
     use Symfony\Component\Debug\ExceptionHandler;
-
+    
     $app->register(new Provider\ServiceControllerServiceProvider());
     $app->register(new Provider\SessionServiceProvider());
     $app->register(new Provider\UrlGeneratorServiceProvider());
@@ -16,16 +16,22 @@
     ErrorHandler::register();
     ExceptionHandler::register();
     
-    $config = parse_ini_file(__DIR__.'/../src/ROR_V2.ini') ;
+    $config_php = parse_ini_file(__DIR__.'/../src/ROR_V2.ini') ;
     
     $app['debug'] = true;
-    $app['BASE_URL'] = $config['BASE_URL'] ;
-    $app['WS_CLIENT'] = $config['WS_CLIENT'] ;
+    $app['BASE_URL'] = $config_php['BASE_URL'] ;
+    $app['WS_CLIENT'] = $config_php['WS_CLIENT'] ;
 
-    // If the route starts with the name of a Valid Phase, but the game is in a different phase, replace the phase in the route 
+    // If the route starts with the name of a Valid Phase, but the game is in a different phase, replace the phase in the route and redirect
     $app->before(function (Request $request) use ($app)
     {
-        $route = explode('/', $request->getRequestUri()) ;
+        // Remove BASE_URL from the URI
+        $uri = str_replace($app['BASE_URL'] , '' , $request->getRequestUri()) ;
+        $route = explode('/', $uri) ;
+        /*
+         * The first element (route[0]) in the route is -mysteriously- ''
+         * If we are inside a Game, the second element (route[1]) should be a phase.
+         */
         if (in_array($route[1], \Entities\Game::$VALID_PHASES))
         {
             $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$route[2]);
@@ -33,9 +39,9 @@
             if (count($result)==1)
             {
                 $game = $result[0] ;
+                // Check if the phase in the route (route[1]) is the same as the phase in the game (game->getPahse()), replace if it's not
                 if ($game->getPhase() != $route[1])
                 {
-                    error_log('redirecting') ;
                     return $app->redirect( str_replace( $route[1] , $game->getPhase() , $request->getRequestUri() ) ) ;
                 }
             }
@@ -50,7 +56,7 @@
         {
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
-        }
+          }
         else
         {
             // Getting new messages should never be done for json requests, as they don't trigger display
@@ -70,23 +76,29 @@
             }
         }
     });
-
+    
     // Twig views path   
     $app['twig.path'] = array(__DIR__.'/../resources/views/');
 
-    // Includes
+    /* Includes :
+     * - Database connection
+     * - SimpleUser
+     */
     require __DIR__.'/../src/appDatabase.php';
     require __DIR__.'/../src/appSimpleUser.php';
 
+    // The Welcome Page
     $app->get($app['BASE_URL'].'/', function () use ($app) {
         return $app['twig']->render('hello.twig', array(
             'layout_template' => 'layout.twig',
         ));
     });
 
-    $app->mount($app['BASE_URL'].'/Lobby', new Controllers\LobbyControllerProvider($app) );
-    $app->mount($app['BASE_URL'].'/Setup', new Controllers\SetupControllerProvider($app) );
-    $app->mount($app['BASE_URL'].'/Revenue', new Controllers\RevenueControllerProvider($app) );
+    // Routes base paths : 'Lobby' or a specific {phase}
+    $app->mount($app['BASE_URL'].'/Lobby'    , new Controllers\LobbyControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Setup'    , new Controllers\SetupControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Mortality', new Controllers\MortalityControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Revenue'  , new Controllers\RevenueControllerProvider($app) );
     
     function getNewMessages($user_id , $game_id , $entityManager) {
         $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
@@ -100,6 +112,23 @@
             return FALSE ;
         }
     }
+
+    /**
+     * A Service that returns a Game entity corresponding to this $game_id, or FALSE if not found
+     * @param int $game_id
+     * @return Entity\Game | FALSE
+     */
+    $app['getGame'] = $app->protect(function ($game_id) use ($app) {
+        $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
+        $result = $query->getResult() ;
+        return ( (count($result)==1) ? $result[0] : FALSE ) ;
+    });
+
+    $app['saveGame'] = $app->protect(function ($game) use ($app) {
+        $savedGame = new \Entities\SavedGame($game) ;
+        $app['orm.em']->persist($savedGame) ;
+        $app['orm.em']->flush() ;
+    });
 
     /*
     $app->error(function (\Exception $e, $code) {

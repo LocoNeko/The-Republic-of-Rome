@@ -12,43 +12,32 @@ abstract class Card
 {
     public static $VALID_TYPES = array('Concession' , 'Conflict' , 'Senator' , 'Leader' , 'FactionCard' , 'EraEnds' , 'Province') ;
     
-    /**
-     * @Id @Column(type="integer") @GeneratedValue
-     * @var int
-     */
+    /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $internalId ;
-    /**
-     * @Column(type="integer")
-     * @var int
-     */
+
+    /** @Column(type="integer") @var int */
     protected $id ;
+    
     // One Deck has many cards
-    /**
-     * @ManyToOne(targetEntity="Deck", inversedBy="cards", cascade={"persist"})
-     **/
+    /** @ManyToOne(targetEntity="Deck", inversedBy="cards", cascade={"persist"}) **/
     private $deck ;
-    /**
-    * @Column(type="string", name="preciseType")
-    * @var string
-     */
+    
+    /** @Column(type="string", name="preciseType") @var string */
     private $preciseType ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $name ;
+    
     // A Card can have a deck (of controlled cards)
-    /**
-     * @OneToOne(targetEntity="Deck", inversedBy="controlled_by", cascade={"persist"})
-     **/
+    /** @OneToOne(targetEntity="Deck", inversedBy="controlled_by", cascade={"persist"}) **/
     private $cards_controlled ;
     
     // A Card can be the location of any number of Legions
     /** @OneToMany(targetEntity="Legion", mappedBy="cardLocation") **/
     private $withLegions ;
-
     
-    public static function isValidType($type) {
+    public static function isValidType($type)
+    {
         return in_array($type , self::$VALID_TYPES) ;
     }
     
@@ -67,16 +56,20 @@ abstract class Card
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
     public function getPreciseType() { return $this->preciseType ; }
+    
     // Only create the cards_controlled deck when it becomes necessary
-    public function getCardsControlled() {
-        if ($this->cards_controlled === NULL) {
+    public function getCardsControlled()
+    {
+        if ($this->cards_controlled === NULL)
+        {
             $this->cards_controlled = new \Entities\Deck('Cards controlled by '.$this->getName()) ;
             $this->cards_controlled->setControlled_by($this) ;
         }
         return $this->cards_controlled ;
     }
     
-    public function __construct($id , $name , $preciseType) {
+    public function __construct($id , $name , $preciseType)
+    {
         $this->setId($id) ;
         $this->setName($name) ;
         $this->setPreciseType($preciseType) ;
@@ -88,11 +81,14 @@ abstract class Card
     * ----------------------------------------------------
     */
     
-    public function getValue($property) {
+    public function getValue($property)
+    {
         if (isset($this->$property))
         {
             return $this->$property ;
-        } else {
+        }
+        else
+        {
             throw new Exception(sprintf(_('Property %1$s doesn\'t exist.') , $property));
         }
     }
@@ -102,23 +98,38 @@ abstract class Card
      * This is entirely based on the Deck the card belongs to
      * @return array ('type' => 'game|card|party|hand' , 'name' , 'value' => NULL|(card)|(party)|(party) )
      */
-    public function getLocation() {
+    public function getLocation()
+    {
         $deck = $this->getDeck() ;
-        if ($deck->getGame() != NULL) {
+        if ($deck->getGame() != NULL)
+        {
             $result = array ('type' => 'game' , 'value' => NULL , 'name' => $deck->getName()) ;
-        } elseif ($deck->getControlled_by() != NULL) {
+        }
+        elseif ($deck->getControlled_by() != NULL)
+        {
             $result = array ('type' => 'card' , 'value' => $deck->getControlled_by() , 'name' => $deck->getControlled_by()->getName()) ;
-        } elseif ($deck->getInParty() != NULL) {
+        }
+        elseif ($deck->getInParty() != NULL)
+        {
             $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;
-        } elseif ($deck->getInHand() != NULL) {
+        }
+        elseif ($deck->getInHand() != NULL)
+        {
             $result = array ('type' => 'hand' , 'value' => $deck->getInHand() , 'name' => $deck->getInHand()->getName()) ;
-        } else {
+        }
+        else
+        {
             $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'Unknown location') ;
         }
         return $result ;
     }
     
-    public function hasControlledCards() {
+    /**
+     * Checks if a card controls other, as calling getCardsControlled() directly would trigger on-the-fly creation
+     * @return type
+     */
+    public function hasControlledCards()
+    {
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }
 }

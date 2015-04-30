@@ -8,40 +8,30 @@ use Doctrine\Common\Collections\Criteria;
  **/
 class Deck
 {
-    /**
-    * @Id @Column(type="integer") @GeneratedValue
-    * @var int
-    */
+    /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $name ;
+    
     // One deck has many cards
-    /**
-     * @OneToMany(targetEntity="Card", mappedBy="deck" , cascade={"persist"} )
-     **/
+    /** @OneToMany(targetEntity="Card", mappedBy="deck" , cascade={"persist"} ) **/
     private $cards ;
+    
     // One Game has many decks
-    /**
-    * @ManyToOne(targetEntity="Game", inversedBy="decks")
-    **/
+    /** @ManyToOne(targetEntity="Game", inversedBy="decks") **/
     private $game ;
+    
     // One Card can have a Deck (of controlled cards)
-    /**
-    * @OneToOne(targetEntity="Card", mappedBy="cards_controlled")
-    **/
+    /** @OneToOne(targetEntity="Card", mappedBy="cards_controlled") **/
     private $controlled_by ;
+
     // A deck can represent the Senators of a party
-    /**
-    * @OneToOne(targetEntity="Party", inversedBy="senators")
-    **/
+    /** @OneToOne(targetEntity="Party", inversedBy="senators") **/
     private $inParty ;
+    
     // A deck can represent the hand of a player
-    /**
-    * @OneToOne(targetEntity="Party", inversedBy="hand")
-    **/
+    /** @OneToOne(targetEntity="Party", inversedBy="hand") **/
     private $inHand ;
 
     /**
@@ -65,16 +55,19 @@ class Deck
     public function getInParty() { return $this->inParty; }
     public function getInHand() { return $this->inHand; }
  
-    public function __construct($name) {
+    public function __construct($name)
+    {
         $this->setName($name) ;
         $this->cards = new ArrayCollection();
     }
 
-    public function saveData() {
+    public function saveData()
+    {
         $data = array() ;
         $data['name'] = $this->getName() ;
         $data['cards'] = array () ;
-        foreach ($this->getCards() as $key=>$card) {
+        foreach ($this->getCards() as $key=>$card)
+        {
             $data['cards'][$key] = $card->saveData() ;
         }
         $data['game_id'] = ($this->game === NULL ? NULL : $this->game->getId()) ;
@@ -87,26 +80,31 @@ class Deck
     * ----------------------------------------------------
     */
 
-    public function attachToGame($game) {
+    public function attachToGame($game)
+    {
         $this->setGame($game) ;
         $game->getDecks()->add($this) ;
     }
 
-    public function attachToCard(Card $controlled_by) {
+    public function attachToCard(Card $controlled_by) 
+    {
         $this->setControlledBy($controlled_by) ;
         $controlled_by->getCardsControlled()->add($this) ;
     }
     
-    public function putCardOnTop($card) {
+    public function putCardOnTop($card) 
+    {
         $this->getCards()->add($card) ;
         $card->setDeck($this) ;
     }
     
-    public function removeCard($card) {
+    public function removeCard($card) 
+    {
         $this->getCards()->removeElement($card) ;
     }
 
-    public function getNumberOfCards() {
+    public function getNumberOfCards() 
+    {
         return count($this->getCards()) ;
     }
     
@@ -115,17 +113,22 @@ class Deck
      * @return Card
      * @throws Exception Deck empty
      */
-    public function drawFirstCard() {
+    public function drawFirstCard()
+    {
         $card = $this->getCards()->first() ;
-        if ($card!=NULL) {
+        if ($card!=NULL)
+        {
             $this->getCards()->removeElement($card) ;
             return $card ;
-        } else {
+        }
+        else
+        {
             throw new Exception(sprintf(_('ERROR - Can\'t draw first card : deck %1$d is empty') , $this->getName() )) ;
         }
     }
 
-    public function shuffle() {
+    public function shuffle()
+    {
         $arrayValues = $this->getCards()->toArray() ;
         shuffle($arrayValues) ;
         $this->cards = new ArrayCollection( $arrayValues );
@@ -138,12 +141,17 @@ class Deck
      * @param type $target
      * @return boolean
      */
-    public function getFirstCardByProperty($property , $value , $target=NULL) {
-        foreach($this->getCards() as $card) {
+    public function getFirstCardByProperty($property , $value , $target=NULL)
+    {
+        foreach($this->getCards() as $card)
+        {
             $getter = 'get'.ucfirst($property);
-            if (method_exists($card, $getter)) {
-                if ($card->$getter() == $value) {
-                    if ($target!=NULL && strpos(get_class($target), 'Entities\\Deck') !== FALSE) {
+            if (method_exists($card, $getter))
+            {
+                if ($card->$getter() == $value)
+                {
+                    if ($target!=NULL && strpos(get_class($target), 'Entities\\Deck') !== FALSE) 
+                    {
                         $this->removeCard($card) ;
                         $target->putCardOnTop($card) ;
                     }

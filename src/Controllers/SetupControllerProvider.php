@@ -21,7 +21,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', (int)$game_id);
-            $game = $this->getGame((int)$game_id) ;
+            $game = $app['getGame']((int)$game_id) ;
             if ($game===FALSE)
             {
                 $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , (int)$game_id ));
@@ -49,7 +49,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/PickLeader', function($game_id , Request $request) use ($app)
         {
-            $game = $this->getGame((int)$game_id) ;
+            $game = $app['getGame']((int)$game_id) ;
             if ($game!==FALSE)
             {
                 try
@@ -118,7 +118,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/Play Statesman', function($game_id , Request $request) use ($app)
         {
-            $game = $this->getGame((int)$game_id) ;
+            $game = $app['getGame']((int)$game_id) ;
             if ($game!==FALSE)
             {
                 $user_id = (int)$app['user']->getId() ;
@@ -147,7 +147,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/Play Concession', function($game_id , Request $request) use ($app)
         {
-            $game = $this->getGame((int)$game_id) ;
+            $game = $app['getGame']((int)$game_id) ;
             if ($game!==FALSE)
             {
                 $user_id = (int)$app['user']->getId() ;
@@ -157,7 +157,6 @@ class SetupControllerProvider implements ControllerProviderInterface
                     $concession = $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $request->request->get('dragFrom')) ;
                     if($concession!=FALSE)
                     {
-                        error_log($concession->getName().' dropped on '.$recipient->getName() ) ;
                         $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $request->request->get('dragFrom') , $recipient->getCardsControlled()) ;
                         $game->log(_('[['.$user_id.']]'.' {play,plays} %1$s on %2$s.') , 'log' , array($concession->getName() , $recipient->getName()));
                         $this->entityManager->persist($game);
@@ -193,7 +192,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/DonePlayingCards', function($game_id , Request $request) use ($app)
         {
-            $game = $this->getGame((int)$game_id) ;
+            $game = $app['getGame']((int)$game_id) ;
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
@@ -203,8 +202,8 @@ class SetupControllerProvider implements ControllerProviderInterface
                 {
                     $game->log(_('Everyone is done playing cards.'));
                     $game->setPhase('Mortality') ;
-                    $this->doMortality($game) ;
-                    $game->setPhase('Revenue') ;
+                    $app['saveGame']($game) ;
+                    $game->resetAllIsDone() ;
                 }
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -221,71 +220,4 @@ class SetupControllerProvider implements ControllerProviderInterface
         return $controllers ;
     }
 
-    /**
-     * Returns a Game entity corresponding to this $game_id, or FALSE if not found
-     * @param int $game_id
-     * @return Entity\Game | FALSE
-     */
-    function getGame($game_id)
-    {
-        $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-        $result = $query->getResult() ;
-        return ( (count($result)==1) ? $result[0] : FALSE ) ;
-    }
-
-    function doMortality($game)
-    {
-        // First, handle Imminent Wars activation
-        if ($game->getDeck('imminentWars')->getNumberOfCards() > 0)
-        {
-            $game->log(_('There is no imminent conflicts to activate.')) ;
-        }
-        else
-        {
-            // Get imminent Wars in an array and sort it by card id
-            $imminentWars = $game->getDeck('imminentWars')->getCards()->toArray() ;
-            usort ($imminentWars , function ($a,$b)
-            {
-                return ($a->getId() < $b->getId()) ;
-            });
-            
-            foreach ($imminentWars as $conflict)
-            {
-                // Activate the first imminent War
-                $game->getDeck('imminentWars')->getFirstCardByProperty('id' , $conflict->getId() , $game->getDeck('activeWars')) ;
-                $game->log(_('Imminent conflict %1$s has been activated.') , 'alert' , array($conflict->getName()) );
-                    
-                // Remove all other matching wars from $imminentWars
-                $matchingName = $conflict->getMatches() ;
-                foreach($imminentWars as $key => $matchingConflict)
-                {
-                    if ($matchingConflict->getMatches() == $matchingName)
-                    {
-                        unset($imminentWars[$key]) ;
-                    }
-                }
-            }
-        }
-        
-        // Second, draw mortality chits
-        $chits = $game->mortality_chits(1) ;
-        foreach ($chits as $chit)
-        {
-            if ($chit!='NONE' && $chit!='DRAW 2')
-            {
-                $returnedMessage= $game->killSenator((string)$chit) ;
-                $game->log 
-                (
-                    _('Chit drawn : %1$s. %2$s') ,
-                    (isset($returnedMessage[1]) ? $returnedMessage[1] : 'log') ,
-                    array($chit , $returnedMessage[0])
-                );
-            }
-            else
-            {
-                $game->log(_('Chit drawn : %1$s') , 'log' , array($chit)) ;
-            }
-        }
-
-    }
 }

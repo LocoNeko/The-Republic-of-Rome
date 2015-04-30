@@ -5,17 +5,17 @@
     // Connection to the database
     $app['db.options'] = array(
         'driver'   => 'pdo_mysql',
-        'dbname' => $config['MYSQL_DB'],
-        'host' => $config['MYSQL_HOST'],
-        'user' => $config['MYSQL_USER'],
-        'password' => $config['MYSQL_PASSWORD'],
+        'dbname' => $config_php['MYSQL_DB'],
+        'host' => $config_php['MYSQL_HOST'],
+        'user' => $config_php['MYSQL_USER'],
+        'password' => $config_php['MYSQL_PASSWORD'],
     );
       
     // Create a simple "default" Doctrine ORM configuration for Annotations
     $isDevMode = true;
-    $config = Setup::createAnnotationMetadataConfiguration(array(__DIR__."/../src/Entities"), $isDevMode);
-
+    
     // obtaining the entity manager
+    //$config = Setup::createAnnotationMetadataConfiguration(array(__DIR__."/../src/Entities"), $isDevMode);
     //$entityManager = EntityManager::create($app['db.options'], $config);
     
     // Doctrine ORM
