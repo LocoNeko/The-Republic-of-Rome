@@ -191,6 +191,10 @@ class Game
     public function getTimezone() { return $this->timezone ; }
     public function getCurrentBidder() { return $this->currentBidder; }
     public function getPersuasionTarget() { return $this->persuasionTarget; }
+    public function getEventTable() { return $this->eventTable; }
+    public function getEvents() { return $this->events; }
+    public function getAppealTable() { return $this->appealTable; }
+    public function getLandBillsTable() { return $this->landBillsTable; }
 
     public function getCreated()
     {
@@ -239,7 +243,7 @@ class Game
 
     /**
      * ----------------------------------------------------
-     * Functions
+     * General Functions
      * ----------------------------------------------------
      */
     
@@ -752,6 +756,16 @@ class Game
             if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()==$party->getUser_id())
             {
                 $familyLocation['value']->getSenators()->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
+                // Adjust Statesman's value that are below the Family's
+                $statesman->setPriorConsul($family->getPriorConsul()) ;
+                if ($family->getINF() > $statesman->getINF()) { $statesman->setINF($family->getINF()) ; }
+                if ($family->getPOP() > $statesman->getPOP()) {$statesman->setPOP($family->getPOP()) ; }
+                $statesman->setTreasury($family->getTreasury()) ;
+                $statesman->setKnights($family->getKnights()) ;
+                $statesman->setOffice($family->getOffice()) ;
+                $family->resetSenator() ;
+                // The family was the party's leader
+                if ($party->getLeader()->getSenatorID() == $family->getSenatorID()) { $party->setLeader($statesman); }
                 $familyMessage=_(' He has the Family and puts it under the Statesman.');
                 
             // The Family was found in the forum - Play the Statesman and make him control the Family
@@ -764,6 +778,123 @@ class Game
         }
         $this->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()));
         return $statesman ;
+    }
+
+    /**
+     * Returns the current level of the event if it's in play, 0 if it's not, FALSE if the request made no sense
+     * @param string $type can be 'name' or 'number'
+     * @param mixed $search The name of the event <b>OR</b> its number, based on the value of $type
+     * @return mixed The event's level (<b>0</b> if not in play) or FALSE if $type was wrong
+     */
+    public function getEventLevel ($type , $search) {
+        if ($type=='name')
+        {
+            foreach ($this->getEvents() as $event)
+            {
+               if ($event['name'] == $search)
+                {
+                    return $event['level'];
+                }
+            }
+            return 0 ;
+        }
+        elseif ($type=='number')
+        {
+            return $this->getEvents()[$search]['level'] ;
+        }
+        return FALSE ;
+    }
+
+    /**
+     * Returns the number of Legions in garrison in the province
+     * @param type $province
+     * @return int
+     */
+    public function getProvinceGarrisons($province)
+    {
+        $result = 0 ;
+        if ($province->getPreciseType() == 'Province')
+        {
+            $id = $province->getId();
+            foreach ($this->getLegions() as $legion)
+            {
+                if ($legion->getCardLocation()!==NULL && $legion->getCardLocation()->getId() == $id)
+                {
+                    $result++;
+                }
+            }
+        }
+        else
+        {
+            return 0 ;
+        }
+        return $result;
+    }
+
+    /**
+     * 
+     * @param integer $nb = Number of dice to roll (1 to 3)
+     * @param type $evilOmensEffect = Whether evil omens affect the roll by -1 , +1 or 0
+     * @return array 'total' => the total roll , 'x' => value of die X so we can obtain 1 white die & 2 black dice
+     */
+    public function rollDice($nb , $evilOmensEffect)
+    {
+        $nb = (int)$nb;
+        if ($nb<1 || $nb>3)
+        {
+            return FALSE ;
+        }
+        $evilOmensEffect = (int)$evilOmensEffect ;
+        if ( ($evilOmensEffect!=-1) && ($evilOmensEffect!=0) && ($evilOmensEffect!=1) )
+        {
+            return FALSE ;
+        }
+        $result = array() ;
+        $result['total'] = 0 ;
+        for ($i=0 ; $i<$nb ; $i++)
+        {
+            $result[$i]=mt_rand(1,6);
+            $result['total']+=$result[$i];
+        }
+        // Add evil omens effects to the roll
+        $result['total'] += $evilOmensEffect * $this->getEventLevel('name' , 'Evil Omens');
+        return $result ;
+    }
+    
+    /**
+    * Convenience function to get a straight 1 die roll
+    * @param type $evilOmensEffect
+    * @return int The result
+    */
+    public function rollOneDie($evilOmensEffect)
+    {
+        $result = $this->rollDice(1 , $evilOmensEffect) ;
+        if ($result!==FALSE)
+        {
+            return $result['total'];
+        }
+        else
+        {
+            return FALSE ;
+        }
+    }
+
+    /**
+    * Returns a description of the effects of evil omens on a die/dice roll. Empty if current evil omens level is 0
+    * @param type $effect -1|+1
+    * @return string description
+    */
+    public function getEvilOmensMessage($effect)
+    {
+        $evilOmensLevel = $this->getEventLevel('name' , 'Evil Omens') ;
+        if ($evilOmensLevel==0)
+        {
+            return '';
+        }
+        else
+        {
+            return sprintf(_(' (including %1$d from evil Omens)') , $effect*$evilOmensLevel);
+        }
     }
 
     /**
@@ -964,6 +1095,31 @@ class Game
         fclose($filePointer);
     }
 
+    public function getListOfCardActions($preciseType)
+    {
+        if ($this->getPhase()=='Setup' && $this->getSubPhase() == 'Play cards' && $preciseType=='Statesman')
+        {
+            return array (
+                0 => array (
+                    'type' => 'button' , 
+                    'action' => 'Play Statesman' ,
+                    'playable' => TRUE
+                ) ,
+            ) ;
+        }
+        elseif ($this->getPhase()=='Setup' && $this->getSubPhase() == 'Play cards' && $preciseType=='Concession')
+        {
+            return array (
+                0 => array (
+                    'type' => 'drag' , 
+                    'action' => 'Play Concession'
+                ) ,
+            ) ;
+        } else {
+            return array();
+        }
+    }
+    
     /**
      * ----------------------------------------------------
      * Mortality
@@ -1182,5 +1338,176 @@ class Game
         return array($message) ;
     }
 
+    /**
+     * ----------------------------------------------------
+     * Revenue
+     * ----------------------------------------------------
+     */
+    
+    /**
+     * Initialises the revenu phase by performing BarbarianRaids & InternalDisorder events if needed
+     */
+    public function revenue_init() 
+    {
+        $barbarianRaids = $this->getEventLevel('name', 'Barbarian Raids');
+        $internalDisorder = $this->getEventLevel('name', 'Internal Disorder');
+        $barbarianRaidsTargets = array() ;
+        $internalDisorderTargets = array() ;
+        foreach($this->getParties() as $party)
+        {
+            foreach ($party->getSenators()->getCards() as $senator)
+            {
+                if ($senator->hasControlledCards()) 
+                {
+                    foreach ($senator->getCardsControlled()->getCards() as $card)
+                    {
+                        if ($card->getPreciseType()=='Province')
+                        {
+                            $card->setOverrun(FALSE) ;
+                            // Only for frontier provinces
+                            if ($barbarianRaids>0 && $card->getFrontier())
+                            {
+                                array_push($barbarianRaidsTargets , array('province' => $card , 'senator' => $senator)) ;
+                            }
+                            // Only for undeveloped provinces
+                            if ($internalDisorder>0 && $card->getDeveloped()===FALSE) {
+                                array_push($internalDisorderTargets , array('province' => $card , 'senator' => $senator)) ;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        foreach ($barbarianRaidsTargets as $target)
+        {
+            $this->doBarbarianRaids($barbarianRaids , $target['province'] , $target['senator']) ;
+        }
+        foreach ($internalDisorderTargets as $target)
+        {
+            $this->doInternalDisorder($internalDisorder , $target['province'] , $target['senator']) ;
+        }
+    }
+    
+    /**
+     * Function that handles the Barabarian raid event first step (the rolls, and the immediate effects of overrunning)
+     * Later, the overrun flag will be used to prevent income and development
+     * @param integer $level the raids level : 1|2
+     * @param Province $province The provincial Province being governingly governed by the governing Governor
+     * @param Senator $senator The governing Governor governing the provincial Province being governinglly governed
+     * @return array messages
+     */
+    public function doBarbarianRaids($level , $province , $senator )
+    {
+        $messages = array() ;
+        $garrisons = $this->getProvinceGarrisons($province) ;
+        $roll = $this->rollDice(2, -1) ;
+        $total = $writtenForce + 2 * $garrisons + $governorMIL + $roll['total'];
+        $message = sprintf(
+            _('Province %s is attacked by %s Barabarian raids. Military force is %d (written force) + %d (for %d legions) + %d (%s\'s MIL), a %d (white die %d, black die %d) is rolled for a total of %d%s ') ,
+            $province->getName() ,
+            ($barbarianRaids==2 ? 'increased ' : '') ,
+            $province->getLand() ,
+            2*$garrisons ,
+            $garrisons ,
+            $senator->getMIL() ,
+            $senator->getName() ,
+            $roll['total'] ,
+            $roll[0] ,
+            $roll[1] ,
+            $total ,
+            $this->getEvilOmensMessage(-1)
+        );
+        if ($total>( $barbarianRaids==1 ? 15 : 17))
+        {
+            $message.= sprintf(_(' which is greater than %d, the province is safe.') , ($barbarianRaids==1 ? 15 : 17)) ;
+            array_push($messages , array($message) ) ;
+        }
+        else
+        {
+            $province->setOverrun(TRUE) ;
+            $message.= sprintf(_(' which is not greater than %d, the province is overrun.') , ($barbarianRaids==1 ? 15 : 17)) ;
+            array_push($messages , array($message , 'alert') ) ;
+            if ($province->getDeveloped())
+            {
+                $province->setDeveloped(FALSE) ;
+                array_push($messages , array(_('The Province reverts to undeveloped status'),'alert'));
+            }
+            $mortalityChits = $this->mortality_chits($roll[1]) ;
+            $message = sprintf(_('The black die was a %d, so %d mortality chits are drawn : ') , $roll[1]);
+            $outcome = 'safe' ;
+            $i=1 ;
+            foreach($mortalityChits as $chit)
+            {
+                $message.=$chit.', ';
+                if (    ($senator->getPreciseType()=='Senator' && $senator->getSenatorID()==$chit)
+                    ||  ($senator->getPreciseType()=='Statesman' && $senator->statesmanFamily() ==$chit)
+                )
+                {
+                    // The outcome is based on whether or not the chit drawn was the last (which means capture)
+                    $outcome = ($i++==$roll[1] ? _('captured') : _('killed')) ;
+                }
+            }
+            $message=substr($message, 0, -2);
+            array_push($messages , array($message));
+            switch($outcome)
+            {
+                case 'killed' :
+                    $this->killSenator($senator->getSenatorID(), TRUE) ;
+                    array_push($messages , array(sprintf(_('%s is killed by the barbaric barbarians.') , 'alert' , array($senator->getName()))));
+                    break ;
+                case 'captured' :
+                    $senator->setCaptive('barbarians') ;
+                    array_push($messages , array(sprintf(_('%s is captured by the barbaric barbarians. Ransom must be paid before next Forum phase or he\'s BBQ.') , 'alert' , array($senator->getName()))));
+                    break ; 
+                default :
+                    array_push($messages , array(sprintf(_('%s is safe.') , 'log' , array($senator->getName())) ));
+            }
+        }
+        foreach($messages as $message)
+        {
+            $this->log($message[0] , ( isset($message[1]) ? $message[1] : NULL ) , ( isset($message[2]) ? $message[2] : NULL ) ) ;
+        }
+    }
+
+    /**
+     * Function that handles the internal disorder events first step (order rolls and immediate effects of failure)
+     * @param integer $level 1|2
+     * @param Province $province The provincial Province being governingly governed by the governing Governor
+     * @param Senator $senator The governing Governor governing the provincial Province being governinglly governed
+     * @return array messages
+     */
+    public function doInternalDisorder($level , $province , $senator)
+    {
+        $messages = array() ;
+        $garrisons = $this->getProvinceGarrisons($province) ;
+        $roll = $this->rollOneDie(-1);
+        $message = sprintf(
+            _('Province %s faces internal disorder, %s rolls a %d%s + %d garrisons for a total of %d') ,
+            $province->getName() ,
+            $senator->getName() ,
+            $roll ,
+            $this->getEvilOmensMessage(-1) ,
+            $garrisons ,
+            ($roll+$garrisons)
+        );
+        if (($roll+$garrisons) > ($internalDisorder == 1 ? 4 : 5))
+        {
+            $message.sprintf(_(' which is greater than %d. The province will not generate revenue and cannot be improved this turn.') , ($internalDisorder == 1 ? '4' : '5'));
+            // Using the overrun property both for Barbarian raids & Internal Disorder
+            $province->setOverrun(TRUE) ;
+            $this->log($message) ;
+        }
+        else
+        {
+            // Revolt : Kill Senator, garrisons, and move Province to the Active War deck
+            $message.=sprintf(_(' which is not greater than %d') , ($internalDisorder == 1 ? '4' : '5')) ;
+            $this->killSenator($senator->getSenatorID() , TRUE);
+            // Note : The war is now in the forum, because of the killSenator function, so $revoltedProvince['deck'] should be $this->forum
+            $this->getDeck('Forum')->getFirstCardByProperty('id', $province->getId() , $this->getDeck('activeWars'));
+            $message.=sprintf(_('%s is killed %s and %s becomes an active war') , $senator->getName() , ($garrisons>0 ? _(' with all ').$garrisons._(' garrisons, ') : '') , $province->getName() ) ;
+            $this->log($message , 'alert') ;
+        }
+        // TO DO : log the message
+    }
 
 }

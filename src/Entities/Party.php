@@ -66,7 +66,12 @@ class Party
     public function setLastUpdate($lastUpdate) { $this->lastUpdate = $lastUpdate ; }
     public function setAssassinationAttempt($assassinationAttempt) { $this->assassinationAttempt = $assassinationAttempt; }
     public function setAssassinationTarget($assassinationTarget) {  $this->assassinationTarget = $assassinationTarget; }
-    public function setLeader($leader) {
+    public function setLeader($leader)
+    {
+        if ($this->getLeader()!=NULL)
+        {
+            $this->getLeader()->setLeaderOf(NULL) ;
+        }
         $this->leader = $leader;
         $leader->setLeaderOf($this) ;
     }
@@ -112,7 +117,7 @@ class Party
 
     /**
     * ----------------------------------------------------
-    * Other methods
+    * General methods
     * ----------------------------------------------------
     */
 
@@ -149,6 +154,12 @@ class Party
     }
     
     /**
+    * ----------------------------------------------------
+    * Setup
+    * ----------------------------------------------------
+    */
+
+    /**
      * Returns TRUE if this party has cards in hand that can be played during the Setup/Revolution phases :
      * - Concessions
      * - A Playable Statesman
@@ -168,4 +179,109 @@ class Party
         }
         return FALSE ;
     }
+    
+    /**
+    * ----------------------------------------------------
+    * Revenue
+    * ----------------------------------------------------
+    */
+    
+    /**
+     * Returns a list of the various components of base revenue : senators, leader, knights, concessions, provinces
+     * @param ArrayCollection $legions
+     * @return array ['total'] = int , ['senators'] = int , ['leader'] = string (his name) , ['knights'] = int ,
+     * array ['concessions'] => array(Card , Senator) ,
+     * array ['provinces'] => array(Card , Senator) ,
+     * array['rebels'] => array (Senator , 'nbLegions' , 'loyal' , 'notLoyal' , 'list')
+     */
+    public function revenue_base($legions)
+    {
+        $result = array() ;
+        $result['total'] = 0 ;
+        $result['senators'] = 0 ;
+        $result['leader'] = '' ;
+        $result['knights'] = 0 ;
+        $result['concessions_total'] = 0 ;
+        $result['concessions'] = array() ;
+        $result['provinces'] = array() ;
+        $result['rebels'] = array() ;
+        foreach ($this->getSenators()->getCards() as $senator)
+        {
+            if (!$senator->getRebel() && !$senator->getCaptive())
+            {
+                if ($this->getLeader()->getSenatorID() == $senator->getSenatorID())
+                {
+                    $result['total']+=3 ;
+                    $result['leader']=$senator->getName() ;
+                }
+                else
+                {
+                    $result['total']+=1 ;
+                    $result['senators']+=1 ;
+                }
+                $result['total']+=$senator->getKnights() ;
+                $result['knights']+=$senator->getKnights() ;
+                if ($senator->hasControlledCards())
+                {
+                    foreach ($senator->getCardsControlled()->getCards() as $card)
+                    {
+                        if ( $card->getPreciseType() == 'Concession' && $card->getIncome() > 0)
+                        {
+                            // TO DO : Hmmmm... this should just be a for reference function, why set something here ?
+                            $card->setCorrupt(TRUE) ;
+                            $result['total']+=$card->getIncome() ;
+                            $result['concessions_total']+=$card->getIncome() ;
+                            array_push($result['concessions'] , array('card' => $card , 'senator' => $senator) );
+                        }
+                        elseif ( $card->getPreciseType() == 'Province' )
+                        {
+                            array_push($result['provinces'] , array('card' => $card , 'senator' => $senator) );
+                        }
+                    }
+                }
+            }
+            elseif ($senator->getRebel())
+            {
+                // Rebel senator's legions
+                $nbLegions = 0 ;
+                $nbVeteransLoyal = 0 ;
+                $nbVeteransNotLoyal = 0 ;
+                $legionList = array() ;
+                foreach($legions as $legion)
+                {
+                    if ($legion->getCardLocation()!==NULL && $legion->getCardLocation()->getId() == $senator->getId())
+                    {
+                        array_push($legionList , $legion) ;
+                        $nbLegions++ ;
+                        if ($legion->getVeteran())
+                        {
+                            if ($legion->getLoyalTo()!==NULL && $legion->getLoyalTo()->getSenatorID() == $senator->getSenatorID())
+                            {
+                                $nbVeteransLoyal ++ ;
+                            }
+                            else
+                            {
+                                $nbVeteransNotLoyal ++ ;
+                            }
+                        }
+                    }
+                }
+                //  Rebels CAN collect provincial spoils
+                if ($senator->hasControlledCards())
+                {
+                    foreach ($senator->getCardsControlled()->getCards() as $card)
+                    {
+                        if ( $card->getPreciseType == 'Province' )
+                        {
+                            array_push($result['provinces'] , array($card , $senator) );
+                        }
+                    }
+                }
+                array_push($result['rebels'] , array('senator' => $senator , 'nbLegions' => $nbLegions , 'loyal' => $nbVeteransLoyal , 'notLoyal' => $nbVeteransNotLoyal , 'list' => $legionList) ) ;
+            }
+        }
+        return $result ;
+    }
+
+
 }

@@ -227,7 +227,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 return $app->json( $e->getMessage() , 201);
             }
         })
-        ->bind('verb_JoinGame');
+        ->bind('verb_LoadGame');
 
         return $controllers ;
     }
@@ -257,7 +257,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 $result[$savedGame->getGame_id()] ,
                 array (
                     'savedGameId' => $savedGame->getSavedGameId() ,
-                    'name' => $savedGame->getSavedTime()->format('Y-m-d H:i:s').', Turn '.$savedGame->getTurn().' - '.$savedGame->getPhase().' - '.$savedGame->getSubPhase())
+                    'name' => $savedGame->getSavedTime()->format('Y-m-d H:i:s').', Turn '.$savedGame->getTurn().' - '.$savedGame->getPhase().($savedGame->getSubPhase()!='' ? ' - '.$savedGame->getSubPhase() : ''))
                 );
         }
         return $result ;

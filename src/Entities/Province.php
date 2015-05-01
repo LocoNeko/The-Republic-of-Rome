@@ -106,6 +106,24 @@ class Province extends Card
      * ----------------------------------------------------
      */
 
-        
-}
+    /**
+    * Returns the value of local land forces, based on current status
+    * @return integer
+    */
+    public function getLand()
+    {
+        $status = ($this->getDeveloped()) ? 'developed' : 'undeveloped' ;
+        return $this->getForces()[$status]['land'] ;
+    }
 
+   /**
+    * Returns the value of local sea forces, based on current status
+    * @return integer
+    */
+    public function getSea()
+    {
+        $status = ($this->getDeveloped()) ? 'developed' : 'undeveloped' ;
+        return $this->getForces()[$status]['sea'] ;
+    }
+
+}

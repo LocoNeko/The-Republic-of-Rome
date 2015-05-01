@@ -20,13 +20,17 @@
     {% if game.getParty(app.user.id).getHand().getNumberOfCards() == 0 %}
         <h3>Your Hand is empty</h3>
     {% else%}
+        {#
         {% if game.getPhase()=='Setup' and game.getSubPhase() == 'Play cards' %}
             {% set verbForHand = 'Play cards' %}
         {% endif %}
-
+        #}
         <h3>Your Hand</h3>
         <div class="row">
             {% for card in game.getParty(app.user.id).getHand().getCards() %}
+                {% embed "BoardElements/Card.twig" with {'card': card , 'gameId': game.getId() , 'actions': game.getListOfCardActions(card.getPreciseType()) } only %}
+                {% endembed %}
+                {#
                 {% if card.statesmanPlayable(app.user.id)['flag']|default(FALSE) and verbForHand|default(FALSE)=='Play cards' %}
                     {% embed "BoardElements/Card.twig" with {'card': card , 'buttonVerb': 'Play Statesman' , 'gameId': game.getId() } only %}
                     {% endembed %}
@@ -37,6 +41,7 @@
                     {% embed "BoardElements/Card.twig" with {'card': card , 'gameId': game.getId() } only %}
                     {% endembed %}
                 {% endif %}
+                #}
             {% endfor %}
         </div>
     {% endif %}

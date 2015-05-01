@@ -1,6 +1,6 @@
 <h1>Mortality</h1>
 {% if game.getParty(app.user.id).getIsDone() == FALSE %}
-    Clcik "Done" when you are ready for the death bingo.
+    Click "READY" when you are ready for the death bingo.
     <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MortalityReady' gameId='{{game.getId()}}'>
         <button type="submit" class="btn btn-warning">READY</button>
     </form>

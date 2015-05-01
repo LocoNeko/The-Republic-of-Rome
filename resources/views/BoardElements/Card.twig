@@ -1,105 +1,110 @@
-    {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
-        <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}' gameId='{{gameId}}' >
-            {# Senator's name :
-                - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
-                - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message
-                - The Statesman message will be set as a tooltip ('title' property)
-                - If the card has a Statesman, put brackets around SenatorID
-             #}
-            <div class="sprite-position-name" {{leader|default(false) ? 'style="color: red;"' : ''}} title="{{card.statesmanPlayable(app.user.id)['message']|default('')}}">
-                {{ card.getName() }}<br>
-                {{ card.getHasStatesman() ? '[' ~ card.getSenatorID() ~ ']' : card.getSenatorID() }}
-            </div>
-            <div class="sprite-position-MIL">{{card.getMIL()}}</div>
-            <div class="sprite-position-ORA">{{card.getORA()}}</div>
-            <div class="sprite-position-LOY">{{card.getLOY()}}</div>
-            <div class="sprite-position-treasury">{{card.getTreasury()}}</div>
-            {% if card.getINF() > 0 %}
-                <div class="sprite sprite-Marker_{{card.getINF() % 10}} sprite-position-INF"></div>
-            {% endif %}
-            {% if card.getINF() >= 10 %}
-                <div class="sprite sprite-Marker_{{card.getINF() / 10}} sprite-position-INF10"></div>
-            {% endif %}
-            {% if card.getPOP() > 0 %}
-                <div class="sprite sprite-Marker_{{card.getPOP()}} sprite-position-POP"></div>
-            {% endif %}
-            {% if card.getKnights()> 0 %}
-                <div class="sprite sprite-Marker_{{card.getKnights()}}knights sprite-position-knights"></div>
-            {% endif %}
-            {% if card.getCorrupt() %}
-                <div class="sprite sprite-Marker_Corrupt sprite-position-corrupt"></div>
-            {% endif %}
-            {% if card.getPriorConsul() %}
-                <div class="sprite sprite-Marker_PriorConsul sprite-position-PriorConsul"></div>
-            {% endif %}
-            {% if card.getOffice() != null %}
-                <div class="sprite sprite-Office_{{card.getOffice()|replace({' ': '-'})}} sprite-position-office"></div>
-            {% endif %}
-            <div class="sprite-position-card-id">{{"%03d"|format(card.getId())}}</div>
-            {#
-    {% elseif card.type=='Conflict' %}
-        <div class="span3 sprite sprite-Card" card_id='{{card.getId()}}'>
-            <div class="sprite-position-card-name">{{card.name}}</div>
-            <div class="sprite-position-card-subname">{{card.description}} (1 of {{card.nbOfMatch}} {{card.matches}})</div>
-            <div class="sprite-position-card-text">Inactive until attacked or Matched.
-                {% if card.creates!=null %}
-                    <br><br>Victory creates {{card.creates}}</div>
-                {% endif %}
-            <div class="sprite-position-card-attacks">Attacks :{{card.attacks}}</div>
-        </div>
-    #}
-    {% else %}
-        <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{cardVerb|default()}}' gameId='{{gameId}}'>
-            <div class="sprite-position-card-name">{{card.getName()}}</div>
-    {% endif %}
-        {#
-            Is there a "buttonVerb" for this card ? In which case, display a drop down with the verb(s)
-        #}
-        {% if buttonVerb|default(FALSE) != FALSE %}
-            {#
-            <div class="dropdown closed " style="margin: auto; position: absolute; top: 0; right: 0;">
-                <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
-                    <input type="hidden" name="card_id" value="{{card.getId()}}">
-                        <span href="#" class="dropdown-toggle glyphicon glyphicon-collapse-down" data-toggle="dropdown" aria-haspopup="true" role="button" aria-expanded="false" aria-hidden="true" style="font-size: 3em;"></span>
-                        <ul class="dropdown-menu" role="menu">
-                        <li>
-                            <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-warning">{{buttonVerb}}</button>
-                        </li>
-                        </ul>
-                </form>
-            </div>
-            #}    
-            <div class="sprite-position-topright">
-                <a href="#buttonVerb_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
-                    <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
-                </a>
-                <div id="buttonVerb_{{card.getId()}}" class="collapse">
-                    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
-                        <input type="hidden" name="card_id" value="{{card.getId()}}">
-                        <ul role="menu">
-                            <li>
-                                <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-primary">{{buttonVerb}}</button>
-                            </li>
-                        </ul>
-                    </form>
-                </div>
-            </div>
-        {% endif %}
-        {#
-            Does this card have other cards under its control ? If yes, display them in a collapsable row
-        #}
-        {% if card.hasControlledCards() %}
-            <div class="sprite-position-topleft">
-                <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
-                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-                </a>
-                <div id="CardsControlledBy_{{card.getId()}}" class="row collapse">
-                    {% for slave in card.getCardsControlled().getCards() %}
-                        {% embed "BoardElements/Card.twig" with {'card': slave , 'gameId': gameId } only %}
-                        {% endembed %}
-                    {% endfor %}
-                </div>
-            </div>
-        {% endif %}
+{#
+This template receives a list of actions in the form of an array of arrays :
+0 => ['type' => 'button'|'drag' , 'action' => the name of the action , 'playable' => (optional) applies to Statesman playable only]
+#}
+{% for action in actions|default(NULL) %}
+    {% set cardVerb = ( (action['type'] == 'drag') ? action['action'] : '' ) %}
+    {% set buttonVerb = ( (action['type'] == 'button') ? action['action'] : '' ) %}
+{% endfor %}
 
+{% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
+    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}' gameId='{{gameId}}'>
+        {# Senator's name :
+            - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
+            - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message
+            - The Statesman message will be set as a tooltip ('title' property)
+            - If the card has a Statesman, put brackets around SenatorID
+         #}
+        <div class="sprite-position-name" {{leader|default(false) ? 'style="color: red;"' : ''}} title="{{card.statesmanPlayable(app.user.id)['message']|default('')}}">
+            {{ card.getName() }}<br>
+            {{ card.getHasStatesman() ? '[' ~ card.getSenatorID() ~ ']' : card.getSenatorID() }}
         </div>
+        <div class="sprite-position-MIL">{{card.getMIL()}}</div>
+        <div class="sprite-position-ORA">{{card.getORA()}}</div>
+        <div class="sprite-position-LOY">{{card.getLOY()}}</div>
+        <div class="sprite-position-treasury">{{card.getTreasury()}}</div>
+        {% if card.getINF() > 0 %}
+            <div class="sprite sprite-Marker_{{card.getINF() % 10}} sprite-position-INF"></div>
+        {% endif %}
+        {% if card.getINF() >= 10 %}
+            <div class="sprite sprite-Marker_{{card.getINF() / 10}} sprite-position-INF10"></div>
+        {% endif %}
+        {% if card.getPOP() > 0 %}
+            <div class="sprite sprite-Marker_{{card.getPOP()}} sprite-position-POP"></div>
+        {% endif %}
+        {% if card.getKnights()> 0 %}
+            <div class="sprite sprite-Marker_{{card.getKnights()}}knights sprite-position-knights"></div>
+        {% endif %}
+        {% if card.getCorrupt() %}
+            <div class="sprite sprite-Marker_Corrupt sprite-position-corrupt"></div>
+        {% endif %}
+        {% if card.getPriorConsul() %}
+            <div class="sprite sprite-Marker_PriorConsul sprite-position-PriorConsul"></div>
+        {% endif %}
+        {% if card.getOffice() != null %}
+            <div class="sprite sprite-Office_{{card.getOffice()|replace({' ': '-'})}} sprite-position-office"></div>
+        {% endif %}
+        <div class="sprite-position-card-id">{{"%03d"|format(card.getId())}}</div>
+        {#
+{% elseif card.getPreciseType()=='Conflict' %}
+    <div class="span3 sprite sprite-Card" card_id='{{card.getId()}}'>
+        <div class="sprite-position-card-name">{{card.name}}</div>
+        <div class="sprite-position-card-subname">{{card.description}} (1 of {{card.nbOfMatch}} {{card.matches}})</div>
+        <div class="sprite-position-card-text">Inactive until attacked or Matched.
+            {% if card.creates!=null %}
+                <br><br>Victory creates {{card.creates}}</div>
+            {% endif %}
+        <div class="sprite-position-card-attacks">Attacks :{{card.attacks}}</div>
+    </div>
+#}
+{% elseif card.getPreciseType()=='Concession' %}
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{cardVerb|default()}}' gameId='{{gameId}}'>
+        <div class="sprite-position-card-name">{{card.getName()}}</div>
+        <div class="sprite-position-card-subname">Income : {{card.getIncome()}}</div>
+        {% if card.getSpecial()!=NULL %}
+            <div class="sprite-position-card-attacks">Special :{{card.getSpecial()}}</div>
+        {% endif %}
+{% else %}
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{cardVerb|default()}}' gameId='{{gameId}}'>
+        <div class="sprite-position-card-name">{{card.getName()}}</div>
+{% endif %}
+
+{#
+    Is there a "buttonVerb" for this card ? In which case, display a drop down with the verb(s)
+#}
+{% if buttonVerb|default(FALSE) != FALSE %}
+    <div class="sprite-position-topright">
+        <a href="#buttonVerb_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
+            <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
+        </a>
+        <div id="buttonVerb_{{card.getId()}}" class="collapse">
+            <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{buttonVerb|default()}}' gameId='{{gameId}}'>
+                <input type="hidden" name="card_id" value="{{card.getId()}}">
+                <ul role="menu">
+                    <li>
+                        <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-primary">{{buttonVerb}}</button>
+                    </li>
+                </ul>
+            </form>
+        </div>
+    </div>
+{% endif %}
+
+    {#
+        Does this card have other cards under its control ? If yes, display them in a collapsable row
+    #}
+    {% if card.hasControlledCards() %}
+        <div class="sprite-position-topleft">
+            <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            </a>
+            <div id="CardsControlledBy_{{card.getId()}}" class="row collapse">
+                {% for slave in card.getCardsControlled().getCards() %}
+                    {% embed "BoardElements/Card.twig" with {'card': slave , 'gameId': gameId } only %}
+                    {% endembed %}
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    </div>

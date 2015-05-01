@@ -57,8 +57,10 @@ class MortalityControllerProvider implements ControllerProviderInterface
                 {
                     $this->doMortality($game) ;
                     $game->setPhase('Revenue') ;
+                    $game->setSubPhase('Base') ;
                     $app['saveGame']($game) ;
                     $game->resetAllIsDone() ;
+                    $game->revenue_init() ;
                 }
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -71,7 +73,6 @@ class MortalityControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('verb_MortalityReady');
-
     
         return $controllers ;
     }

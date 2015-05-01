@@ -1,1 +1,50 @@
-<h1>Revenue (TO DO)</h1>
+<h1>Revenue</h1>
+{% set revenueBase = game.getParty(app.user.id).revenue_base(game.getLegions())%}
+<h3>Summary:</h3>
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
+    <thead>
+        <tr>
+            <th>Senators</th>
+            <th>Leader</th>
+            <th>Knights</th>
+            <th>Concessions</th>
+            <th>Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr class="success text-center" style="text-shadow: 1px 1px #888888;">
+            <td>{{revenueBase['senators']}}</td>
+            <td>{{revenueBase['leader']!='' ? 3 : 0}}</td>
+            <td>{{revenueBase['knights']}}</td>
+            <td>{{revenueBase['concessions_total']}}</td>
+            <td class="danger">{{revenueBase['total']}}</td>
+        </tr>
+    </tbody>
+</table>
+{% if game.getSubPhase()=='Base' %}
+    {% if game.getParty(app.user.id).getIsDone() == FALSE %}
+        <h3>You need to handle</h3>
+        {# Earn from drought or not #}
+        <h4>Drought</h4>
+            {% for concession in revenueBase['concessions'] %}
+                {{concession['card'].getSpecial()}}
+            {% endfor %}
+        {# Provincial spoils #}
+        <h4>Provinces</h4>
+        {# Rebel maintaining legions #}
+        <h4>Maintaining legions for rebels</h4>
+        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RevenueDone' gameId='{{game.getId()}}'>
+            <button type="submit" class="btn btn-warning">Done</button>
+        </form>
+    {% else %}
+        You are done with revenue and are currently waiting for :
+        <ul>
+            {% for party in game.getAllPartiesButOne(app.user.id) %}
+                {% if not party.getIsDone() %}
+                    <li>{{party.getFullName()}}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <br>
+{% endif %}

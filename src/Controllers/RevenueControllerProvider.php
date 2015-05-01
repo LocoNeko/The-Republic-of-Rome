@@ -41,6 +41,34 @@ class RevenueControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('Revenue');
+        
+        /*
+        * POST target
+        * Verb : RevenueDone
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/RevenueDone', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                if ($game->isEveryoneDone())
+                {
+                    $app['saveGame']($game) ;
+                }
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_RevenueDone');
+
 
         return $controllers ;
     }
