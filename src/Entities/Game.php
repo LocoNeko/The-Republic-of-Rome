@@ -1095,31 +1095,6 @@ class Game
         fclose($filePointer);
     }
 
-    public function getListOfCardActions($preciseType)
-    {
-        if ($this->getPhase()=='Setup' && $this->getSubPhase() == 'Play cards' && $preciseType=='Statesman')
-        {
-            return array (
-                0 => array (
-                    'type' => 'button' , 
-                    'action' => 'Play Statesman' ,
-                    'playable' => TRUE
-                ) ,
-            ) ;
-        }
-        elseif ($this->getPhase()=='Setup' && $this->getSubPhase() == 'Play cards' && $preciseType=='Concession')
-        {
-            return array (
-                0 => array (
-                    'type' => 'drag' , 
-                    'action' => 'Play Concession'
-                ) ,
-            ) ;
-        } else {
-            return array();
-        }
-    }
-    
     /**
      * ----------------------------------------------------
      * Mortality

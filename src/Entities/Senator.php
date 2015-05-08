@@ -399,4 +399,8 @@ class Senator extends Card
         $this->setReturningGovernor(FALSE) ;
     }
 
+    public function isLeader() 
+    {
+        return ($this->getLeaderOf()!==NULL) ;
+    }
 }

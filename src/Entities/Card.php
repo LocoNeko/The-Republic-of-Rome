@@ -132,4 +132,31 @@ abstract class Card
     {
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }
+    
+    public function getListOfActions($phase , $subPhase)
+    {
+        if ($phase=='Setup' && $subPhase() == 'Play cards' && $this->getPreciseType()=='Statesman')
+        {
+            return array (
+                0 => array (
+                    'type' => 'button' , 
+                    'action' => 'Play Statesman' ,
+                    'playable' => TRUE
+                ) ,
+            ) ;
+        }
+        elseif ($phase=='Setup' && $subPhase() == 'Play cards' && $this->getPreciseType()=='Concession')
+        {
+            return array (
+                0 => array (
+                    'type' => 'drag' , 
+                    'action' => 'Play Concession'
+                ) ,
+            ) ;
+        } else {
+            return array();
+        }
+    }
+    
+
 }
