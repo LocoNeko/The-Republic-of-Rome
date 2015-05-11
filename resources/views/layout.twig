@@ -208,9 +208,7 @@
             /*
              * A (droppable) Senator card needs to have these attributes :
              * - card_id
-             * The draggables must provide :
-             * - gameId
-             * - verb
+             * The draggables must provide  a verb
              */
             $('.sprite-Senator').each( function() {
                 $(this).droppable( {
@@ -223,15 +221,11 @@
                         json['dropOn'] = $(event.target).attr('card_id') ;
                         json['dragFrom'] = ui.draggable.attr('card_id') ;
 
-                        /* All draggable elements should have a gameId
-                         * The gameId is necessary within Jquery so we can properly emit the socket.io Update event
-                         */
-                        var gameId = ui.draggable.attr('gameId') ;
         
                         /* Emit the Update event to socket.io
-                         * This requires a gameId attribute on the draggable (not the droppable as there would be too many)
+                         * This requires a gameId (or "Lobby") which should be in the "realm" attribute of the title tag
                          */
-                        socket.emit( 'Update', gameId );
+                        socket.emit( 'Update', $("title").attr('realm') );
 
                         $.post(
                             window.location.pathname + '/' + verb ,
@@ -260,6 +254,7 @@
         });
         
         // any submit of a form with the 'json-submit' property will result is submitting data in json to the current route + '/verb'
+        // The json data will also include the data of <li> elements from any sortable list (class "sortable-list")
         $(function(){
             $('.json-submit').submit(function(e){
                 //prevent Default functionality
@@ -286,9 +281,9 @@
                 });
                 
                 /* Emit the Update event to socket.io
-                 * This requires a gameId attribute on the form
+                 * This requires a gameId in the "realm" attribute of the title
                  */
-                socket.emit('Update', $(this).attr('gameId'));
+                socket.emit('Update', $("title").attr('realm'));
                 
                 $.post(
                     window.location.pathname + '/' + $(this).attr('verb') ,

@@ -193,6 +193,7 @@ class Party
      * array ['concessions'] => array(Card , Senator) ,
      * array ['provinces'] => array(Card , Senator) ,
      * array['rebels'] => array (Senator , 'nbLegions' , 'loyal' , 'notLoyal' , 'list')
+     * array['flag'] => ['drought'] , ['province'] , ['rebel'] : TRUE if this specific revenue action is relevant to this party
      */
     public function revenue_base($legions)
     {
@@ -205,6 +206,10 @@ class Party
         $result['concessions'] = array() ;
         $result['provinces'] = array() ;
         $result['rebels'] = array() ;
+        $result['flag'] = array() ;
+        $result['flag']['drought'] = FALSE ;
+        $result['flag']['province'] = FALSE ;
+        $result['flag']['rebel'] = FALSE ;
         foreach ($this->getSenators()->getCards() as $senator)
         {
             if (!$senator->getRebel() && !$senator->getCaptive())
@@ -231,10 +236,15 @@ class Party
                             $card->setCorrupt(TRUE) ;
                             $result['total']+=$card->getIncome() ;
                             $result['concessions_total']+=$card->getIncome() ;
+                            if ($card->getSpecial()=='drought')
+                            {
+                                $result['flag']['drought'] = TRUE ;
+                            }
                             array_push($result['concessions'] , array('card' => $card , 'senator' => $senator) );
                         }
                         elseif ( $card->getPreciseType() == 'Province' )
                         {
+                            $result['flag']['province'] = TRUE ;
                             array_push($result['provinces'] , array('card' => $card , 'senator' => $senator) );
                         }
                     }
@@ -251,6 +261,7 @@ class Party
                 {
                     if ($legion->getCardLocation()!==NULL && $legion->getCardLocation()->getId() == $senator->getId())
                     {
+                        $result['flag']['rebel'] = TRUE ;
                         array_push($legionList , $legion) ;
                         $nbLegions++ ;
                         if ($legion->getVeteran())

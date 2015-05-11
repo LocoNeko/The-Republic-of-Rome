@@ -1,13 +1,12 @@
 {#
 This template gets the following parameters :
 - 'card' (Card Entity)
-- 'gameId' (int) : The id of this game
 - 'context' (string) : hand , party , other party
 - actions (array) : [PreciseType][context][style] => action
 #}
 
 {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
-    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}' gameId='{{gameId}}'>
+    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}'>
         {# Senator's name :
             - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
             - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message
@@ -57,14 +56,14 @@ This template gets the following parameters :
     </div>
 #}
 {% elseif card.getPreciseType()=='Concession' %}
-    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{actions['Concession'][context]['drag']|default()}}' gameId='{{gameId}}'>
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{actions['Concession'][context]['drag']|default()}}'>
         <div class="sprite-position-card-name">{{card.getName()}}</div>
         <div class="sprite-position-card-subname">Income : {{card.getIncome()}}</div>
         {% if card.getSpecial()!=NULL %}
             <div class="sprite-position-card-attacks">Special :{{card.getSpecial()}}</div>
         {% endif %}
 {% else %}
-    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='' gameId='{{gameId}}'>
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb=''>
         <div class="sprite-position-card-name">{{card.getName()}}</div>
 {% endif %}
 
@@ -77,7 +76,7 @@ This template gets the following parameters :
             <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
         </a>
         <div id="cardMenu_{{card.getId()}}" class="collapse">
-            <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{actions[card.getPreciseType()][context]['menu']|default()}}' gameId='{{gameId}}'>
+            <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{actions[card.getPreciseType()][context]['menu']|default()}}'>
                 <input type="hidden" name="card_id" value="{{card.getId()}}">
                 <ul role="menu">
                     <li>
@@ -102,7 +101,6 @@ This template gets the following parameters :
                     {% embed "BoardElements/Card.twig" with
                         {
                             'card': controlledCard ,
-                            'gameId': gameId ,
                             'context': context ,
                             'actions': actions|default(NULL)
                         } only 

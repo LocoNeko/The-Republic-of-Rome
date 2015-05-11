@@ -1,5 +1,5 @@
 {% if game.getParty(app.user.id).getLeader() == NULL %}
-    <div class="btn btn-default btn-lg draggable" gameId='{{game.getId()}}' verb='PickLeader' title='Drag and drop on top of a Senator to make him Party leader'>
+    <div class="btn btn-default btn-lg draggable" verb='PickLeader' title='Drag and drop on top of a Senator to make him Party leader'>
         <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Leader
     </div>
 {% else %}

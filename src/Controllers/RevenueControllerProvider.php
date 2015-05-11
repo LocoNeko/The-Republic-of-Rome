@@ -3,6 +3,7 @@ namespace Controllers ;
 
 use Silex\Application;
 use Silex\ControllerProviderInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 class RevenueControllerProvider implements ControllerProviderInterface
 {
@@ -53,6 +54,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
+                $game->getParty($user_id)->setIsDone(TRUE) ;
                 if ($game->isEveryoneDone())
                 {
                     $app['saveGame']($game) ;

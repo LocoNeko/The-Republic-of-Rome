@@ -35,7 +35,6 @@
     {% embed "BoardElements/Card.twig" with
         {
             'card': senator ,
-            'gameId': game.getId() ,
             'context' : (self ? 'Party' : 'Other party') ,
             'actions': actions|default(NULL)
         } only 

@@ -11,7 +11,7 @@
     <strong>You don't have any playable card</strong>
 {% endif %}
 {% if game.getParty(app.user.id).getIsDone() == FALSE %}
-    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='DonePlayingCards' gameId='{{game.getId()}}'>
+    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='DonePlayingCards'>
         <button type="submit" class="btn btn-warning">DONE</button>
     </form>
 {% endif %}

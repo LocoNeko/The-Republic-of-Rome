@@ -23,17 +23,52 @@
 </table>
 {% if game.getSubPhase()=='Base' %}
     {% if game.getParty(app.user.id).getIsDone() == FALSE %}
-        <h3>You need to handle</h3>
+        
         {# Earn from drought or not #}
-        <h4>Drought</h4>
-            {% for concession in revenueBase['concessions'] %}
-                {{concession['card'].getSpecial()}}
-            {% endfor %}
+        {% if revenueBase['flag']['drought'] and game.getEventLevel('name' , 'Drought')>=0 %}
+            <h4>Drought</h4>
+                <table class="table table-bordered" style="width:auto; font-size: 120%; font-weight: bold; ">
+                    <thead>
+                        <tr>
+                            <th>Senator</th>
+                            <th>POP</th>
+                            <th>Concession</th>
+                            <th>Generate extra income</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for concession in revenueBase['concessions'] %}
+                            <tr class="warning text-center">
+                                <td>{{concession['senator'].getName()}}</td>
+                                <td>{{concession['senator'].getPOP()}}</td>
+                                <td>{{concession['card'].getName()}}</td>
+                                <td>
+                                    <div class="btn-group" data-toggle="buttons">
+                                        <label class="btn btn-primary">
+                                            <input type="radio" name="{{concession['card'].getId()}}" id="YES" autocomplete="off">YES
+                                        </label>
+                                        <label class="btn btn-primary active">
+                                            <input type="radio" name="{{concession['card'].getId()}}" id="NO" autocomplete="off" checked> NO
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+        {% endif %}
+        
         {# Provincial spoils #}
-        <h4>Provinces</h4>
+        {% if revenueBase['flag']['province']%}
+            <h4>Provinces</h4>
+        {% endif %}
+   
         {# Rebel maintaining legions #}
-        <h4>Maintaining legions for rebels</h4>
-        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RevenueDone' gameId='{{game.getId()}}'>
+        {% if revenueBase['flag']['rebel']%}
+            <h4>Maintaining legions for rebels</h4>
+        {% endif %}
+        
+        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RevenueDone'>
             <button type="submit" class="btn btn-warning">Done</button>
         </form>
     {% else %}
