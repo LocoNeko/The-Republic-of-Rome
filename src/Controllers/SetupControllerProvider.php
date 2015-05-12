@@ -36,8 +36,7 @@ class SetupControllerProvider implements ControllerProviderInterface
             {
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
-                    'game' => $game ,
-                    'actions' => $this->getCardsActions($game->getPhase() , $game->getSubPhase() )
+                    'game' => $game
                 ));
             }
         })
@@ -221,14 +220,4 @@ class SetupControllerProvider implements ControllerProviderInterface
         return $controllers ;
     }
 
-    public function getCardsActions($phase , $subPhase)
-    {
-        $result = array () ;
-        if ($phase == 'Setup' && $subPhase == 'Play cards')
-        {
-            $result ['Statesman']['Hand']['menu'] = 'Play Statesman' ;
-            $result ['Concession']['Hand']['drag'] = 'Play Concession' ;
-        }
-        return $result ;
-    }
 }

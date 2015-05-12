@@ -1,10 +1,8 @@
 {#
 This template gets the following parameters :
 - 'card' (Card Entity)
-- 'context' (string) : hand , party , other party
-- actions (array) : [PreciseType][context][style] => action
+- 'action' as per the card->getAction() function
 #}
-
 {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
     <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}'>
         {# Senator's name :
@@ -56,7 +54,7 @@ This template gets the following parameters :
     </div>
 #}
 {% elseif card.getPreciseType()=='Concession' %}
-    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{actions['Concession'][context]['drag']|default()}}'>
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{action['drag']|default()}}'>
         <div class="sprite-position-card-name">{{card.getName()}}</div>
         <div class="sprite-position-card-subname">Income : {{card.getIncome()}}</div>
         {% if card.getSpecial()!=NULL %}
@@ -70,20 +68,20 @@ This template gets the following parameters :
 {#
     Is there a drop down menu for this card ? In which case, display it with its actions
 #}
-{% if actions[card.getPreciseType()][context]['menu']|default(FALSE) != FALSE %}
+{% if action['menu']|default(FALSE) != FALSE %}
     <div class="sprite-position-topright">
         <a href="#cardMenu_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
             <span class="glyphicon glyphicon-collapse-down" aria-hidden="true"></span>
         </a>
         <div id="cardMenu_{{card.getId()}}" class="collapse">
-            <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{actions[card.getPreciseType()][context]['menu']|default()}}'>
-                <input type="hidden" name="card_id" value="{{card.getId()}}">
-                <ul role="menu">
-                    <li>
-                        <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-primary">{{actions[card.getPreciseType()][context]['menu']}}</button>
+            <ul role="menu">
+                <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{action['menu']|default()}}'>
+                    <li role="presentation">
+                        <input type="hidden" name="card_id" value="{{card.getId()}}">
+                        <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-primary">{{action['menu']}}</button>
                     </li>
-                </ul>
-            </form>
+                </form>
+            </ul>
         </div>
     </div>
 {% endif %}
@@ -101,8 +99,7 @@ This template gets the following parameters :
                     {% embed "BoardElements/Card.twig" with
                         {
                             'card': controlledCard ,
-                            'context': context ,
-                            'actions': actions|default(NULL)
+                            'action': controlledCard.getAction()
                         } only 
                     %}
                     {% endembed %}

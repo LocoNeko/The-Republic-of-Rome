@@ -103,7 +103,7 @@ abstract class Card
         $deck = $this->getDeck() ;
         if ($deck->getGame() != NULL)
         {
-            $result = array ('type' => 'game' , 'value' => NULL , 'name' => $deck->getName()) ;
+            $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName()) ;
         }
         elseif ($deck->getControlled_by() != NULL)
         {
@@ -125,6 +125,17 @@ abstract class Card
     }
     
     /**
+     * Return the game entity to which this card ultimately belongs or FALSE if there was an error
+     * This function makes use of the fact that all entitites returned by the getLocation() function (Deck, Card , Party) have a getGame() function
+     * @return Game
+     */
+    public function getGame()
+    {
+        $location = $this->getLocation() ;
+        return ( ($location['value']==NULL) ? NULL : $location['value']->getGame() ) ;
+    }
+    
+    /**
      * Checks if a card controls other, as calling getCardsControlled() directly would trigger on-the-fly creation
      * @return type
      */
@@ -133,26 +144,19 @@ abstract class Card
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }
     
-    public function getListOfActions($phase , $subPhase)
+    public function getAction()
     {
-        if ($phase=='Setup' && $subPhase() == 'Play cards' && $this->getPreciseType()=='Statesman')
+        $location = $this->getLocation() ;
+        $game = $this->getGame() ;
+        $phase = $game->getPhase() ;
+        $subPhase = $game->getSubPhase() ;
+        if ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Statesman' && $location['type'] == 'hand' && $this->statesmanPlayable($location['value']->getUser_id())['flag'] )
         {
-            return array (
-                0 => array (
-                    'type' => 'button' , 
-                    'action' => 'Play Statesman' ,
-                    'playable' => TRUE
-                ) ,
-            ) ;
+            return [ 'menu' => 'Play Statesman' ];
         }
-        elseif ($phase=='Setup' && $subPhase() == 'Play cards' && $this->getPreciseType()=='Concession')
+        elseif ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
         {
-            return array (
-                0 => array (
-                    'type' => 'drag' , 
-                    'action' => 'Play Concession'
-                ) ,
-            ) ;
+            return [ 'drag' => 'Play Concession' ] ;
         } else {
             return array();
         }

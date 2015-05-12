@@ -14,7 +14,7 @@
     {% endembed %}
 
     <h3>Your Party</h3>
-    {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id) , 'actions': actions|default(NULL) } %}
+    {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id) } %}
     {% endembed %}
 
     {% if game.getParty(app.user.id).getHand().getNumberOfCards() == 0 %}
@@ -23,7 +23,12 @@
         <h3>Your Hand</h3>
         <div class="row">
             {% for card in game.getParty(app.user.id).getHand().getCards() %}
-                {% embed "BoardElements/Card.twig" with {'card': card , 'context': 'Hand' , 'actions': actions|default(NULL) } only %}
+                {% embed "BoardElements/Card.twig" with
+                    {
+                        'card': card ,
+                        'action': card.getAction()
+                    } only
+                %}
                 {% endembed %}
             {% endfor %}
         </div>
@@ -31,7 +36,7 @@
 
     <h3>Other Parties</h3>
     {% for party in game.getAllPartiesButOne(app.user.id).toArray() %}
-        {% embed 'BoardElements/Party.twig' with {'self' : FALSE , 'party' : party , 'actions': actions|default(NULL) } %}
+        {% embed 'BoardElements/Party.twig' with {'self' : FALSE , 'party' : party } %}
         {% endembed %}
     {% endfor %}
     
