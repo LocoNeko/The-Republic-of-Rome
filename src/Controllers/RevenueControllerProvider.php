@@ -54,6 +54,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
+                $this->doRevenue($game , $user_id , $request->request->all()) ;
                 $game->getParty($user_id)->setIsDone(TRUE) ;
                 if ($game->isEveryoneDone())
                 {
@@ -75,4 +76,29 @@ class RevenueControllerProvider implements ControllerProviderInterface
         return $controllers ;
     }
 
+    private function doRevenue($game , $user_id , $data)
+    {
+        $base = $game->getParty($user_id)->revenue_base($game->getLegions()) ;
+        // Handle normal revenue (senators, leader, knights)
+        
+        // Handle Concessions, including extra revenue from drought (choice should be in 'data')
+        foreach($base['concessions'] as $concession)
+        {
+            
+        }
+
+        // Handle Provincial spoils, choice should be in 'data'
+        foreach($base['provinces'] as $province)
+        {
+            
+        }
+
+        // Handle rebel legions maintenance, choice should be in 'data'
+        foreach($base['rebels'] as $rebel)
+        {
+            
+        }
+        die() ;
+    }
+    
 }

@@ -66,16 +66,12 @@ class Province extends Card
         $this->setIncome(
             Array (
                 'undeveloped' => Array(
-                    Array (
-                        'senator' => Array ( 'variable' => (int)$data[3] , 'fixed' => (int)$data[4] ),
-                        'rome'    => Array ( 'variable' => (int)$data[5] , 'fixed' => (int)$data[6] )
-                    )
+                    'senator' => Array ( 'variable' => (int)$data[3] , 'fixed' => (int)$data[4] ),
+                    'rome'    => Array ( 'variable' => (int)$data[5] , 'fixed' => (int)$data[6] )
                 ) ,
 		'developed' => Array (
-                    Array ( 
-                        'senator' => Array ( 'variable' => (int)$data[7] , 'fixed' => (int)$data[8] ),
-                        'rome'    => Array ( 'variable' => (int)$data[9] , 'fixed' => (int)$data[10])
-                    )
+                    'senator' => Array ( 'variable' => (int)$data[7] , 'fixed' => (int)$data[8] ),
+                    'rome'    => Array ( 'variable' => (int)$data[9] , 'fixed' => (int)$data[10])
                 )
             )
         ) ;
