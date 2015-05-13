@@ -8,6 +8,7 @@
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
         <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
         <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/css/sprite.css">
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
         <style>
             .sortable-list-placeholder { background-color: #bbb; border: 1px dashed #666; margin-bottom: -1px; padding: 10px 15px; }
             .ui-resizable { position: relative;}
@@ -22,6 +23,10 @@
             .ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
             .ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
         </style>
+        <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
     </head>
     
     <body style="{{ game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%;">
@@ -143,10 +148,6 @@
             </div>
         {% endif %}
         
-        <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
         <!--
             Scripts for :
             - JqueryUI : Sortable lists
@@ -190,21 +191,6 @@
                 });
             });
 
-            /* Droppables (something can be dropped on it) based on classes :
-             * - Card slots
-             * - Senator cards
-             */
-            $('.sprite-CardSlot').droppable( {
-                drop: function ( event, ui ) {
-                    /*
-                    $(event.target).find('div[id^="Card_"]').remove(); // WARNING : I Stopped using id = Card_XX
-                    var clonedDraggable = ui.draggable.clone();
-                    clonedDraggable.css({'margin-left':'0px'});
-                    $(this).append(clonedDraggable);
-                    */
-                }
-            } );
-            
             /*
              * A (droppable) Senator card needs to have these attributes :
              * - card_id

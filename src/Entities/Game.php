@@ -1453,7 +1453,7 @@ class Game
      */
     public function doInternalDisorder($level , $province , $senator)
     {
-        $messages = array() ;
+        // TO DO : Refactor the messages parameters so they take advantage of the log(message , type, parameters) function
         $garrisons = $this->getProvinceGarrisons($province) ;
         $roll = $this->rollOneDie(-1);
         $message = sprintf(
@@ -1465,9 +1465,9 @@ class Game
             $garrisons ,
             ($roll+$garrisons)
         );
-        if (($roll+$garrisons) > ($internalDisorder == 1 ? 4 : 5))
+        if (($roll+$garrisons) > ($level == 1 ? 4 : 5))
         {
-            $message.sprintf(_(' which is greater than %d. The province will not generate revenue and cannot be improved this turn.') , ($internalDisorder == 1 ? '4' : '5'));
+            $message.sprintf(_(' which is greater than %d. The province will not generate revenue and cannot be improved this turn.') , ($level == 1 ? '4' : '5'));
             // Using the overrun property both for Barbarian raids & Internal Disorder
             $province->setOverrun(TRUE) ;
             $this->log($message) ;
@@ -1475,14 +1475,13 @@ class Game
         else
         {
             // Revolt : Kill Senator, garrisons, and move Province to the Active War deck
-            $message.=sprintf(_(' which is not greater than %d') , ($internalDisorder == 1 ? '4' : '5')) ;
+            $message.=sprintf(_(' which is not greater than %d') , ($level == 1 ? '4' : '5')) ;
             $this->killSenator($senator->getSenatorID() , TRUE);
-            // Note : The war is now in the forum, because of the killSenator function, so $revoltedProvince['deck'] should be $this->forum
+            // Note : The war is now in the forum, because of the killSenator function, hence the $this->getDeck('Forum')
             $this->getDeck('Forum')->getFirstCardByProperty('id', $province->getId() , $this->getDeck('activeWars'));
             $message.=sprintf(_('%s is killed %s and %s becomes an active war') , $senator->getName() , ($garrisons>0 ? _(' with all ').$garrisons._(' garrisons, ') : '') , $province->getName() ) ;
             $this->log($message , 'alert') ;
         }
-        // TO DO : log the message
     }
 
 }

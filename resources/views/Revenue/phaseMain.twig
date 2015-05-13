@@ -1,27 +1,27 @@
-<h1>Revenue</h1>
-{% set revenueBase = game.getParty(app.user.id).revenue_base(game.getLegions())%}
-<h3>Summary:</h3>
-<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
-    <thead>
-        <tr>
-            <th>Senators</th>
-            <th>Leader</th>
-            <th>Knights</th>
-            <th>Concessions</th>
-            <th>Total</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr class="success text-center" style="text-shadow: 1px 1px #888888;">
-            <td>{{revenueBase['senators']}}</td>
-            <td>{{revenueBase['leader']!='' ? 3 : 0}}</td>
-            <td>{{revenueBase['knights']}}</td>
-            <td>{{revenueBase['concessions_total']}}</td>
-            <td class="danger">{{revenueBase['total']}}</td>
-        </tr>
-    </tbody>
-</table>
+<h1>Revenue - {{game.getSubPhase()}}</h1>
 {% if game.getSubPhase()=='Base' %}
+    {% set revenueBase = game.getParty(app.user.id).revenue_base(game.getLegions())%}
+    <h3>Summary:</h3>
+    <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
+        <thead>
+            <tr>
+                <th>Senators</th>
+                <th>Leader</th>
+                <th>Knights</th>
+                <th>Concessions</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="success text-center" style="text-shadow: 1px 1px #888888;">
+                <td>{{revenueBase['senators']}}</td>
+                <td>{{revenueBase['leader']!='' ? 3 : 0}}</td>
+                <td>{{revenueBase['knights']}}</td>
+                <td>{{revenueBase['concessions_total']}}</td>
+                <td class="danger">{{revenueBase['total']}}</td>
+            </tr>
+        </tbody>
+    </table>
     {% if game.getParty(app.user.id).getIsDone() == FALSE %}
         
         <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RevenueDone'>
@@ -69,7 +69,7 @@
                                                         <input type="radio" name="{{concession['card'].getId()}}" value="YES" autocomplete="off">YES
                                                     </label>
                                                     <label class="btn btn-primary active">
-                                                        <input type="radio" name="{{concession['card'].getId()}}" value="NO" autocomplete="off" checked> NO
+                                                        <input type="radio" name="{{concession['card'].getId()}}" value="NO" autocomplete="off" checked>NO
                                                     </label>
                                                 </div>
                                             </td>
@@ -124,20 +124,20 @@
                                                 <td>
                                                     <div class="btn-group" data-toggle="buttons">
                                                         <label class="btn btn-primary">
-                                                            <input type="radio" name="{{province['card'].getId()}}['spoils']" value="YES" autocomplete="off">YES
+                                                            <input type="radio" name="{{province['card'].getId()}}[spoils]" value="YES" autocomplete="off">YES
                                                         </label>
                                                         <label class="btn btn-primary active">
-                                                            <input type="radio" name="{{province['card'].getId()}}['spoils']" value="NO" autocomplete="off" checked> NO
+                                                            <input type="radio" name="{{province['card'].getId()}}[spoils]" value="NO" autocomplete="off" checked>NO
                                                         </label>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="btn-group" data-toggle="buttons">
                                                         <label class="btn btn-primary">
-                                                            <input type="radio" name="{{province['card'].getId()}}['rome']" value="YES" autocomplete="off">YES
+                                                            <input type="radio" name="{{province['card'].getId()}}[rome]" value="YES" autocomplete="off">YES
                                                         </label>
                                                         <label class="btn btn-primary active">
-                                                            <input type="radio" name="{{province['card'].getId()}}['rome']" value="NO" autocomplete="off" checked> NO
+                                                            <input type="radio" name="{{province['card'].getId()}}[rome]" value="NO" autocomplete="off" checked>NO
                                                         </label>
                                                     </div>
                                                 </td>
@@ -201,4 +201,65 @@
         </ul>
     {% endif %}
     <br>
+{% elseif game.getSubPhase()=='Redistribution' %}
+    {% if game.getParty(app.user.id).getIsDone() == FALSE %}
+        <div class="btn btn-default btn-lg draggable revenueRedistribution" title='Drag and drop to transfer money to/from your party treasury'>
+            Your party : {{game.getParty(app.user.id).getTreasury()}}T
+        </div>
+        {% for otherParty in game.getAllPartiesButOne(app.user.id)%}
+            <div class="btn btn-default btn-lg revenueRedistribution" title='Drag and drop to transfer money to/from {{otherParty.getName()}}'>
+                {{otherParty.getName()}}
+            </div>
+        {% endfor %}
+        <div class="modal fade" id="redistributionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Transfer</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="redistributionAmount" style="border:0; font-weight:bold; font-size: 2em;">
+                        <div id="redistributionSlider"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary">Transfer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            $(document).ready(function(){
+                $('.revenueRedistribution').droppable( {
+                    drop: function ( event, ui ) {
+                        $('#redistributionSlider').slider({
+                            value:1,
+                            min: 1,
+                            max: 42,
+                            slide: function( event, ui ) {
+                                $( "#redistributionAmount" ).val( ui.value + 'T.' );
+                            }
+                        });
+                        $('#redistributionModal').modal('show') ;
+                        /*
+                        $(event.target).find('div[id^="Card_"]').remove(); // WARNING : I Stopped using id = Card_XX
+                        var clonedDraggable = ui.draggable.clone();
+                        clonedDraggable.css({'margin-left':'0px'});
+                        $(this).append(clonedDraggable);
+                        */
+                    }
+                } );
+            });
+        </script>
+
+    {% else %}
+        You are done with redistribution and are currently waiting for :
+        <ul>
+            {% for party in game.getAllPartiesButOne(app.user.id) %}
+                {% if not party.getIsDone() %}
+                    <li>{{party.getFullName()}}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% endif %}
 {% endif %}

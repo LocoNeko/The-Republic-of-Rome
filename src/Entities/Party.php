@@ -153,6 +153,11 @@ class Party
         return $total ;
     }
     
+    public function changeTreasury($amount)
+    {
+        $this->treasury+=(int)$amount ;
+    }
+    
     /**
     * ----------------------------------------------------
     * Setup
@@ -232,8 +237,6 @@ class Party
                     {
                         if ( $card->getPreciseType() == 'Concession' && $card->getIncome() > 0)
                         {
-                            // TO DO : Hmmmm... this should just be a for reference function, why set something here ?
-                            $card->setCorrupt(TRUE) ;
                             $result['total']+=$card->getIncome() ;
                             $result['concessions_total']+=$card->getIncome() ;
                             if ($card->getSpecial()=='drought')
