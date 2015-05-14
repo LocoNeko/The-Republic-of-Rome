@@ -4,7 +4,7 @@ This template gets the following parameters :
 - 'action' as per the card->getAction() function
 #}
 {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
-    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}'>
+    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}' treasury='{{card.getTreasury()}}' item_name='{{ card.getName() }}'>
         {# Senator's name :
             - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
             - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message

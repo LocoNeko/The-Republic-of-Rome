@@ -73,6 +73,26 @@ class RevenueControllerProvider implements ControllerProviderInterface
         })
         ->bind('verb_RevenueDone');
 
+        /*
+        * POST target
+        * Verb : Redistribute
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/Redistribute', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                error_log(print_r($request->request->all() , TRUE)) ;
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_RevenueDone');
 
         return $controllers ;
     }

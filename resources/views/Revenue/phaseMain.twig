@@ -203,11 +203,11 @@
     <br>
 {% elseif game.getSubPhase()=='Redistribution' %}
     {% if game.getParty(app.user.id).getIsDone() == FALSE %}
-        <div class="btn btn-default btn-lg draggable revenueRedistribution" title='Drag and drop to transfer money to/from your party treasury'>
+        <div class="btn btn-default btn-lg draggable revenueRedistribution" title='Drag and drop to transfer money to/from your party treasury' treasury='{{game.getParty(app.user.id).getTreasury()}}' item_name='your party treasury' user_id="{{game.getParty(app.user.id).getUser_id()}}">
             Your party : {{game.getParty(app.user.id).getTreasury()}}T
         </div>
         {% for otherParty in game.getAllPartiesButOne(app.user.id)%}
-            <div class="btn btn-default btn-lg revenueRedistribution" title='Drag and drop to transfer money to/from {{otherParty.getName()}}'>
+            <div class="btn btn-default btn-lg revenueRedistribution" title='Drop to transfer money to {{otherParty.getName()}}' item_name='{{otherParty.getName()}}' user_id="{{otherParty.getUser_id()}}">
                 {{otherParty.getName()}}
             </div>
         {% endfor %}
@@ -216,39 +216,79 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                        <h4 class="modal-title" id="myModalLabel">Transfer</h4>
+                        <h4 class="modal-title" id="myModalLabel"></h4>
                     </div>
                     <div class="modal-body">
                         <input type="text" id="redistributionAmount" style="border:0; font-weight:bold; font-size: 2em;">
                         <div id="redistributionSlider"></div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary">Transfer</button>
+                        <button type="button" class="btn btn-primary" id="submitRedistribution" from_senator="" to_senator="" from_party="" to_party="">Transfer</button>
                     </div>
                 </div>
             </div>
         </div>
         <script>
             $(document).ready(function(){
-                $('.revenueRedistribution').droppable( {
+                $('.revenueRedistribution , .sprite-Senator').droppable( {
+                    tolerance: 'pointer',
                     drop: function ( event, ui ) {
+                        // treasury is defined if you drag from party or Senator
+                        var maxAmount = ui.draggable.attr('treasury') ;
+                        var giver = ui.draggable.attr('item_name') ;
+                        var recipient = $(event.target).attr('item_name') ;
+                        $('#myModalLabel').text('Transfer from ' + giver + ' to ' + recipient );
+                        $('#redistributionAmount' ).val('1T.' );
                         $('#redistributionSlider').slider({
-                            value:1,
                             min: 1,
-                            max: 42,
+                            max: maxAmount ,
+                            value: 1,
                             slide: function( event, ui ) {
-                                $( "#redistributionAmount" ).val( ui.value + 'T.' );
+                                $('#redistributionAmount').val( ui.value + 'T.' );
                             }
                         });
                         $('#redistributionModal').modal('show') ;
-                        /*
-                        $(event.target).find('div[id^="Card_"]').remove(); // WARNING : I Stopped using id = Card_XX
-                        var clonedDraggable = ui.draggable.clone();
-                        clonedDraggable.css({'margin-left':'0px'});
-                        $(this).append(clonedDraggable);
-                        */
+                        // Update the elements that hold the card_id and/or party_id of giver & recipient
+                        if (ui.draggable.hasClass('sprite-Senator'))
+                        {
+                            $('#submitRedistribution').attr('from_senator' , ui.draggable.attr('card_id') ) ;
+                            $('#submitRedistribution').attr('from_party' , '' ) ;
+                        }
+                        else
+                        {
+                            $('#submitRedistribution').attr('from_senator' , '' ) ;
+                            $('#submitRedistribution').attr('from_party' , ui.draggable.attr('user_id') ) ;
+                        }
+                        if ($(event.target).hasClass('sprite-Senator'))
+                        {
+                            $('#submitRedistribution').attr('to_senator' , $(event.target).attr('card_id') ) ;
+                            $('#submitRedistribution').attr('to_party' , '' ) ;
+                        }
+                        else
+                        {
+                            $('#submitRedistribution').attr('to_senator' , '' ) ;
+                            $('#submitRedistribution').attr('to_party' , $(event.target).attr('user_id') ) ;
+                        }
                     }
-                } );
+                });
+                $('#submitRedistribution').click(function(){
+                    $('#redistributionModal').modal('hide') ;
+                    var json = {} ;
+                    json['fromSenator'] = $('#submitRedistribution').attr('from_senator') ;
+                    json['toSenator'] = $('#submitRedistribution').attr('to_senator') ;
+                    json['fromParty'] = $('#submitRedistribution').attr('from_party') ;
+                    json['toParty'] = $('#submitRedistribution').attr('to_party') ;
+                    json['amount'] = $('#redistributionSlider').slider('option' , 'value') ;
+
+                    $.post(
+                        window.location.pathname + '/Redistribute',
+                        json ,
+                        function( data ) {
+                            window.location.reload(true) ;
+                        } ,
+                        "json"
+                    );
+                });
             });
         </script>
 
