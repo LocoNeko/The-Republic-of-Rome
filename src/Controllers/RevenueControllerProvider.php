@@ -84,7 +84,10 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
-                error_log(print_r($request->request->all() , TRUE)) ;
+                $this->doTransfer($game , $user_id , $request->request->all()) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             else
             {
@@ -272,4 +275,84 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $party->setIsDone(TRUE) ;
     }
     
+    /**
+     * This function transfers money based on the $data submitted.
+     * @param Game $game
+     * @param int $user_id
+     * @param array $data array 'fromSenator','fromParty','toSenator','toParty','amount'<br>
+     * For senators : card_id|'' , for parties : user_id|'' , for amount : (int)
+     * @return boolean Success or failure
+     */
+    private function doTransfer($game , $user_id , $data)
+    {
+        $party = $game->getParty($user_id) ;
+        /* Checks on the data :
+         * - fromSenator & fromParty cannot both be set
+         * - fromSenator & fromParty cannot both be null
+         * - toSenator & toParty cannot both be set
+         * - toSenator & toParty cannot both be null
+         * - fromParty can only be $user_id
+         * - fromSenator & toSenator can only be in the party 
+         */
+        if (
+            ((int)$data['amount']<=0) ||
+            ($data['fromSenator']!='' && $data['fromParty']!='') ||
+            ($data['fromSenator']=='' && $data['fromParty']=='') ||
+            ($data['toSenator']!='' && $data['toParty']!='') ||
+            ($data['toSenator']=='' && $data['toParty']=='') ||
+            ($data['fromParty']!='' && $data['fromParty']!=$user_id) ||
+            ($data['fromSenator']!='' && ($party->getSenators()->getFirstCardByProperty('id', $data['fromSenator']) === FALSE) ) ||
+            ($data['toSenator']!='' && ($party->getSenators()->getFirstCardByProperty('id', $data['toSenator']) === FALSE) )
+        )
+        {
+            $game->log(_('ERROR - Redistributing from or to wrong Seantor or with invalid amount') , 'error' ) ;
+            return FALSE ;
+        }
+        else 
+        {
+            $fromText = '' ;
+            $toText = '' ;
+            // FROM
+            if ($data['fromParty']!='')
+            {
+                if ($party->getTreasury()<(int)$data['amount'])
+                {
+                    $game->log(_('ERROR - Insufficient funds for Redistribution') , 'error' ) ;
+                    return FALSE ;
+                }
+                else
+                {
+                    $party->changeTreasury(-(int)$data['amount']) ; $fromText=_(' party treasury');
+                }
+            }
+            else
+            {
+                $fromSenator = $party->getSenators()->getFirstCardByProperty('id' , $data['fromSenator']) ;
+                if ($fromSenator->getTreasury() <(int)$data['amount'])
+                {
+                    $game->log(_('ERROR - Insufficient funds for Redistribution') , 'error' ) ;
+                    return FALSE ;
+                }
+                else
+                {
+                    $fromSenator->changeTreasury(-(int)$data['amount']) ; $fromText=$fromSenator->getName();
+                }
+            }
+        
+            // TO
+            if ($data['toParty']!='')
+            {
+                $game->getParty($data['toParty'])->changeTreasury((int)$data['amount']) ;
+                $toText = ( ($data['toParty']==$user_id) ? _('party treasury') : _('[['.$data['toParty'].']]') ) ;
+            }
+            else
+            {
+                $toSenator = $party->getSenators()->getFirstCardByProperty('id' , $data['toSenator']) ;
+                $toSenator->changeTreasury((int)$data['amount']) ;
+                $toText = $toSenator->getName() ;
+            }
+            $game->log(_('[['.$user_id.']] {transfer '.(int)$data['amount'].'T , transfers money} from '.$fromText.' to '.$toText) , 'log' ) ;
+        }
+        return TRUE ;
+    }
 }

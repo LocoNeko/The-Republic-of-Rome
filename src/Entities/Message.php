@@ -173,7 +173,7 @@ class Message
      * Displays the message, taking $user_id into account<br>
      * NOTE : The following special tags will be replaced :<br>
      * - [[$id]], will be replaced by the party & name of the player with id $id, or "You" if the $id is the same as $user_id<br>
-     * - {receive,receives} only works if a previous [[]] tag exists, in which case "do" will be used if $id = $user_id and "does" otherwise<br>
+     * - A tag in the format {do,does} only works if a previous [[]] tag exists, in which case "do" will be used if $id = $user_id and "does" otherwise<br>
      * 
      * How it works : It goes through each user_id in the partiesNames array, if it finds [[$id]], it replaces it with<br>
      * the name of the party or 'you', based on the $user_id parameter (which tells us who is reading the message)<br>

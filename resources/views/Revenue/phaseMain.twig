@@ -280,6 +280,11 @@
                     json['toParty'] = $('#submitRedistribution').attr('to_party') ;
                     json['amount'] = $('#redistributionSlider').slider('option' , 'value') ;
 
+                    /* Emit the Update event to socket.io
+                     * This requires a gameId in the "realm" attribute of the title
+                     */
+                    socket.emit('Update', $("title").attr('realm'));
+
                     $.post(
                         window.location.pathname + '/Redistribute',
                         json ,

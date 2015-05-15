@@ -136,10 +136,10 @@ class Deck
     
     /**
      * Returns the first card that has a $property equal to $value. Moves it to another deck if $target is defined.
-     * @param type $property
-     * @param type $value
-     * @param type $target
-     * @return boolean
+     * @param string $property
+     * @param mixed $value
+     * @param Deck $target
+     * @return boolean|Card Card or FALSE if no card was found
      */
     public function getFirstCardByProperty($property , $value , $target=NULL)
     {
