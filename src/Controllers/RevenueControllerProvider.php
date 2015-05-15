@@ -96,6 +96,40 @@ class RevenueControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('verb_RevenueDone');
+        
+        /*
+        * POST target
+        * Verb : RedistributionDone
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/RedistributionDone', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                // TO DO : Offer an interface to the HRAO for disbanding legions that were released by rebels
+                // The HRAO cannot setDone to TRUE as long as there is released legions
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                if ($game->isEveryoneDone())
+                {
+                    $app['saveGame']($game) ;
+                    $this->doRomeRevenue($game) ;
+                    $game->setSubPhase('Contributions') ;
+                    $game->resetAllIsDone() ;
+                }
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_RedistributionDone');
+
 
         return $controllers ;
     }
@@ -354,5 +388,59 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $game->log(_('[['.$user_id.']] {transfer '.(int)$data['amount'].'T , transfers money} from '.$fromText.' to '.$toText) , 'log' ) ;
         }
         return TRUE ;
+    }
+    
+    /**
+     * Generates the revenues for Rome : 100T, Allied Enthusiasm, Provinces (both for aligned and unaligned Senators)
+     * @param Game $game
+     */
+    private function doRomeRevenue($game)
+    {
+        $game->log(_('State revenues' , 'alert')) ;
+        $game->changeTreasury(100) ;
+        $game->log(_('Rome collects 100T.')) ;
+        // Allied Enthusiasm event
+        $alliedEnthusiasmEvent = $game->getEvent('name' , 'Allied Enthusiasm') ;
+        if ($alliedEnthusiasmEvent['level']>0)
+        {
+            $name = ($alliedEnthusiasmEvent['level'] ? 'name' : 'increased_name') ;
+            $description = ($alliedEnthusiasmEvent['level']==1 ? 'description' : 'increased_description') ;
+            array_push($messages , array($this->events[162][$name].' : '.$this->events[162][$description]) );
+            $game->changeTreasury($alliedEnthusiasmEvent['level']==1 ? 50 : 75);
+            $game->setEventLevel ('name' , 'Allied Enthusiasm' , 0) ;
+            $game->log($alliedEnthusiasmEvent[$name].' : '.$alliedEnthusiasmEvent[$description]) ;
+        }
+        // Provinces revenues for aligned Senators
+        foreach ($game->getParties() as $party)
+        {
+            foreach ($party->getSenators()->getCards() as $senator)
+            {
+                foreach ($senator->getCardsControlled()->getCards() as $province)
+                {
+                    if ($province->getPreciseType()=='Province')
+                    {
+                        $revenue = $province->rollRevenues('rome' , -$game->getEvent('name' , 'Evil Omens'));
+                        $game->changeTreasury($revenue);
+                        $game->log(_('%1$s : Rome\'s revenue is %2$dT .') , 'log' , array($province->getName() , $revenue) ) ;
+                    }
+                }
+            }
+        }
+        // Provinces revenues for unaligned Senators
+        foreach ($game->getDeck('Forum')->getCards() as $senator)
+        {
+            if ($senator->getPreciseType()=='Senator' || $senator->getPreciseType()=='Statesman')
+            {
+                foreach ($senator->getCardsControlled()->getCards() as $province)
+                {
+                    if ($province->getPreciseType()=='Province')
+                    {
+                        $revenue = $province->rollRevenues('rome' , -$game->getEvent('name' , 'Evil Omens'));
+                        $game->changeTreasury($revenue);
+                        $game->log(_('%1$s : Rome\'s revenue is %2$dT .') , 'log' , array($province->getName() , $revenue) ) ;
+                    }
+                }
+            }
+        }
     }
 }

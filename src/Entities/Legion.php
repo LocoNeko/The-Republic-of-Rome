@@ -22,7 +22,7 @@ class Legion
     /** @ManyToOne(targetEntity="Senator", inversedBy="loyalLegions") @JoinColumn(name="loyalTo_id", referencedColumnName="internalId" , nullable=true) **/
     private $loyalTo ;
 
-    // A Legion can be on a non-Card named location ("Rome" , "Pool")
+    // A Legion can be on a non-Card named location ("Rome" , "Pool" , "Released")
     /** @Column(type="string") @var string */
     private $otherLocation ='Pool';
 
@@ -37,6 +37,7 @@ class Legion
     public function setOtherLocation($otherLocation) { $this->otherLocation = $otherLocation; }
     public function setCardLocation($cardLocation) { $this->cardLocation = $cardLocation; }
 
+    public function getId() { return $this->id; }
     public function getGame() { return $this->game; }
     public function getName() { return $this->name; }
     public function getVeteran() { return $this->veteran; }
@@ -61,7 +62,7 @@ class Legion
 
     public function canBeDisbanded()
     {
-        return ($this->getOtherLocation()== 'Rome' || $this->getOtherLocation() == 'released') ;
+        return ($this->getOtherLocation()== 'Rome' || $this->getOtherLocation() == 'Released') ;
     }
     
     public function recruit()

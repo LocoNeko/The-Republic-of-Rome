@@ -649,6 +649,11 @@ class Game
         return $result ;
     }
     
+    /**
+     * 
+     * @param boolean $presiding
+     * @return Senator
+     */
     function getHRAO($presiding=FALSE)
     {
         
@@ -801,6 +806,50 @@ class Game
         elseif ($type=='number')
         {
             return $this->getEvents()[$search]['level'] ;
+        }
+        return FALSE ;
+    }
+
+    /**
+     * Returns an event by looking for its name or for its number
+     * @param string $type can be 'name' or 'number'
+     * @param mixed $search The name of the event <b>OR</b> its number, based on the value of $type
+     * @return mixed event|FALSE
+     */
+    public function getEvent ($type , $search) {
+        if ($type=='name')
+        {
+            foreach ($this->getEvents() as $event)
+            {
+               if ($event['name'] == $search)
+                {
+                    return $event;
+                }
+            }
+            return FALSE ;
+        }
+        elseif ($type=='number')
+        {
+            return $this->getEvents()[$search] ;
+        }
+        return FALSE ;
+    }
+
+    public function setEventLevel ($type , $search , $level) {
+        if ($type=='name')
+        {
+            foreach ($this->getEvents() as $key=>$event)
+            {
+               if ($event['name'] == $search)
+                {
+                    $this->getEvents()[$key]['level'] = $level ;
+                }
+            }
+            return FALSE ;
+        }
+        elseif ($type=='number')
+        {
+            $this->getEvents()[$search]['level'] = $level ;
         }
         return FALSE ;
     }
@@ -1482,6 +1531,22 @@ class Game
             $message.=sprintf(_('%s is killed %s and %s becomes an active war') , $senator->getName() , ($garrisons>0 ? _(' with all ').$garrisons._(' garrisons, ') : '') , $province->getName() ) ;
             $this->log($message , 'alert') ;
         }
+    }
+    
+    /**
+     * 
+     * @return boolean Whether or not one or more legion->otherLocation is 'Released' 
+     */
+    public function areThereReleasedLegions()
+    {
+        foreach($this->getLegions() as $legion)
+        {
+            if ($legion->getOtherLocation() == 'Released')
+            {
+                return TRUE ;
+            }
+        }
+        return FALSE ;
     }
 
 }
