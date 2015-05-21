@@ -36,6 +36,10 @@ abstract class Card
     /** @OneToMany(targetEntity="Legion", mappedBy="cardLocation") **/
     private $withLegions ;
     
+    // A Card can be the location of any number of Fleets
+    /** @OneToMany(targetEntity="Fleet", mappedBy="cardLocation") **/
+    private $withFleets ;
+
     public static function isValidType($type)
     {
         return in_array($type , self::$VALID_TYPES) ;

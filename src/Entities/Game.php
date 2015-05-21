@@ -72,6 +72,10 @@ class Game
     /** @OneToMany(targetEntity="Legion", mappedBy="game", cascade={"persist"} ) **/
     private $legions ;
     
+    // A Game has many fleets
+    /** @OneToMany(targetEntity="Fleet", mappedBy="game", cascade={"persist"} ) **/
+    private $fleets ;
+
     // A Game has many messages
     /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist"} ) **/
     private $messages ;
@@ -158,6 +162,7 @@ class Game
         $this->parties = new ArrayCollection();
         $this->decks = new ArrayCollection();
         $this->legions = new ArrayCollection();
+        $this->fleets = new ArrayCollection();
         $this->messages = new ArrayCollection();
         foreach (self::$VALID_DECKS as $deckName)
         {
@@ -187,6 +192,7 @@ class Game
     public function getParties() { return $this->parties ; }
     public function getDecks() { return $this->decks ; }
     public function getLegions() { return $this->legions; }
+    public function getFleets() { return $this->fleets; }
     public function getMessages() { return $this->messages; }
     public function getTimezone() { return $this->timezone ; }
     public function getCurrentBidder() { return $this->currentBidder; }
@@ -977,9 +983,6 @@ class Game
         $this->log(_('The "Era Ends" card goes to the discard. (MUST FIX)') , 'error' ) ;
         $earlyRepublicDeck->getFirstCardByProperty('id' , 65 , $this->getDeck('discard')) ;
 
-        /*
-         * TO DO : Fleets
-         */
         // Then create 4 legions in Rome, the rest of the legions and all the fleets are non-existent (Legions and Fleet objects should never be created during a game)
         for($i=1;$i<=25;$i++) 
         {
@@ -989,6 +992,8 @@ class Game
             {
                 $legion->setOtherLocation('Rome') ;
             }
+            $fleet = new \Entities\Fleet($this,$i) ;
+            $this->getFleets()->add($fleet) ;
         }
         $this->log(_('Rome starts with 4 regular Legions.') ) ;
         
