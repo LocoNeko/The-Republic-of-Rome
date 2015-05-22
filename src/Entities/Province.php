@@ -6,35 +6,22 @@ namespace Entities ;
  **/
 class Province extends Card
 {
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    /** @Column(type="integer") @var int */
     protected $mandate ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    
+    /** @Column(type="boolean") @var int */
     protected $developed = FALSE ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    
+    /** @Column(type="boolean") @var int */
     protected $overrun = FALSE ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    
+    /** @Column(type="boolean") @var int */
     protected $frontier = FALSE ;
-    /**
-    * @Column(type="array")
-    * @var array
-    */
+    
+    /** @Column(type="array") @var array */
     protected $income = array() ;
-    /**
-    * @Column(type="array")
-    * @var array
-    */
+    
+    /** @Column(type="array") @var array */
     protected $forces = array() ;
  
     /**

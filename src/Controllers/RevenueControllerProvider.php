@@ -95,7 +95,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
             }
         })
-        ->bind('verb_RevenueDone');
+        ->bind('verb_Redistribute');
         
         /*
         * POST target

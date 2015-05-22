@@ -259,8 +259,8 @@
                         });
                     }
                 });
-                
-                /* Emit the Update event to socket.io
+
+        /* Emit the Update event to socket.io
                  * This requires a gameId in the "realm" attribute of the title
                  */
                 socket.emit('Update', $("title").attr('realm'));

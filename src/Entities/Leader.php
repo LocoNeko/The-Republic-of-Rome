@@ -10,44 +10,29 @@ namespace Entities ;
  **/
 class Leader extends Card
 {
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    /** @Column(type="string", nullable=true) @var string */
     protected $matches = NULL ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $description='' ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $strength ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $disaster ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $standoff ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    
+    /** @Column(type="string", nullable=true) @var string */
     protected $ability = NULL ;
+    
     /*
     Causes : 0 = nothing , 1 = a random tax farmer , 2 = drought , ...
     '2+1' means : if matched with war 2, causes effect 1
     */
-    /**
-    * @Column(type="string", nullable=true)
-    * @var int
-    */
+    /** @Column(type="string", nullable=true) @var int */
     protected $causes = NULL ;
 
     /**

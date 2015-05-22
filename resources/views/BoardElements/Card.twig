@@ -60,6 +60,9 @@ This template gets the following parameters :
         {% if card.getSpecial()!=NULL %}
             <div class="sprite-position-card-attacks">Special :{{card.getSpecial()}}</div>
         {% endif %}
+        {% if card.getCorrupt() %}
+            <div class="sprite sprite-Marker_Corrupt sprite-position-corrupt"></div>
+        {% endif %}
 {% else %}
     <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb=''>
         <div class="sprite-position-card-name">{{card.getName()}}</div>

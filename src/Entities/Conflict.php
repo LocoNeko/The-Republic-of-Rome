@@ -12,75 +12,46 @@ namespace Entities ;
  **/
 class Conflict extends Card
 {
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    /** @Column(type="string") @var string */
     protected $matches ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $nbOfMatch ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $description ;
-    /**
-    * @Column(type="boolean")
-    * @var int
-    */
+    
+    /** @Column(type="boolean") @var int */
     protected $active ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $causes ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    
+    /** @Column(type="string", nullable=true) @var string */
     protected $attacks ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    
+    /** @Column(type="string", nullable=true) @var string */
     protected $revolt ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    
+    /** @Column(type="string", nullable=true) @var string */
     protected $creates ;
-    /**
-    * @Column(type="integer", nullable=true)
-    * @var int
-    */
+    
+    /** @Column(type="integer", nullable=true) @var int */
     protected $land ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $support ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $fleet ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $disaster ;
-    /**
-    * @Column(type="string")
-    * @var string
-    */
+    
+    /** @Column(type="string") @var string */
     protected $standoff ;
-    /**
-    * @Column(type="integer")
-    * @var int
-    */
+    
+    /** @Column(type="integer") @var int */
     protected $spoils ;
  
     /**
@@ -89,118 +60,35 @@ class Conflict extends Card
      * ----------------------------------------------------
      */
     
-    public function setMatches ($matches) {
-        $this->matches = $matches ;
-    }
-
-    public function setNbOfMatch ($nbOfMatch) {
-        $this->nbOfMatch = $nbOfMatch ;
-    }
+    public function setMatches ($matches) { $this->matches = $matches ; }
+    public function setNbOfMatch ($nbOfMatch) { $this->nbOfMatch = $nbOfMatch ; }
+    public function setDescription ($description) { $this->description = $description ; }
+    public function setActive ($active) { $this->active = $active ; }
+    public function setCauses ($causes) { $this->causes = $causes ; }
+    public function setAttacks ($attacks) { $this->attacks = $attacks ; }
+    public function setRevolt ($revolt) { $this->revolt = $revolt ; }
+    public function setCreates ($creates) { $this->creates = $creates ; }
+    public function setLand ($land) { $this->land = $land ; }
+    public function setSupport ($support) { $this->support = $support ; }
+    public function setFleet ($fleet) { $this->fleet = $fleet ; }
+    public function setDisaster ($disaster) { $this->disaster = $disaster ; }
+    public function setStandoff ($standoff) { $this->standoff = $standoff ; }
+    public function setSpoils ($spoils) { $this->spoils = $spoils ; }
     
-    public function setDescription ($description) {
-        $this->description = $description ;
-    }
-    
-    public function setActive ($active) {
-        $this->active = $active ;
-    }
-    
-    public function setCauses ($causes) {
-        $this->causes = $causes ;
-    }
-    
-    public function setAttacks ($attacks) {
-        $this->attacks = $attacks ;
-    }
-    
-    public function setRevolt ($revolt) {
-        $this->revolt = $revolt ;
-    }        // Unique to Conflicts
-
-    
-    public function setCreates ($creates) {
-        $this->creates = $creates ;
-    }
-    
-    public function setLand ($land) {
-        $this->land = $land ;
-    }
-    
-    public function setSupport ($support) {
-        $this->support = $support ;
-    }
-    
-    public function setFleet ($fleet) {
-        $this->fleet = $fleet ;
-    }
-    
-    public function setDisaster ($disaster) {
-        $this->disaster = $disaster ;
-    }
-    
-    public function setStandoff ($standoff) {
-        $this->standoff = $standoff ;
-    }
-    
-    public function setSpoils ($spoils) {
-        $this->spoils = $spoils ;
-    }
-    
-    public function getMatches() {
-        return $this->matches ;
-    }
-    
-    public function getNbOfMatch() {
-        return $this->nbOfMatch ;
-    }
-    
-    public function getDescription() {
-        return $this->description ;
-    }
-    
-    public function getActive() {
-        return $this->active ;
-    }
-    
-    public function getCauses() {
-        return $this->causes ;
-    }
-        
-    public function getAttacks() {
-        return $this->attacks ;
-    }
-    
-    public function getRevolt() {
-        return $this->revolt ;
-    }
-    
-    public function getCreates() {
-        return $this->creates ;
-    }
-    
-    public function getLand() {            
-        return $this->land ;
-    }
-    
-    public function getSupport() {            
-        return $this->support ;
-    }
-    
-    public function getFleet() {            
-        return $this->fleet ;
-    }
-    
-    public function getDisaster() {            
-        return $this->disaster ;
-    }
-    
-    public function getStandoff() {            
-        return $this->standoff ;
-    }
-    
-    public function getSpoils() {            
-        return $this->spoils ;
-    }
+    public function getMatches() { return $this->matches ; }
+    public function getNbOfMatch() { return $this->nbOfMatch ; }
+    public function getDescription() { return $this->description ; }
+    public function getActive() { return $this->active ; }
+    public function getCauses() { return $this->causes ; }
+    public function getAttacks() { return $this->attacks ; }
+    public function getRevolt() { return $this->revolt ; }
+    public function getCreates() { return $this->creates ; }
+    public function getLand() { return $this->land ; }
+    public function getSupport() { return $this->support ; }
+    public function getFleet() { return $this->fleet ; }
+    public function getDisaster() { return $this->disaster ; }
+    public function getStandoff() { return $this->standoff ; }
+    public function getSpoils() { return $this->spoils ; }
     
     /**
      * ----------------------------------------------------

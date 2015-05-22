@@ -17,25 +17,16 @@ class Concession extends Card
 {
     public static $VALID_SPECIAL = array('legions' , 'fleets' , 'drought' , 'land bill' ) ;
 
-    /**
-     * @Column(type="integer")
-     * @var int
-     */
+    /** @Column(type="integer") @var int */
     protected $income ;
-    /**
-    * @Column(type="string", nullable=true)
-    * @var string
-    */
+    
+    /** @Column(type="string", nullable=true) @var string */
     protected $special = NULL;
-    /**
-     * @Column(type="boolean")
-     * @var int
-     */
+    
+    /** @Column(type="boolean") @var int */
     protected $corrupt = FALSE ;
-    /**
-     * @Column(type="boolean")
-     * @var int
-     */
+
+    /** @Column(type="boolean") @var int */
     protected $flipped = FALSE ;
     
     /**
@@ -43,37 +34,15 @@ class Concession extends Card
      * Getters & Setters
      * ----------------------------------------------------
      */
-    public function setIncome($income) {
-        $this->income = (int)$income ;
-    }
+    public function setIncome($income) { $this->income = (int)$income ; }
+    public function setSpecial($special) { $this->special = ( (in_array($special , self::$VALID_SPECIAL)) ? $special : NULL ); }
+    public function setCorrupt($corrupt) { $this->corrupt = (bool)$corrupt ; }
+    public function setFlipped($flipped) { $this->flipped = (bool)$flipped ; }
     
-    public function setSpecial($special) {
-        $this->special = ( (in_array($special , self::$VALID_SPECIAL)) ? $special : NULL );
-    }
-    
-    public function setCorrupt($corrupt) {
-        $this->corrupt = (bool)$corrupt ;
-    }
-    
-    public function setFlipped($flipped) {
-        $this->flipped = (bool)$flipped ;
-    }
-    
-    public function getIncome() {
-        return $this->income ;
-    }
-
-    public function getSpecial() {
-        return $this->special ;
-    }
-    
-    public function getCorrupt() {
-        return $this->corrupt ;
-    }
-    
-    public function getFlipped() {
-        return $this->flipped ;
-    }
+    public function getIncome() { return $this->income ; }
+    public function getSpecial() { return $this->special ; }
+    public function getCorrupt() { return $this->corrupt ; }
+    public function getFlipped() { return $this->flipped ; }
 
     public function saveData() {
         $data = array() ;
