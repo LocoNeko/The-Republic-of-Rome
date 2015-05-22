@@ -780,11 +780,20 @@ class Game
                 $familyMessage=_(' He has the Family and puts it under the Statesman.');
                 
             // The Family was found in the forum - Play the Statesman and make him control the Family
-            } elseif (($familyLocation['type']=='game') && ($familyLocation['name']=='forum') ) 
+            }
+            elseif (($familyLocation['type']=='game') && ($familyLocation['name']=='forum') ) 
             {
                 $this->getDeck('forum')->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
                 $familyMessage=_(' He takes the Family from the forum and puts it under the Statesman.');
 
+            }
+            // Move any card controlled by the Family on the Statesman
+            if ($family->hasControlledCards())
+            {
+                while($family->getCardsControlled()->getNumberOfCards()>0)
+                {
+                    $statesman->getCardsControlled()->putCardOnTop($family->getCardsControlled()->drawFirstCard()) ;
+                }
             }
         }
         $this->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()));
@@ -1050,7 +1059,7 @@ class Game
         }
         catch (Exception $e)
         {
-            $result[0]->log($e->getMessage() , 'error') ;
+            $this->log($e->getMessage() , 'error') ;
         }
         $this->setSubPhase('Pick leaders') ;
     }
