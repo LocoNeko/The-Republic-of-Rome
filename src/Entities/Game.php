@@ -801,53 +801,54 @@ class Game
     }
 
     /**
-     * Returns the current level of the event if it's in play, 0 if it's not, FALSE if the request made no sense
-     * @param string $type can be 'name' or 'number'
-     * @param mixed $search The name of the event <b>OR</b> its number, based on the value of $type
-     * @return mixed The event's level (<b>0</b> if not in play) or FALSE if $type was wrong
+     * Returns the specific property ('level' by default) of an event, or the event itself ('ALL') found through its name or its number
+     * @param string $type 'name' | 'number'
+     * @param mixed $search The name or number of the event to look for
+     * @param string $property 'level' (default) , 'name' , 'description' , 'max_level' , 'ALL'
+     * @return mixed The event's property, the event itslef, or FALSE if the type was wrong or the event not found
      */
-    public function getEventLevel ($type , $search) {
+    public function getEventProperty ($type , $search , $property = 'level')
+    {
+        $event = NULL ;
         if ($type=='name')
         {
-            foreach ($this->getEvents() as $event)
+            foreach ($this->getEvents() as $anEvent)
             {
-               if ($event['name'] == $search)
+               if ($anEvent['name'] == $search)
                 {
-                    return $event['level'];
+                    $event = $anEvent ;
                 }
             }
-            return 0 ;
         }
         elseif ($type=='number')
         {
-            return $this->getEvents()[$search]['level'] ;
+            $event = $this->getEvents()[$search]['level'] ;
         }
-        return FALSE ;
-    }
-
-    /**
-     * Returns an event by looking for its name or for its number
-     * @param string $type can be 'name' or 'number'
-     * @param mixed $search The name of the event <b>OR</b> its number, based on the value of $type
-     * @return mixed event|FALSE
-     */
-    public function getEvent ($type , $search) {
-        if ($type=='name')
+        if ($event == NULL)
         {
-            foreach ($this->getEvents() as $event)
-            {
-               if ($event['name'] == $search)
-                {
-                    return $event;
-                }
-            }
             return FALSE ;
         }
-        elseif ($type=='number')
+        else
         {
-            return $this->getEvents()[$search] ;
+            switch($property)
+            {
+                // name
+                case 'name' :
+                    return $event[($event['level']<=1 ? 'name' : 'increased_name')] ;
+                // description
+                case 'description' :
+                    return $event[($event['level']<=1 ? 'description' : 'increased_description')] ;
+                // max_level
+                case 'max_level':
+                    return $event['max_level'] ;
+                // level
+                case 'level':
+                    return $event['level'] ;
+                case 'ALL' :
+                default :
+                    return $event ;
+            }
         }
-        return FALSE ;
     }
 
     public function setEventLevel ($type , $search , $level) {
@@ -898,17 +899,15 @@ class Game
     /**
      * 
      * @param integer $nb = Number of dice to roll (1 to 3)
-     * @param type $evilOmensEffect = Whether evil omens affect the roll by -1 , +1 or 0
+     * @param type $evilOmensEffectPassed = Whether evil omens affect the roll by -1 , +1 or 0
      * @return array 'total' => the total roll , 'x' => value of die X so we can obtain 1 white die & 2 black dice
      */
-    public function rollDice($nb , $evilOmensEffect)
+    public function rollDice($nb , $evilOmensEffectPassed)
     {
         $nb = (int)$nb;
-        if ($nb<1 || $nb>3)
-        {
-            return FALSE ;
-        }
-        $evilOmensEffect = (int)$evilOmensEffect ;
+        if ($nb<1) { $nb = 1 ; }
+        if ($nb>3) { $nb = 3 ; }
+        $evilOmensEffect = (int)$evilOmensEffectPassed ;
         if ( ($evilOmensEffect!=-1) && ($evilOmensEffect!=0) && ($evilOmensEffect!=1) )
         {
             return FALSE ;
@@ -921,7 +920,7 @@ class Game
             $result['total']+=$result[$i];
         }
         // Add evil omens effects to the roll
-        $result['total'] += $evilOmensEffect * $this->getEventLevel('name' , 'Evil Omens');
+        $result['total'] += $evilOmensEffect * $this->getEventProperty('name' , 'Evil Omens');
         return $result ;
     }
     
@@ -950,15 +949,8 @@ class Game
     */
     public function getEvilOmensMessage($effect)
     {
-        $evilOmensLevel = $this->getEventLevel('name' , 'Evil Omens') ;
-        if ($evilOmensLevel==0)
-        {
-            return '';
-        }
-        else
-        {
-            return sprintf(_(' (including %1$d from evil Omens)') , $effect*$evilOmensLevel);
-        }
+        $evilOmensLevel = $this->getEventProperty('name' , 'Evil Omens') ;
+        return ($evilOmensLevel==0 ? '' : sprintf(_(' (including %1$d from evil Omens)') , $effect*$evilOmensLevel) ) ;
     }
 
     /**
@@ -1387,8 +1379,8 @@ class Game
      */
     public function revenue_init() 
     {
-        $barbarianRaids = $this->getEventLevel('name', 'Barbarian Raids');
-        $internalDisorder = $this->getEventLevel('name', 'Internal Disorder');
+        $barbarianRaids = $this->getEventProperty('name', 'Barbarian Raids');
+        $internalDisorder = $this->getEventProperty('name', 'Internal Disorder');
         $barbarianRaidsTargets = array() ;
         $internalDisorderTargets = array() ;
         foreach($this->getParties() as $party)

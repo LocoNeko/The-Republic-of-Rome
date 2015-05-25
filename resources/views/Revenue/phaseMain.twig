@@ -30,7 +30,7 @@
 
         {# Earn from drought or not #}
         
-            {% set droughtLevel = game.getEventLevel('name' , 'Drought') %}
+            {% set droughtLevel = game.getEventProperty('name' , 'Drought') %}
             {% if revenueBase['flag']['drought'] and droughtLevel>0 %}
                 <div class="panel panel-default">
                     

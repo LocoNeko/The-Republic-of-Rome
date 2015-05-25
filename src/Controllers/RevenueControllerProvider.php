@@ -161,7 +161,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         foreach($base['concessions'] as $concession)
         {
             $concession['card']->setCorrupt(TRUE) ;
-            $droughtLevel = $game->getEventLevel('name' , 'Drought') ;
+            $droughtLevel = $game->getEventProperty('name' , 'Drought') ;
             if ($droughtLevel>0)
             {
                 $choice = $data[$concession['card']->getId()] ;
@@ -204,7 +204,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 // Spoils
                 if ($choice['spoils'] == 'YES')
                 {
-                    $revenue = $province['card']->rollRevenues('senator' , -$game->getEventLevel('name' , 'Evil Omens'));
+                    $revenue = $province['card']->rollRevenues('senator' , -$game->getEventProperty('name' , 'Evil Omens'));
                     if ($province['senator']->getCorrupt())
                     {
                         $corruptMessage=_(' He was already corrupt.');
@@ -396,11 +396,11 @@ class RevenueControllerProvider implements ControllerProviderInterface
      */
     private function doRomeRevenue($game)
     {
-        $game->log(_('State revenues' , 'alert')) ;
+        $game->log(_('State revenues') , 'alert') ;
         $game->changeTreasury(100) ;
         $game->log(_('Rome collects 100T.')) ;
         // Allied Enthusiasm event
-        $alliedEnthusiasmEvent = $game->getEvent('name' , 'Allied Enthusiasm') ;
+        $alliedEnthusiasmEvent = $game->getEvent('name' , 'Allied Enthusiasm' , 'ALL') ;
         if ($alliedEnthusiasmEvent['level']>0)
         {
             $name = ($alliedEnthusiasmEvent['level'] ? 'name' : 'increased_name') ;
@@ -419,7 +419,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 {
                     if ($province->getPreciseType()=='Province')
                     {
-                        $revenue = $province->rollRevenues('rome' , -$game->getEvent('name' , 'Evil Omens'));
+                        $revenue = $province->rollRevenues('rome' , -$game->getEventProperty('name' , 'Evil Omens'));
                         $game->changeTreasury($revenue);
                         $game->log(_('%1$s : Rome\'s revenue is %2$dT .') , 'log' , array($province->getName() , $revenue) ) ;
                     }
@@ -435,7 +435,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 {
                     if ($province->getPreciseType()=='Province')
                     {
-                        $revenue = $province->rollRevenues('rome' , -$game->getEvent('name' , 'Evil Omens'));
+                        $revenue = $province->rollRevenues('rome' , -$game->getEventProperty('name' , 'Evil Omens'));
                         $game->changeTreasury($revenue);
                         $game->log(_('%1$s : Rome\'s revenue is %2$dT .') , 'log' , array($province->getName() , $revenue) ) ;
                     }
