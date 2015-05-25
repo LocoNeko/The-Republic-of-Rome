@@ -214,10 +214,9 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/List/LoadGame', function(Request $request) use ($app)
         {
-            error_log('Load Game data : '.print_r($request->request->all() , true));
-            die() ;
             try
             {
+                $this->loadGame($request->request->all()) ;
                 $app['session']->getFlashBag()->add('success', _('Game loaded'));
                 return $app->json( 'Game loaded' , 201);
             }
@@ -280,7 +279,8 @@ class LobbyControllerProvider implements ControllerProviderInterface
         }
     }
     
-    private function CreateGame($data) {
+    private function CreateGame($data)
+    {
         $data['gameName'] = strip_tags($data['gameName']) ;
         $query = $this->entityManager->createQuery('SELECT COUNT(g.id) FROM Entities\Game g WHERE g.name = ?1');
         $query->setParameter(1, $data['gameName']);
@@ -330,4 +330,26 @@ class LobbyControllerProvider implements ControllerProviderInterface
             return _('Error') . $e->getMessage() ;
         }
     }
+    
+    /**
+     * Loads game data from savedGame into Game
+     * @param type $data
+     * @return boolean
+     */
+    private function loadGame($data)
+    {
+        $savedGameId = strip_tags($data['savedGameId']) ;
+        $query = $this->entityManager->createQuery('SELECT s FROM Entities\SavedGame s WHERE s.savedGameId = '.$savedGameId);
+        $result = $query->getResult() ;
+        if (count($result)!=1)
+        {
+            return FALSE ;
+        }
+        else
+        {
+            $savedGame = $result[0] ;
+            error_log(sprintf(_('Game %1$s (ID : %2$d) loaded. Turn %3$d - %4$s - %5$s') , $savedGame->getName() , $savedGame->getGame_id() , $savedGame->getTurn() , $savedGame->getPhase() , $savedGame->getSubPhase()) ) ;
+        }
+    }
+
 }

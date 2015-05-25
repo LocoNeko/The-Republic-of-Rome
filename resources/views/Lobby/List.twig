@@ -59,10 +59,14 @@
                         {% endif %}
                     </td>
                     <td>
+                        {% if savedGamesList[game.getId()] is defined %}
                                 <button type="submit" class="btn">
                                     <span class="glyphicon glyphicon-floppy-open" aria-hidden="true" style="font-size: 16px;"></span>
                                 </button>
                             </form>
+                        {% else %}
+                            -
+                        {% endif %}
                     </td>
                     <td>{{ game.getCreated()|date('Y/m/d H:i') }}</td>
                     <td>
