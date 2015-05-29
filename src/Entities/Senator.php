@@ -129,63 +129,48 @@ class Senator extends Card
     public function getLeaderOf() { return $this->leaderOf; }
     public function getSteppedDown() { return $this->steppedDown; }
 
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        $data['senatorID'] = $this->getSenatorID() ;
-        $data['baseMIL'] = $this->getBaseMIL() ;
-        $data['baseORA'] = $this->getBaseORA() ;
-        $data['baseLOY'] = $this->getBaseLOY() ;
-        $data['baseINF'] = $this->getBaseINF() ;
-        $data['MIL'] = $this->getMIL () ;
-        $data['ORA'] = $this->getORA () ;
-        $data['LOY'] = $this->getLOY () ;
-        $data['INF'] = $this->getINF () ;
-        $data['specialLOY'] = $this->getSpecialLOY () ;
-        $data['specialAbility'] = $this->getSpecialAbility () ;
-        $data['hasStatesman'] = $this->getHasStatesman () ;
-        $data['knights'] = $this->getKnights () ;
-        $data['treasury'] = $this->getTreasury () ;
-        $data['POP'] = $this->getPOP () ;
-        $data['office'] = $this->getOffice () ;
-        $data['priorConsul'] = $this->getPriorConsul () ;
-        $data['corrupt'] = $this->getCorrupt () ;
-        $data['major'] = $this->getMajor () ;
-        $data['rebel'] = $this->getRebel () ;
-        $data['captive'] = $this->getCaptive () ;
-        $data['freeTribune'] = $this->getFreeTribune () ;
-        $data['returningGovernor'] = $this->getReturningGovernor () ;
-        return $data ;
-    }
-
     /**
      * ----------------------------------------------------
      * Other methods
      * ----------------------------------------------------
      */
 
-    public function __construct($data) {
-        parent::__construct(
-            (int)$data[0] ,
-            ( is_string($data[1]) ? $data[1] : NULL ) ,
-            ( preg_match('/\d{1,2}[a-cA-C]/' , (string)$data[3]) == 0 ? 'Senator' : 'Statesman')
-        ) ;
-        $this->setSenatorID( (string)( preg_match('/\d?\d\w?/i',$data[3]) ? $data[3] : NULL) ) ;
-        $this->setBaseMIL ( (int)($data[4]) ) ;
-        $this->setBaseORA ( (int)($data[5]) ) ;
-        $this->setBaseLOY ( (int)($data[6]) ) ;
-        $this->setBaseINF ( (int)($data[7]) ) ;
-        $this->setMIL ( $this->baseMIL ) ;
-        $this->setORA ( $this->baseORA ) ;
-        $this->setLOY ( $this->baseLOY ) ;
-        $this->setINF ( $this->baseINF ) ;
-        $this->setSpecialLOY( ( is_string($data[8]) ? $data[8] : NULL ) ) ; /* A list of senatorID with + or - separated by ,. +X means : only loyal if X exists and is in the same party, -X : means loyalty 0 if in the same party as X*/
-        $this->setSpecialAbility ( ( is_string($data[9]) ? $data[9] : NULL ) ) ; /* A list of abilities separated by ,  */
-        $this->setHasStatesman ( (bool)($data[10]) ) ;
-        $this->setKnights (0);
-        $this->setTreasury (0) ;
-        $this->setPOP (0) ;
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct(
+                (int)$data[0] ,
+                ( is_string($data[1]) ? $data[1] : NULL ) ,
+                ( preg_match('/\d{1,2}[a-cA-C]/' , (string)$data[3]) == 0 ? 'Senator' : 'Statesman')
+            ) ;
+            $this->setSenatorID( (string)( preg_match('/\d?\d\w?/i',$data[3]) ? $data[3] : NULL) ) ;
+            $this->setBaseMIL ( (int)($data[4]) ) ;
+            $this->setBaseORA ( (int)($data[5]) ) ;
+            $this->setBaseLOY ( (int)($data[6]) ) ;
+            $this->setBaseINF ( (int)($data[7]) ) ;
+            $this->setMIL ( $this->baseMIL ) ;
+            $this->setORA ( $this->baseORA ) ;
+            $this->setLOY ( $this->baseLOY ) ;
+            $this->setINF ( $this->baseINF ) ;
+            $this->setSpecialLOY( ( is_string($data[8]) ? $data[8] : NULL ) ) ; /* A list of senatorID with + or - separated by ,. +X means : only loyal if X exists and is in the same party, -X : means loyalty 0 if in the same party as X*/
+            $this->setSpecialAbility ( ( is_string($data[9]) ? $data[9] : NULL ) ) ; /* A list of abilities separated by ,  */
+            $this->setHasStatesman ( (bool)($data[10]) ) ;
+            $this->setKnights (0);
+            $this->setTreasury (0) ;
+            $this->setPOP (0) ;
+            }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , $data['preciseType'] ) ;
+            foreach ($data as $property=>$value)
+            {
+                $setter = 'set'.ucfirst($property);
+                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                {
+                    $this->$setter($value) ;
+                }
+            }
+        }
     }
     
     public function changeINF($value) {

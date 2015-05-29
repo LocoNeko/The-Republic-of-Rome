@@ -63,30 +63,29 @@ class Leader extends Card
      * ----------------------------------------------------
      */
 
-    public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Leader' ) ;
-        $this->setMatches ( is_string($data[3]) ? $data[3] : NULL ) ;
-        $this->setDescription ((string)($data[4])) ;
-        $this->setStrength ( (int)$data[5] ) ;
-        $this->setDisaster ( (int)$data[6] ) ;
-        $this->setStandoff ( (int)$data[7] ) ;
-        $this->setAbility ( is_string($data[8]) ? $data[8] : NULL ) ;
-        $this->setCauses ( is_string($data[9]) ? $data[9] : NULL ) ;
-
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Leader' ) ;
+            $this->setMatches ( is_string($data[3]) ? $data[3] : NULL ) ;
+            $this->setDescription ((string)($data[4])) ;
+            $this->setStrength ( (int)$data[5] ) ;
+            $this->setDisaster ( (int)$data[6] ) ;
+            $this->setStandoff ( (int)$data[7] ) ;
+            $this->setAbility ( is_string($data[8]) ? $data[8] : NULL ) ;
+            $this->setCauses ( is_string($data[9]) ? $data[9] : NULL ) ;
+        }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , 'Leader' ) ;
+            foreach ($data as $property=>$value)
+            {
+                $setter = 'set'.ucfirst($property);
+                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                {
+                    $this->$setter($value) ;
+                }
+            }
+        }
     }
-            
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        $data['matches'] = $this->getMatches () ;
-        $data['description'] = $this->getDescription () ;
-        $data['strength'] = $this->getStrength () ;
-        $data['disaster'] = $this->getDisaster () ;
-        $data['standoff'] = $this->getStandoff () ;
-        $data['ability'] = $this->getAbility () ;
-        $data['causes'] = $this->getCauses () ;
-        return $data ;
-    }
-
 }

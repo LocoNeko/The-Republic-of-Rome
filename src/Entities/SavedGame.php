@@ -49,7 +49,7 @@ class SavedGame
     public function getPhase() { return $this->phase; }
     public function getSubPhase() { return $this->subPhase; }
     public function getSavedTime() { return $this->savedTime; }
-    public function getGameData() { return $this->gameData; }
+    public function getGameData() { return unserialize( gzuncompress(stream_get_contents($this->gameData))) ; } // stream_get_contents must be used, as gameData is a resource, not a string
 
     public function __construct($game)
     {

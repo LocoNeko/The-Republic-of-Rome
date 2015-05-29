@@ -53,16 +53,14 @@ class LobbyControllerProvider implements ControllerProviderInterface
          */
         $controllers->get('/Join/{game_id}', function($game_id) use ($app)
         {
-            $game_id = (int)$game_id ;
             $app['session']->set('game_id', $game_id);
-            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-            $result = $query->getResult() ;
-            if (count($result)!=1)
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game===FALSE)
             {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
-            elseif ($result[0]->gameStarted())
+            elseif ($game->gameStarted())
             {
                 return $app->redirect($app['BASE_URL'].'/Setup/'.$game_id) ;
             }
@@ -70,7 +68,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             {
                 return $app['twig']->render('Lobby/Join.twig', array(
                    'layout_template' => 'layout.twig' ,
-                   'game' => $result[0] ,
+                   'game' => $game ,
                 ));
             }
         })
@@ -81,18 +79,16 @@ class LobbyControllerProvider implements ControllerProviderInterface
          */
         $controllers->get('/Play/{game_id}', function($game_id) use ($app)
         {
-            $game_id = (int)$game_id ;
             $app['session']->set('game_id', $game_id);
-            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-            $result = $query->getResult() ;
-            if (count($result)!=1)
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game===FALSE)
             {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
-            elseif ($result[0]->gameStarted())
+            elseif ($game->gameStarted())
             {
-                return $app->redirect($app['BASE_URL'].'/'.$result[0]->getPhase().'/'.$game_id) ;
+                return $app->redirect($app['BASE_URL'].'/'.$game->getPhase().'/'.$game_id) ;
             }
             else
             {
@@ -104,13 +100,11 @@ class LobbyControllerProvider implements ControllerProviderInterface
         /*
          * Save game
          */
-        $controllers->get('/Save/{game_id}', function($game_id) use ($app)
+        $controllers->get('/Debug/{game_id}', function($game_id) use ($app)
         {
-            $game_id = (int)$game_id ;
             $app['session']->set('game_id', $game_id);
-            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-            $result = $query->getResult() ;
-            if (count($result)!=1)
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game===FALSE)
             {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
@@ -119,11 +113,11 @@ class LobbyControllerProvider implements ControllerProviderInterface
             {
                 return $app['twig']->render('Lobby/GameData.twig', array(
                    'layout_template' => 'layout.twig' ,
-                   'gameData' => $result[0]->saveData() ,
+                   'gameData' => $game->saveData() ,
                 ));
             }
         })
-        ->bind('SaveGame');
+        ->bind('DebugGame');
 
         /*
         * POST target
@@ -155,24 +149,22 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/Join/{game_id}/Ready', function($game_id) use ($app)
         {
-            $game_id = (int)$game_id ;
-            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-            $result = $query->getResult() ;
-            if (count($result)!=1)
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game===FALSE)
             {
                 $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
             else
             {
-                if ($result[0]->setPartyToReady($app['user']->getId()) )
+                if ($game->setPartyToReady($app['user']->getId()) )
                 {
                     // If the game was started, save it
-                    if ($result[0]->gameStarted())
+                    if ($game->gameStarted())
                     {
-                        $app['saveGame']($result[0]) ;
+                        $app['saveGame']($game) ;
                     }
-                    $this->entityManager->persist($result[0]);
+                    $this->entityManager->persist($game);
                     $this->entityManager->flush();
                     $app['session']->getFlashBag()->add('success', _('You are ready to start'));
                     return $app->json( _('You are ready to start') , 201);
@@ -347,8 +339,19 @@ class LobbyControllerProvider implements ControllerProviderInterface
         }
         else
         {
+            // Determine the number of savedGames that were saved later (in order to delete them)
             $savedGame = $result[0] ;
+            $query2 = $this->entityManager->createQuery('SELECT COUNT(s.savedGameId) FROM Entities\SavedGame s WHERE s.game_id= ?1 AND s.savedTime > ?2 ') ;
+            $query2->setParameter(1 , $savedGame->getGame_id() ) ;
+            $query2->setParameter(2 , $savedGame->getSavedTime()->format('Y-m-d H:i:s')) ;
+            $count = $query2->getSingleScalarResult();
             error_log(sprintf(_('Game %1$s (ID : %2$d) loaded. Turn %3$d - %4$s - %5$s') , $savedGame->getName() , $savedGame->getGame_id() , $savedGame->getTurn() , $savedGame->getPhase() , $savedGame->getSubPhase()) ) ;
+            // Actual load function : Find the id of the game to be loaded, then load
+            $query3 = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id= ?1') ;
+            $query3->setParameter(1 , $savedGame->getGame_id() ) ;
+            $result3 = $query3->getResult() ;
+            $game = $result3[0] ;
+            $game->loadData($savedGame->getGameData()) ;
         }
     }
 

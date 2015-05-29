@@ -120,24 +120,6 @@ class Message
         }
     }
     
-    public function saveData() {
-        $data = array() ;
-        $data['text'] = $this->getText();
-        $data['parameters'] = $this->getParameters() ;
-        $data['type'] = $this->getType() ;
-        if ($this->getRecipients()!==NULL) {
-            $data['recipients_User_ids'] = array() ;
-            foreach($this->getRecipients() as $party) {
-                array_push($data['recipients_User_ids'] , $party->getUser_id()) ;
-            }
-        } else {
-            $data['recipients_User_ids'] = NULL ;
-        }
-        $data['from_User_id'] = ($this->getFrom()===NULL ? NULL : $this->getFrom() ) ;
-        $data['time'] = $this->getTime() ;
-        return $data ;
-    }
-
     public function setParameters($parameters) {
         if (is_array($parameters)) {
             $this->parameters = $parameters ;

@@ -114,6 +114,40 @@ class Party
         $data['senators'] = $this->getSenators()->saveData() ;
         return $data ;
     }
+    
+    public function loadData($data)
+    {
+        foreach ($data as $key=>$value)
+        {
+            // Non-arrays should all be treated later
+            if (!is_array($value))
+            {
+                $getter = 'get'.ucfirst($key);
+                if (method_exists($this, $getter) && !is_array($value))
+                {
+                    if ($this->$getter() != $value)
+                    {
+                        $setter = 'set'.ucfirst($key);
+                        // TO DO  : Uncomment once happy
+                        // $this->.$setter($value) ;
+                        error_log('$party->'.$setter.' ('.$value.')') ;
+                    }
+                }
+            }
+            else
+            {
+                switch($key)
+                {
+                    case 'hand' :
+                        $this->getHand()->loadData($value) ;
+                        break ;
+                    case 'senators' :
+                        $this->getSenators()->loadData($value) ;
+                        break ;
+                }
+            }
+        }
+    }
 
     /**
     * ----------------------------------------------------

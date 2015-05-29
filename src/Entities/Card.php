@@ -77,8 +77,68 @@ abstract class Card
         $this->setId($id) ;
         $this->setName($name) ;
         $this->setPreciseType($preciseType) ;
+        $this->withLegions = new ArrayCollection() ;
+        $this->withFleets = new ArrayCollection() ;
+    }
+    
+    /**
+     * Goes through all the object's properties and saves them in an array
+     * @return type
+     */
+    public function saveData()
+    {
+        $data = array() ;
+        foreach (get_object_vars($this) as $name=>$property)
+        {
+            if ($name!='deck')
+            {
+                $getter = 'get'.ucfirst($name);
+                if (method_exists($this, $getter) && !is_array($property))
+                {
+                    $data[$name] = $this->$getter() ;
+                }
+            }
+            else
+            {
+                // TO DO : handle arrays cards_controlled (recusrion) , withLegions , withFleets
+            }
+        }
+        return $data ;
     }
 
+    /* 
+     * TO DO 
+     * The saveData() functions of each child class of Card should be moved here.
+     * A foreach() should go through every property (using get_object_vars()) and save them in the form $data[$propertyName] = $propertyValue
+     * All properties that are an array (cards_controlled , withLegions , withFleets) should call the saveData() of the releveant target entity
+     */
+    
+    public function loadData($data)
+    {
+        foreach ($data as $key=>$value)
+        {
+            // Non-arrays should all be treated later
+            if (!is_array($value))
+            {
+                $getter = 'get'.ucfirst($key);
+                if (method_exists($this, $getter) && !is_array($value))
+                {
+                    if ($this->$getter() != $value)
+                    {
+                        $setter = 'set'.ucfirst($key);
+                        // TO DO  : Uncomment once happy
+                        // $this->.$setter($value) ;
+                        error_log('$card->'.$setter.' ('.$value.')') ;
+                    }
+                }
+            }
+            else
+            {
+                // 3 cases : cards_controlled , withLegions , withFleets
+            }
+        }    
+    }
+    
     /**
     * ----------------------------------------------------
     * Other methods

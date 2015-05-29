@@ -44,45 +44,48 @@ class Province extends Card
     public function getIncome () { return $this->income ; }
     public function getForces () { return $this->forces ; }
 
-    public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Province' ) ;
-        $this->setMandate (0) ;
-        $this->setDeveloped (FALSE) ;
-        $this->setOverrun (FALSE) ;
-        $this->setFrontier ($data[15]) ;
-        $this->setIncome(
-            Array (
-                'undeveloped' => Array(
-                    'senator' => Array ( 'variable' => (int)$data[3] , 'fixed' => (int)$data[4] ),
-                    'rome'    => Array ( 'variable' => (int)$data[5] , 'fixed' => (int)$data[6] )
-                ) ,
-		'developed' => Array (
-                    'senator' => Array ( 'variable' => (int)$data[7] , 'fixed' => (int)$data[8] ),
-                    'rome'    => Array ( 'variable' => (int)$data[9] , 'fixed' => (int)$data[10])
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Province' ) ;
+            $this->setMandate (0) ;
+            $this->setDeveloped (FALSE) ;
+            $this->setOverrun (FALSE) ;
+            $this->setFrontier ($data[15]) ;
+            $this->setIncome(
+                Array (
+                    'undeveloped' => Array(
+                        'senator' => Array ( 'variable' => (int)$data[3] , 'fixed' => (int)$data[4] ),
+                        'rome'    => Array ( 'variable' => (int)$data[5] , 'fixed' => (int)$data[6] )
+                    ) ,
+                    'developed' => Array (
+                        'senator' => Array ( 'variable' => (int)$data[7] , 'fixed' => (int)$data[8] ),
+                        'rome'    => Array ( 'variable' => (int)$data[9] , 'fixed' => (int)$data[10])
+                    )
                 )
-            )
-        ) ;
-        $this->setForces(
-            Array (
-                'undeveloped' => Array ( 'land' => (int)$data[11] , 'sea'  => (int)$data[12] ) ,
-                'developed'   => Array ( 'land' => (int)$data[13] , 'sea'  => (int)$data[14] )
-            )
-        ) ;
+            ) ;
+            $this->setForces(
+                Array (
+                    'undeveloped' => Array ( 'land' => (int)$data[11] , 'sea'  => (int)$data[12] ) ,
+                    'developed'   => Array ( 'land' => (int)$data[13] , 'sea'  => (int)$data[14] )
+                )
+            ) ;
+        }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , 'Province' ) ;
+            foreach ($data as $property=>$value)
+            {
+                $setter = 'set'.ucfirst($property);
+                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                {
+                    $this->$setter($value) ;
+                }
+            }
+        }
+
     }
             
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        $data['mandate'] = $this->getMandate () ;
-        $data['developed'] = $this->getDeveloped () ;
-        $data['overrun'] = $this->getOverrun () ;
-        $data['frontier'] = $this->getFrontier () ;
-        $data['income'] = $this->getIncome () ;
-        $data['forces'] = $this->getForces () ;
-        return $data ;
-    }
-
     /**
      * ----------------------------------------------------
      * Other methods

@@ -12,15 +12,15 @@ class FactionCard extends Card
      * ----------------------------------------------------
      */
 
-    public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Faction card') ;
-    }
-        
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        return $data ;
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Faction card') ;
+        }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , 'Faction card' ) ;
+        }
     }
 
 }

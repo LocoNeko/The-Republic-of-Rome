@@ -12,15 +12,15 @@ class EraEnds extends Card
      * ----------------------------------------------------
      */
 
-    public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Era ends' ) ;
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Era ends') ;
+        }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , 'Era ends' ) ;
+        }
     }
         
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        return $data ;
-    }
-
 }

@@ -73,6 +73,63 @@ class Deck
         $data['game_id'] = ($this->game === NULL ? NULL : $this->game->getId()) ;
         return $data ;
     }
+    
+    public function loadData($data)
+    {
+        foreach ($data as $key=>$value)
+        {
+            // Non-arrays should all be treated later
+            if (!is_array($value))
+            {
+                $getter = 'get'.ucfirst($key);
+                if (method_exists($this, $getter) && !is_array($value))
+                {
+                    if ($this->$getter() != $value)
+                    {
+                        $setter = 'set'.ucfirst($key);
+                        // TO DO  : Uncomment once happy
+                        // $this->$setter($value) ;
+                        error_log('$deck->'.$setter.' ('.$value.')') ;
+                    }
+                }
+            }
+            elseif ($key=='cards')
+            {
+                
+                /*
+                 * - If the array collection of cards in the existing deck and in the saved data are both empty, don't do anything
+                 * - Otherwise :
+                 * 1 - Delete all cards for existing deck
+                 * 2 - Create new cards based on savedData
+                 */
+                if ( count($this->getCards()) > 0 ) 
+                {
+                    //unset ($this->getCards()) ;
+                    //$this->cards = new ArrayCollection();
+                    if (count($value) > 0 )
+                    {
+                        foreach ($value as $key2=>$value2)
+                        {
+                            $cardType = $value2['preciseType'] ;
+                            if ($cardType=='Statesman') { $cardType='Senator' ; }
+                            if ($cardType=='Faction card') { $cardType='FactionCard' ; }
+                            if ($cardType=='Era ends') { $cardType='EraEnds' ; }
+                            $class = __NAMESPACE__.'\\'.$cardType ;
+                            $card = new $class ($value2 , FALSE);
+                            error_log($card->getPreciseType()) ;
+                            // Here : transform the $value2 array into something that can be used by the constructor of the relevant entity
+                            /*
+                            $card = new $class ($value2);
+                            $this->getCards()[$key2] = $card ;
+                            error_log($class) ;
+                             */
+                        }
+                    }
+                }
+            }
+        }
+
+    }
 
     /**
     * ----------------------------------------------------

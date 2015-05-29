@@ -212,39 +212,69 @@ class Game
     public function saveData()
     {
         $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['created'] = $this->getCreated() ;
-        $data['timezone'] = $this->timezone ;
-        $data['localised'] = $this->localised;
-        $data['name'] = $this->getName() ;
-        $data['turn'] = $this->getTurn() ;
-        $data['phase'] = $this->getPhase() ;
-        $data['subPhase'] = $this->getSubPhase() ;
-        $data['initiative'] = $this->getInitiative() ;
-        $data['censorIsDone'] = $this->getCensorIsDone() ;
-        $data['senateAdjourned'] = $this->getSenateAdjourned() ;
-        $data['scenario'] = $this->getScenario() ;
-        $data['variants'] = $this->getVariants() ;
-        $data['unrest'] = $this->getUnrest() ;
-        $data['treasury'] = $this->getTreasury() ;
-        $data['parties'] = array() ;
-        foreach($this->getParties() as $key=>$party)
+        foreach (get_object_vars($this) as $name=>$property)
         {
-            $data['parties'][$key] = $party->saveData() ;
+            $getter = 'get'.ucfirst($name);
+            if (method_exists($this, $getter))
+            {
+                // Array collections : parties, decks, legions, fleets
+                // messages are not saved are they are sequentially created, so can be re-loaded based on time
+                if ($name=='parties' || $name=='decks' || $name=='legions' || $name=='fleets')
+                {
+                    foreach($this->$getter() as $key=>$value)
+                    {
+                        $data[$name][$key] = $value->saveData() ;
+                    }
+                }
+                elseif ($name=='currentBidder' || $name=='persuasionTarget')
+                {
+                    $data[$name] = $property->getId() ;
+                }
+                // Scalar properties
+                else
+                {
+                    $data[$name] = $this->$getter() ;
+                }
+            }
         }
-        $data['decks'] = array() ;
-        foreach($this->getDecks() as $deck)
-        {
-            array_push($data['decks'] , $deck->saveData()) ;
-        }
-        $data['messages'] = array() ;
-        foreach($this->getMessages() as $message)
-        {
-            array_push($data['messages'] , $message->saveData()) ;
-        }
-        $data['currentBidder_id'] = ($this->getCurrentBidder() === NULL ? NULL : $this->getCurrentBidder()->getId() ) ; // NOTE : This is a Party id
-        $data['persuasionTarget_id'] = ($this->getPersuasionTarget() === NULL ? NULL : $this->getPersuasionTarget()->getId() ) ; // NOTE : This is a Card id
         return $data ;
+    }
+    
+    public function loadData($data)
+    {
+        foreach ($data as $key=>$value)
+        {
+            // Non-arrays should all be treated later
+            if (!is_array($value))
+            {
+                $getter = 'get'.ucfirst($key);
+                if (method_exists($this, $getter))
+                {
+                    if ($this->$getter() != $value)
+                    {
+                        $setter = 'set'.ucfirst($key);
+                        // TO DO  : Uncomment once happy
+                        // $this->.$setter($value) ;
+                        error_log('$this->'.$setter.' ('.$value.')') ;
+                    }
+                }
+            }
+            else
+            {
+                foreach ($value as $key2=>$value2)
+                {
+                    switch($key)
+                    {
+                        case 'parties' :
+                            $this->getParties()[$key2]->loadData($value2) ;
+                            break ;
+                        case 'decks' :
+                            $this->getDecks()[$key2]->loadData($value2) ;
+                            break ;
+                    }
+                }
+            }
+        }
     }
 
     /**

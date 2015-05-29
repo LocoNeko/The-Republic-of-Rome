@@ -36,7 +36,7 @@
                 {% endfor %}
                 <tr>
                     <th scope="row">{{ game.getId() }}</th>
-                    <td><strong>{{ game.getName() }}</strong></td>
+                    <td><strong><a href="{{ path('DebugGame', {game_id: game.getId()}) }}">{{ game.getName() }}</a></strong></td>
                     <td>{{ game.getScenario() }}</td>
                     <td>
                         <button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs">{{game.getNumberOfPlayers()}}</button>

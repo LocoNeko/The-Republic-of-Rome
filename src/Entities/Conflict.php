@@ -96,43 +96,37 @@ class Conflict extends Card
      * ----------------------------------------------------
      */
 
-    public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Conflict' ) ;
-        $this->setMatches ( (string)$data[3] ) ;
-        $this->setNbOfMatch ( (int)$data[4]) ;
-        $this->setDescription ( (string)$data[5] ) ;
-        $this->setActive ( (bool)$data[6]) ;
-        $this->setCauses ( is_string($data[7]) ? $data[7] : NULL ) ;
-        $this->setAttacks ( is_string($data[8]) ? $data[8] : NULL ) ;
-        $this->setRevolt = ( is_string($data[9]) ? $data[9] : NULL ) ;
-        $this->setCreates( is_string($data[10]) ? $data[10] : NULL ) ;
-        $this->setLand ( (int)$data[11] ) ;
-        $this->setSupport ( (int)$data[12] ) ;
-        $this->setFleet ( (int)$data[13] ) ;
-        $this->setDisaster ( $data[14] ) ;
-        $this->setStandoff ( $data[15] ) ;
-        $this->setSpoils ( $data[16] ) ;
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Conflict' ) ;
+            $this->setMatches ( (string)$data[3] ) ;
+            $this->setNbOfMatch ( (int)$data[4]) ;
+            $this->setDescription ( (string)$data[5] ) ;
+            $this->setActive ( (bool)$data[6]) ;
+            $this->setCauses ( is_string($data[7]) ? $data[7] : NULL ) ;
+            $this->setAttacks ( is_string($data[8]) ? $data[8] : NULL ) ;
+            $this->setRevolt = ( is_string($data[9]) ? $data[9] : NULL ) ;
+            $this->setCreates( is_string($data[10]) ? $data[10] : NULL ) ;
+            $this->setLand ( (int)$data[11] ) ;
+            $this->setSupport ( (int)$data[12] ) ;
+            $this->setFleet ( (int)$data[13] ) ;
+            $this->setDisaster ( $data[14] ) ;
+            $this->setStandoff ( $data[15] ) ;
+            $this->setSpoils ( $data[16] ) ;
+        }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , 'Conflict' ) ;
+            foreach ($data as $property=>$value)
+            {
+                $setter = 'set'.ucfirst($property);
+                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                {
+                    $this->$setter($value) ;
+                }
+            }
+        }
     }
     
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        $data['matches'] = $this->getMatches() ;
-        $data['nbOfMatch'] = $this->getNbOfMatch() ;
-        $data['description'] = $this->getDescription() ;
-        $data['active'] = $this->getActive() ;
-        $data['causes'] = $this->getCauses() ;
-        $data['attacks'] = $this->getAttacks() ;
-        $data['revolt'] = $this->getRevolt() ;
-        $data['creates'] = $this->getCreates() ;
-        $data['land'] = $this->getLand() ;
-        $data['support'] = $this->getSupport() ;
-        $data['fleet'] = $this->getFleet() ;
-        $data['disaster'] = $this->getDisaster() ;
-        $data['standoff'] = $this->getStandoff() ;
-        $data['spoils'] = $this->getSpoils() ;
-        return $data ;
-    }
-        
 }

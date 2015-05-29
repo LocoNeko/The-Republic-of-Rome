@@ -44,27 +44,31 @@ class Concession extends Card
     public function getCorrupt() { return $this->corrupt ; }
     public function getFlipped() { return $this->flipped ; }
 
-    public function saveData() {
-        $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        $data['income'] = $this->getIncome() ;
-        $data['special'] = $this->getSpecial() ;
-        $data['corrupt'] = $this->getCorrupt() ;
-        $data['flipped'] = $this->getFlipped() ;
-        return $data ;
-    }
-    
     /**
      * ----------------------------------------------------
      * Other methods
      * ----------------------------------------------------
      */
 
-    public function __construct($data) {
-        parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Concession' ) ;
-        $this->setIncome((int)$data[4]) ;
-        $this->setSpecial(($data[5]=='' ? NULL : $data[5])) ;
+    public function __construct($data , $fromcsv = TRUE) {
+        if ($fromcsv)
+        {
+            parent::__construct((int)$data[0], ( is_string($data[1]) ? $data[1] : NULL ) , 'Concession' ) ;
+            $this->setIncome((int)$data[4]) ;
+            $this->setSpecial(($data[5]=='' ? NULL : $data[5])) ;
+        }
+        else
+        {
+            parent::__construct((int)$data['id'], $data['name'] , 'Concession' ) ;
+            foreach ($data as $property=>$value)
+            {
+                $setter = 'set'.ucfirst($property);
+                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                {
+                    $this->$setter($value) ;
+                }
+            }
+        }
     }
-
+    
 }
