@@ -107,12 +107,30 @@ class Party
 
     public function saveData() {
         $data = array() ;
-        $data['name'] = $this->getName() ;
-        $data['user_id'] = $this->getUser_id() ;
-        $data['readyToStart'] = $this->getReadyToStart() ;
-        $data['hand'] = $this->getHand()->saveData() ;
-        $data['senators'] = $this->getSenators()->saveData() ;
+        foreach (get_object_vars($this) as $name=>$property)
+        {
+            $getter = 'get'.ucfirst($name);
+            if (method_exists($this, $getter))
+            {
+                // Save the data of 'hand' & 'senators' decks 
+                if ($name=='hand' || $name=='senators')
+                {
+                    $data[$name] = $this->$getter()->saveData() ;
+                }
+                // Many-to-one (game) and one-to-one (leader) relations : just save the id
+                elseif ($name=='game' || $name=='leader')
+                {
+                    $data[$name] = $property->getId() ;
+                }
+                // Scalar properties
+                elseif ($name!='messages')
+                {
+                    $data[$name] = $this->$getter() ;
+                }
+            }
+        }
         return $data ;
+
     }
     
     public function loadData($data)

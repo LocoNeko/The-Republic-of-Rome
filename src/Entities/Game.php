@@ -217,21 +217,23 @@ class Game
             $getter = 'get'.ucfirst($name);
             if (method_exists($this, $getter))
             {
-                // Array collections : parties, decks, legions, fleets
+                // One-to-many relations - Array collections : parties, decks, legions, fleets
                 // messages are not saved are they are sequentially created, so can be re-loaded based on time
                 if ($name=='parties' || $name=='decks' || $name=='legions' || $name=='fleets')
                 {
                     foreach($this->$getter() as $key=>$value)
                     {
+                        // the saveData method must be implemented for parties, decks, legions & fleets
                         $data[$name][$key] = $value->saveData() ;
                     }
                 }
+                // For one-to-one relations, just save the id
                 elseif ($name=='currentBidder' || $name=='persuasionTarget')
                 {
                     $data[$name] = $property->getId() ;
                 }
                 // Scalar properties
-                else
+                elseif ($name!='messages')
                 {
                     $data[$name] = $this->$getter() ;
                 }

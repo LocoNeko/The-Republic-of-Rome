@@ -64,13 +64,17 @@ class Deck
     public function saveData()
     {
         $data = array() ;
+        $data['id'] = $this->getId() ;
         $data['name'] = $this->getName() ;
+        $data['game'] = ($this->game === NULL ? NULL : $this->getGame()->getId()) ;
+        $data['controlled_by'] = $this->getControlled_by()->getId() ;
+        $data['inParty'] = $this->getInParty()->getId() ;
+        $data['inHand'] = $this->getInHand()->getId() ;
         $data['cards'] = array () ;
         foreach ($this->getCards() as $key=>$card)
         {
             $data['cards'][$key] = $card->saveData() ;
         }
-        $data['game_id'] = ($this->game === NULL ? NULL : $this->game->getId()) ;
         return $data ;
     }
     

@@ -90,7 +90,7 @@ abstract class Card
         $data = array() ;
         foreach (get_object_vars($this) as $name=>$property)
         {
-            if ($name!='deck')
+            if ($name!='deck' && $name!='cards_controlled' && $name!='withLegions' && $name!='withFleet')
             {
                 $getter = 'get'.ucfirst($name);
                 if (method_exists($this, $getter) && !is_array($property))
