@@ -217,25 +217,34 @@ class Game
             $getter = 'get'.ucfirst($name);
             if (method_exists($this, $getter))
             {
-                // One-to-many relations - Array collections : parties, decks, legions, fleets
-                // messages are not saved are they are sequentially created, so can be re-loaded based on time
-                if ($name=='parties' || $name=='decks' || $name=='legions' || $name=='fleets')
+                // Get the item and its class
+                $item = $this->$getter() ;
+                $dataType = gettype($item) ;
+                if ($dataType=='object')
                 {
-                    foreach($this->$getter() as $key=>$value)
-                    {
-                        // the saveData method must be implemented for parties, decks, legions & fleets
-                        $data[$name][$key] = $value->saveData() ;
+                    $dataType=get_class($item);
+                }
+                // One-to-many relations - Array collections : parties, decks, legions, fleets but messages are not saved are they are sequentially created, so can be re-loaded based on time
+                // Call to each object's saveData() methods
+                if ($dataType=='Doctrine\\ORM\\PersistentCollection' && $name!='messages')
+                {
+                    if ($name=='parties') {
+                        foreach($item as $key=>$value)
+                        {
+                            // the saveData method must be implemented for parties, decks, legions & fleets
+                            $data[$name][$key] = $value->saveData() ;
+                        }
                     }
                 }
                 // For one-to-one relations, just save the id
                 elseif ($name=='currentBidder' || $name=='persuasionTarget')
                 {
-                    $data[$name] = $property->getId() ;
+                    $data[$name] = (is_null($item) ? NULL : $item->getId() ) ;
                 }
                 // Scalar properties
                 elseif ($name!='messages')
                 {
-                    $data[$name] = $this->$getter() ;
+                    $data[$name] = $item ;
                 }
             }
         }

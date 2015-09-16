@@ -112,20 +112,27 @@ class Party
             $getter = 'get'.ucfirst($name);
             if (method_exists($this, $getter))
             {
+                // Get the item and its class
+                $item = $this->$getter() ;
+                $dataType = gettype($item) ;
+                if ($dataType=='object')
+                {
+                    $dataType=get_class($item);
+                }
                 // Save the data of 'hand' & 'senators' decks 
                 if ($name=='hand' || $name=='senators')
                 {
-                    $data[$name] = $this->$getter()->saveData() ;
+                    $data[$name] = $item->saveData() ;
                 }
                 // Many-to-one (game) and one-to-one (leader) relations : just save the id
                 elseif ($name=='game' || $name=='leader')
                 {
-                    $data[$name] = $property->getId() ;
+                    $data[$name] = (is_null($item) ? NULL : $item->getId() ) ;
                 }
                 // Scalar properties
                 elseif ($name!='messages')
                 {
-                    $data[$name] = $this->$getter() ;
+                    $data[$name] = $item ;
                 }
             }
         }

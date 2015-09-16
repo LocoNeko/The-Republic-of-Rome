@@ -323,6 +323,17 @@ class Deck extends \Entities\Deck implements \Doctrine\ORM\Proxy\Proxy
     /**
      * {@inheritDoc}
      */
+    public function loadData($data)
+    {
+
+        $this->__initializer__ && $this->__initializer__->__invoke($this, 'loadData', array($data));
+
+        return parent::loadData($data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public function attachToGame($game)
     {
 

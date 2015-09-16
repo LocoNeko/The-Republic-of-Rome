@@ -16,7 +16,7 @@
     ErrorHandler::register();
     ExceptionHandler::register();
     
-    $config_php = parse_ini_file(__DIR__.'/../src/ROR_V2.ini') ;
+    $config_php = parse_ini_file(__DIR__.'/../src/silex-test.ini') ;
     
     $app['debug'] = true;
     $app['BASE_URL'] = $config_php['BASE_URL'] ;

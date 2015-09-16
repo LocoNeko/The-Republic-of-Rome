@@ -64,16 +64,35 @@ class Deck
     public function saveData()
     {
         $data = array() ;
-        $data['id'] = $this->getId() ;
-        $data['name'] = $this->getName() ;
-        $data['game'] = ($this->game === NULL ? NULL : $this->getGame()->getId()) ;
-        $data['controlled_by'] = $this->getControlled_by()->getId() ;
-        $data['inParty'] = $this->getInParty()->getId() ;
-        $data['inHand'] = $this->getInHand()->getId() ;
-        $data['cards'] = array () ;
-        foreach ($this->getCards() as $key=>$card)
+        foreach (get_object_vars($this) as $name=>$property)
         {
-            $data['cards'][$key] = $card->saveData() ;
+            $getter = 'get'.ucfirst($name);
+            if (method_exists($this, $getter))
+            {
+                // Get the item and its class
+                $item = $this->$getter() ;
+                $dataType = gettype($item) ;
+                if ($dataType=='object')
+                {
+                    $dataType=get_class($item);
+                }
+                // When we need to save an Id only, check if NULL before
+                if ($name=='game' || $name=='controlled_by' || $name=='inParty' || $name=='inHand' )
+                {
+                    $data[$name] = (is_null($item) ? NULL : $item->getId() ) ;
+                }
+                elseif ($name=='cards')
+                {
+                    foreach ($this->getCards() as $key=>$card)
+                    {
+                        $data['cards'][$key] = $card->saveData() ;
+                    }
+                }
+                else
+                {
+                    $data[$name] = $item ;
+                }
+            }
         }
         return $data ;
     }
