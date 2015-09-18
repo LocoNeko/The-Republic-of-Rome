@@ -42,6 +42,38 @@ class Fleet
         $this->setCardLocation(NULL) ;
     }
 
+    /**
+     * Goes through all the object's properties and saves them in an array
+     * @return type
+     */
+    public function saveData()
+    {
+        $data = array() ;
+        foreach (get_object_vars($this) as $name=>$property)
+        {
+            $getter = 'get'.ucfirst($name);
+            if (method_exists($this, $getter))
+            {
+                // Get the item and its class
+                $item = $this->$getter() ;
+                $dataType = gettype($item) ;
+                if ($dataType=='object')
+                {
+                    $dataType=get_class($item);
+                }
+                if($name=='cardLocation')
+                {
+                    $data[$name] = (is_null($item) ? NULL : $item->saveData() ) ;
+                }
+                elseif ($name!='game')
+                {
+                    $data[$name] = $item ;
+                }
+            }
+        }
+        return $data ;
+    }
+
     public function canBeRecruited()
     {
         return ($this->getOtherLocation() == 'Pool') ;

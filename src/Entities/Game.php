@@ -228,13 +228,10 @@ class Game
                 // Call to each object's saveData() methods
                 if ($dataType=='Doctrine\\ORM\\PersistentCollection' && $name!='messages')
                 {
-                    if ($name=='parties') {
                         foreach($item as $key=>$value)
                         {
-                            // the saveData method must be implemented for parties, decks, legions & fleets
                             $data[$name][$key] = $value->saveData() ;
                         }
-                    }
                 }
                 // For one-to-one relations, just save the id
                 elseif ($name=='currentBidder' || $name=='persuasionTarget')

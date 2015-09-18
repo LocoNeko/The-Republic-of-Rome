@@ -55,12 +55,16 @@ abstract class Card
     public function setName($name) { $this->name = (string)$name ; }
     public function setDeck($deck) { $this->deck = $deck ; }
     public function setPreciseType($preciseType) { $this->preciseType = $preciseType ; }
-    
+     
     public function getId() { return $this->id ; }
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
     public function getPreciseType() { return $this->preciseType ; }
-    
+    public function getCards_controlled() { return $this->cards_controlled; }
+    public function getWithLegions() { return $this->withLegions; }
+    public function getWithFleets() { return $this->withFleets; }
+
+     
     // Only create the cards_controlled deck when it becomes necessary
     public function getCardsControlled()
     {
@@ -90,17 +94,33 @@ abstract class Card
         $data = array() ;
         foreach (get_object_vars($this) as $name=>$property)
         {
-            if ($name!='deck' && $name!='cards_controlled' && $name!='withLegions' && $name!='withFleet')
+            $getter = 'get'.ucfirst($name);
+            if (method_exists($this, $getter))
             {
-                $getter = 'get'.ucfirst($name);
-                if (method_exists($this, $getter) && !is_array($property))
+                // Get the item and its class
+                $item = $this->$getter() ;
+                $dataType = gettype($item) ;
+                if ($dataType=='object')
                 {
-                    $data[$name] = $this->$getter() ;
+                    $dataType=get_class($item);
                 }
-            }
-            else
-            {
-                // TO DO : handle arrays cards_controlled (recusrion) , withLegions , withFleets
+                if ($dataType=='Doctrine\\ORM\\PersistentCollection')
+                {
+                    foreach($item as $key=>$value)
+                    {
+                        $data[$name][$key] = $value->saveData() ;
+                    }
+                }
+                // If cards_controlled is not NULL, it's a Deck, and saveData() must be called on it
+                elseif ($name=='cards_controlled')
+                {
+                    $data[$name] = (is_null($item) ? NULL : $item->saveData() ) ;
+                }
+                // No need to save the Deck, as it can be populated from the deck entity when re-created
+                elseif ($name!='deck')
+                {
+                    $data[$name] = $item ;
+                }
             }
         }
         return $data ;
