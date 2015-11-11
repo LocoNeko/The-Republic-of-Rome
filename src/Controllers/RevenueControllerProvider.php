@@ -22,7 +22,6 @@ class RevenueControllerProvider implements ControllerProviderInterface
         {
             $app['session']->set('game_id', (int)$game_id);
             $game = $app['getGame']((int)$game_id) ;
-            //$game = $this->getGame((int)$game_id) ;
             if ($game===FALSE)
             {
                 $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , (int)$game_id ));
@@ -400,7 +399,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $game->changeTreasury(100) ;
         $game->log(_('Rome collects 100T.')) ;
         // Allied Enthusiasm event
-        $alliedEnthusiasmEvent = $game->getEvent('name' , 'Allied Enthusiasm' , 'ALL') ;
+        $alliedEnthusiasmEvent = $game->getEventProperty('name' , 'Allied Enthusiasm' , 'ALL') ;
         if ($alliedEnthusiasmEvent['level']>0)
         {
             $name = ($alliedEnthusiasmEvent['level'] ? 'name' : 'increased_name') ;
