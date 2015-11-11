@@ -4,6 +4,11 @@
     display: block;
 }
 
+.sprite-modal {
+    position: absolute;
+    z-index : 500 ;
+}
+
 /*
     Cards (400x275 px)
 */

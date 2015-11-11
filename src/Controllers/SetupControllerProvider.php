@@ -68,6 +68,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                             $game->log( _('%1$s is appointed leader of %2$s').' ([['.$user_id.']])','log',array($leader->getName() , $party->getName()) );
                             
                             // TO DO : remove this - Testing only
+                            $game->log( _('For testing purpose : add provinces to all senators'));
                             foreach($party->getSenators()->getCards() as $senator)
                             {
                                 $game->getDeck('unplayedProvinces')->getFirstCardByProperty('overrun' , FALSE , $senator->getCardsControlled()) ;

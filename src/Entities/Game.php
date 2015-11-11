@@ -1331,7 +1331,7 @@ class Game
             {
                 $deadStatesman = $party->getSenators()->getFirstCardByProperty('senatorID' , $deadSenator->getSenatorID() , $this->getDeck('Discard')) ;
                 $deadStatesman->resetSenator();
-                $message.=sprintf(_('%s of party {%s} dies. The card is discarded. ') , $deadStatesman->getName() , $party->getUser_id()) ;
+                $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. The card is discarded. ') , $deadStatesman->getName()) ;
             }
             
             // Death of a normal Senator
@@ -1340,32 +1340,32 @@ class Game
                 $deadSenator->resetSenator() ;
                 if ($party->getLeader()->getSenatorID() == $senatorID)
                 {
-                    $message.=sprintf(_('%s of party {%s} dies. This senator was party leader, the family stays in the party. ') , $deadSenator->getName() , $party->getUser_id());
+                    $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. This senator was party leader, the family stays in the party. ') , $deadSenator->getName() );
                 }
                 else
                 {
-                    $deadSenator = $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID , $this->getDeck('Curia')) ;
-                    $message.=sprintf(_('%s of party {%s} dies. The family goes to the curia. ') , $deadSenator->getName() , $party->getUser_id());
+                    $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID, $this->getDeck('Curia') ) ;
+                    $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. The family goes to the curia. ') , $deadSenator->getName() );
                 }
             }
             
             // Handle dead senators' controlled cards : Concessions, Provinces, Senators
             if ($deadSenator->hasControlledCards())
             {
-                foreach($deadSenator->getControlledCards()->getCards() as $card)
+                foreach($deadSenator->getCards_controlled()->getCards() as $card)
                 {
                     
                     // Concession -> Curia
                     if ($card->getPreciseType()=='Concession')
                     {
-                        $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                        $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
                         $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
                     }
                     
                     // Province -> Forum
                     elseif ($card->getPreciseType()=='Province')
                     {
-                        $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('forum')) ;
+                        $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('forum')) ;
                         $message.=sprintf(_('%s goes to the forum. ') , $card->getName());
                     }
                     
@@ -1378,14 +1378,14 @@ class Game
                         {
                             // Now that the Satesman is dead, the family is the party leader
                             $party->setLeader($card) ;
-                            $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $party->getSenators()) ;
+                            $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $party->getSenators()) ;
                             $message.=sprintf(_('%s stays in the party and is now leader. ') , $card->getName());
                         }
                         
                         // Was not leader -> Curia
                         else
                         {
-                            $deadSenator->getControlledCards()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                            $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
                             $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
                         }
                     }

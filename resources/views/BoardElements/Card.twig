@@ -95,7 +95,7 @@ This template gets the following parameters :
             <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             </a>
-            <div id="CardsControlledBy_{{card.getId()}}" class="row collapse">
+            <div id="CardsControlledBy_{{card.getId()}}" class="row collapse sprite-modal">
                 {% for controlledCard in card.getCardsControlled().getCards() %}
                     {% embed "BoardElements/Card.twig" with
                         {
