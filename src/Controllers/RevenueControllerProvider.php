@@ -74,6 +74,37 @@ class RevenueControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
+        * Verb : ContributionsDone
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/ContributionsDone', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                if ($game->isEveryoneDone())
+                {
+                    // TO DO : Here now (all state expenses, return governors)
+                    $app['saveGame']($game) ;
+                    $game->setSubPhase('State expenses') ;
+                    $game->resetAllIsDone() ;
+                }
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_RevenueDone');
+
+        /*
+        * POST target
         * Verb : Redistribute
         * JSON data : user_id
         */
@@ -96,6 +127,30 @@ class RevenueControllerProvider implements ControllerProviderInterface
         })
         ->bind('verb_Redistribute');
         
+        /*
+        * POST target
+        * Verb : Contribute
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/Contribute', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                $this->doContribution($game , $user_id , $request->request->all()) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_Contribute');
+
         /*
         * POST target
         * Verb : RedistributionDone
@@ -388,6 +443,71 @@ class RevenueControllerProvider implements ControllerProviderInterface
         }
         return TRUE ;
     }
+    
+    /**
+     * This function gives money to Rome based on the $data submitted.
+     * @param Game $game
+     * @param int $user_id
+     * @param array $data array 'fromSenator', 'amount'<br>
+     * @return boolean Success or failure
+     */
+    private function doContribution($game , $user_id , $data)
+    {
+        $party = $game->getParty($user_id) ;
+        /* Checks on the data :
+         * - fromSenator can only be in the party 
+         * - amount must be positive
+         */
+        if (
+            ((int)$data['amount']<=0) ||
+            ($data['fromSenator']!='' && ($party->getSenators()->getFirstCardByProperty('id', $data['fromSenator']) === FALSE) )
+        )
+        {
+            $game->log(_('ERROR - Contribution from wrong Senator or with invalid amount') , 'error' ) ;
+            return FALSE ;
+        }
+        else 
+        {
+            $fromSenator = $party->getSenators()->getFirstCardByProperty('id', $data['fromSenator']) ;
+            $amount = (int)$data['amount'] ;
+            $INFgain = 0 ;
+            $INFgainMessage = '' ;
+            if ($amount>=50)
+            {
+                $INFgain = 7 ;
+                $INFgainMessage = ' He gains 7 INF.' ;
+            }
+            elseif ($amount>=25)
+            {
+                $INFgain = 3 ;
+                $INFgainMessage = ' He gains 3 INF.' ;
+            }
+            elseif ($amount>=10)
+            {
+                $INFgain = 1 ;
+                $INFgainMessage = ' He gains 1 INF.' ;
+            }
+            else
+            {
+                $INFgain = 0 ;
+                $INFgainMessage = ' He doesn\'t gain any INF.' ;
+            }
+            $fromSenator->changeTreasury(-$amount) ;
+            $fromSenator->changeINF($INFgain) ;
+            $game->changeTreasury($amount) ;
+            $game->log(
+                _('%1s ([['.$user_id.']]) gives %2d T. to Rome.%3s') ,
+                'log' ,
+                array(
+                    $fromSenator->getName() ,
+                    $amount ,
+                    $INFgainMessage
+                ) 
+            ) ;
+        }
+        return TRUE ;
+    }
+
     
     /**
      * Generates the revenues for Rome : 100T, Allied Enthusiasm, Provinces (both for aligned and unaligned Senators)

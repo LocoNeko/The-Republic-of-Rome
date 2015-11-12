@@ -228,7 +228,11 @@ abstract class Card
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }
     
-    public function getAction()
+    /**
+     * Returns an array of possible cards actions based on the card's location, type, game phase & subphase
+     * @return array
+     */
+    public function getAction($self=FALSE)
     {
         $location = $this->getLocation() ;
         $game = $this->getGame() ;
@@ -237,6 +241,10 @@ abstract class Card
         if ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Statesman' && $location['type'] == 'hand' && $this->statesmanPlayable($location['value']->getUser_id())['flag'] )
         {
             return [ 'menu' => 'Play Statesman' ];
+        }
+        if ($phase=='Revenue' && $subPhase == 'Contributions' && $location['type'] == 'party' && $this->getTreasury() > 0 && $self)
+        {
+            return [ 'menu' => 'Give to Rome' ];
         }
         elseif ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
         {

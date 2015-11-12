@@ -35,7 +35,7 @@
     {% embed "BoardElements/Card.twig" with
         {
             'card': senator ,
-            'action': senator.getAction()
+            'action': senator.getAction(self)
         } only
     %}
     {% endembed %}

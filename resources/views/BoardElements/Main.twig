@@ -26,7 +26,7 @@
                 {% embed "BoardElements/Card.twig" with
                     {
                         'card': card ,
-                        'action': card.getAction()
+                        'action': card.getAction(TRUE)
                     } only
                 %}
                 {% endembed %}
