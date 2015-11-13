@@ -1148,6 +1148,7 @@ class Game
         if (!$filePointer) {
             throw new Exception(_('Could not open the Land Bills table file'));
         }
+        // TO DO : Add a "inPlay" value initialised at 0, which will keep the number of land bills of that level that are in play
         while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
             if (substr($data[0],0,1)!='#') {
                 $this->landBillsTable[$data[0]] = array();
@@ -1160,7 +1161,8 @@ class Game
                         'unrest' => $data[6] ,
                         'repeal sponsor' => $data[7] ,
                         'repeal vote' => $data[8] ,
-                        'repeal unrest' => $data[9]
+                        'repeal unrest' => $data[9] ,
+                        'inPlay' => 0
                     )
                 );
             }

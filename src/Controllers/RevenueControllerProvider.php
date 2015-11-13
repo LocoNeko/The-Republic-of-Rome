@@ -87,6 +87,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 if ($game->isEveryoneDone())
                 {
                     // TO DO : Here now (all state expenses, return governors)
+                    $this->doStateExpenses($game) ;
                     $app['saveGame']($game) ;
                     $game->setSubPhase('State expenses') ;
                     $game->resetAllIsDone() ;
@@ -451,7 +452,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
      * @param array $data array 'fromSenator', 'amount'<br>
      * @return boolean Success or failure
      */
-    private function doContribution($game , $user_id , $data)
+    private function doContribution(\Entities\Game $game , $user_id , array $data)
     {
         $party = $game->getParty($user_id) ;
         /* Checks on the data :
@@ -513,7 +514,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
      * Generates the revenues for Rome : 100T, Allied Enthusiasm, Provinces (both for aligned and unaligned Senators)
      * @param Game $game
      */
-    private function doRomeRevenue($game)
+    private function doRomeRevenue(\Entities\Game $game)
     {
         $game->log(_('State revenues') , 'alert') ;
         $game->changeTreasury(100) ;
@@ -562,4 +563,23 @@ class RevenueControllerProvider implements ControllerProviderInterface
             }
         }
     }
+    
+    private function doStateExpenses(\Entities\Game $game)
+    {
+        $game->log(_('State expenses') , 'alert') ;
+        $nbUnprosecutedWars = $game->getDeck('unprosecutedWars')->getNumberOfCards();
+        $nbActiveWars = $game->getDeck('activeWars')->getNumberOfCards();
+        $game->log(_('Rome pays %1$dT for %2$d unprosecuted war%3$s and %4$d active war%5$s.') , 'log' , 
+            array(
+                $nbUnprosecutedWars*20 ,
+                $nbUnprosecutedWars ,
+                ($nbUnprosecutedWars > 1 ? 's' : '') ,
+                $nbActiveWars*20 ,
+                $nbActiveWars ,
+                ($nbActiveWars > 1 ? 's' : '')
+            )
+        ) ;
+        $game->changeTreasury(-$nbUnprosecutedWars * 20 - $nbActiveWars * 20) ;
+    }
+    
 }
