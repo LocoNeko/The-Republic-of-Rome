@@ -1594,5 +1594,27 @@ class Game
         }
         return FALSE ;
     }
+    
+    /**
+     * Returns the total cost of land bills and a descriptive message
+     * @return array ['total'] = (int) , ['message']
+     */
+    public function getLandBillsTotalCost()
+    {
+        $result ['total'] = 0 ;
+        $result ['message'] = ',' ;
+        foreach ($this->landBillsTable as $level=>$details)
+        {
+            $result ['message'].=sprintf(
+                _(' %1$d level %2$s bill%3$s,') ,
+                $details['inPlay'] ,
+                ($level==1 ? 'I' : ($level==2 ? 'II' : 'III' ) ) ,
+                ($level>1 ? 's' : '')
+            ) ;
+            $result ['total'] += $details['cost']*$level ;
+        }
+        $result ['message'] = substr($result ['message'], 0 , -1) ;
+        return $result ;
+    }
 
 }

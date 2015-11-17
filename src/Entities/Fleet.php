@@ -95,6 +95,20 @@ class Fleet
         $this->setCardLocation(NULL) ;
     }
 
+    /**
+     * Determines whether or not a Fleet should be maintained by Rome.
+     * Which means the fleet is : in Rome, in a province (garrison) , with a non-rebel Senator
+     * @return boolean
+     */
+    public function romeMaintenance()
+    {
+        if ($this->getOtherLocation()=='Pool') { return FALSE ; } 
+        if ($this->getOtherLocation()=='Rome') { return TRUE ; } 
+        if (!is_null($this->getCardLocation()) && $this->getCardLocation()->getPreciseType() == 'Senator' && !$this->getCardLocation()->getRebel()) { return TRUE; } 
+        if (!is_null($this->getCardLocation()) && $this->getCardLocation()->getPreciseType() == 'Province' ) { return TRUE; } 
+        return FALSE;
+    }
+    
     public function numberToRoman($num)
     {
         $n = intval($num);

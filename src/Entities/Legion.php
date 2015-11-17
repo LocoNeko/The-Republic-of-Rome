@@ -105,13 +105,28 @@ class Legion
         $this->setLoyalTo(NULL) ;
     }
 
-    public function disband() {
+    public function disband()
+    {
         $this->setOtherLocation(NULL) ;
         $this->setCardLocation(NULL) ;
         $this->setVeteran(FALSE) ;
         $this->setLoyalTo(NULL) ;
     }
 
+    /**
+     * Determines whether or not a Legion should be maintained by Rome.
+     * Which means the legion is : in Rome, in a province (garrison) , with a non-rebel Senator
+     * @return boolean
+     */
+    public function romeMaintenance()
+    {
+        if ($this->getOtherLocation()=='Pool') { return FALSE ; } 
+        if ($this->getOtherLocation()=='Rome') { return TRUE ; } 
+        if (!is_null($this->getCardLocation()) && $this->getCardLocation()->getPreciseType() == 'Senator' && !$this->getCardLocation()->getRebel()) { return TRUE; } 
+        if (!is_null($this->getCardLocation()) && $this->getCardLocation()->getPreciseType() == 'Province' ) { return TRUE; } 
+        return FALSE;
+    }
+    
 }
 
 function numberToRoman($num)

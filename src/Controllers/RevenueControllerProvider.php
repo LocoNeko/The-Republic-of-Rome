@@ -567,6 +567,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
     private function doStateExpenses(\Entities\Game $game)
     {
         $game->log(_('State expenses') , 'alert') ;
+        // Wars
         $nbUnprosecutedWars = $game->getDeck('unprosecutedWars')->getNumberOfCards();
         $nbActiveWars = $game->getDeck('activeWars')->getNumberOfCards();
         $game->log(_('Rome pays %1$dT for %2$d unprosecuted war%3$s and %4$d active war%5$s.') , 'log' , 
@@ -579,7 +580,35 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 ($nbActiveWars > 1 ? 's' : '')
             )
         ) ;
-        $game->changeTreasury(-$nbUnprosecutedWars * 20 - $nbActiveWars * 20) ;
+        $game->changeTreasury( - 20 * $nbUnprosecutedWars - 20 * $nbActiveWars ) ;
+        // Land bills
+        $landBills = $game->getLandBillsTotalCost() ;
+        if ($landBills['total']>0)
+        {
+            $game->log(_('Rome pays %1$dT for %2$s') , array($landBills['total'] , $landBills['message'])) ;
+            $game->changeTreasury( - $landBills['total'] ) ;
+        }
+        // Forces
+        $nbLegions = 0 ;
+        $nbFleets = 0 ;
+        foreach ($game->getLegions() as $legion)
+        {
+            $nbLegions += ($legion->romeMaintenance() ? 1 : 0 ) ;
+        }
+        foreach ($game->getFleets() as $fleet)
+        {
+            $nbFleets += ($fleet->romeMaintenance() ? 1 : 0 ) ;
+        }
+        $game->log(_('Rome pays %1$dT for %2$d legion%3$s and %4$d fleet%5$s.') , 'log' , 
+            array(
+                2*($nbLegions+$nbFleets) ,
+                $nbLegions ,
+                ($nbLegions > 1 ? 's' : '') ,
+                $nbFleets ,
+                ($nbFleets > 1 ? 's' : '') ,
+            )
+        ) ;
+        $game->changeTreasury( - 2*($nbLegions+$nbFleets) ) ;
     }
     
 }
