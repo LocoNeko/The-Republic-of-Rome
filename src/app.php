@@ -116,7 +116,7 @@
     /**
      * A Service that returns a Game entity corresponding to this $game_id, or FALSE if not found
      * @param int $game_id
-     * @return Entity\Game | FALSE
+     * @return \Entities\Game\|boolean
      */
     $app['getGame'] = $app->protect(function ($game_id) use ($app) {
         $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);

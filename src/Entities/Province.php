@@ -126,5 +126,17 @@ class Province extends Card
         $status = ($this->getDeveloped()) ? 'developed' : 'undeveloped' ;
         return $this->getForces()[$status]['sea'] ;
     }
+    
+    /**
+     * Changes the mandate by -1 or +1
+     * @param int $delta
+     */
+    public function changeMandate($delta)
+    {
+        if ($delta==-1 || $delta==1)
+        {
+            $this->mandate+=(int)$delta ;
+        }
+    }
 
 }

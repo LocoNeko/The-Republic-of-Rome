@@ -86,11 +86,12 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 $game->getParty($user_id)->setIsDone(TRUE) ;
                 if ($game->isEveryoneDone())
                 {
-                    // TO DO : Here now (all state expenses, return governors)
+                    $game->setSubPhase('State expenses') ;
                     $this->doStateExpenses($game) ;
                     $app['saveGame']($game) ;
-                    $game->setSubPhase('State expenses') ;
                     $game->resetAllIsDone() ;
+                    $game->setPhase('Forum') ;
+                    $game->setSubPhase('RollEvent') ;
                 }
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -585,7 +586,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $landBills = $game->getLandBillsTotalCost() ;
         if ($landBills['total']>0)
         {
-            $game->log(_('Rome pays %1$dT for %2$s') , array($landBills['total'] , $landBills['message'])) ;
+            $game->log(_('Rome pays %1$dT for %2$s') , 'log' , array($landBills['total'] , $landBills['message'])) ;
             $game->changeTreasury( - $landBills['total'] ) ;
         }
         // Forces
@@ -608,7 +609,52 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 ($nbFleets > 1 ? 's' : '') ,
             )
         ) ;
-        $game->changeTreasury( - 2*($nbLegions+$nbFleets) ) ;
+        $game->changeTreasury( - 2 *($nbLegions+$nbFleets) ) ;
+        // Returning governors
+        foreach($game->getParties() as $party) {
+            /* @var $party \Entities\Party */
+            foreach ($party->getSenators()->getCards() as $senator) {
+                // returningGovernor is used during the Senate phase : returning governors cannot be appointed governor again on the turn of their return without their approval
+                $senator->setReturningGovernor(FALSE) ;
+                foreach ($senator->getCardsControlled()->getCards() as $card) {
+                    if ($card->getPreciseType()=='Province') {
+                        $card->changeMandate(1);
+                        if ($card->getMandate() == 3) {
+                            $game->log(_('%1$s returns from %2$s which is placed in the Forum.') , 'log' , array($senator->getName() , $card->getName())) ;
+                            $card->setMandate(0);
+                            $senator->getCardsControlled()->getFirstCardByProperty('id' , $card->getID() , $game->getDeck('forum')) ;
+                            $senator->setReturningGovernor(TRUE);
+                        } else {
+                            $game->log(_('%1$s spends %2$s game turn in %3$s') , 'log' , array($senator->getName() , ( ($card->getMandate()==1) ? _('First') : _('Second') ) , $card->getName())) ;
+                        }
+                    }
+                }
+            }
+        }
+        // Handle unaligned senators who are governors
+        foreach ($game->getDeck('forum')->getCards() as $senator)
+        {
+            if ($senator->getPreciseType()=='Family')
+            {
+                $senator->setReturningGovernor(FALSE) ;
+                foreach ($senator->getCardsControlled()->getCards() as $card)
+                {
+                    /* @var $card \Entities\Province */
+                    if ($card->getPreciseType()=='Province')
+                    {
+                        $card->changeMandate(1) ;
+                        if ($card->getMandate() == 3) {
+                            $game->log(_('%1$s (unaligned) returns from %2$s which is placed in the Forum.') , 'log' , array($senator->getName() , $card->getName())) ;
+                            $card->setMandate(0);
+                            $senator->getCardsControlled()->getFirstCardByProperty('senatorID' , $senator->getSenatorID() , getDeck('forum')) ;
+                            $senator->setReturningGovernor(TRUE);
+                        } else {
+                            $game->log(_('%1$s (unaligned) spends %2$s game turn in %3$s') , 'log' , array($senator->getName() , ( ($card->getMandate()==1) ? _('First') : _('Second') ) , $card->getName())) ;
+                        }
+                    }
+                }
+            }
+        }
     }
     
 }

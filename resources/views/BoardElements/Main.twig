@@ -39,5 +39,35 @@
         {% embed 'BoardElements/Party.twig' with {'self' : FALSE , 'party' : party } %}
         {% endembed %}
     {% endfor %}
+
+    <h3>The Forum</h3>
+    <div class="row">
+    {% if game.getDeck('forum').getNumberOfCards() > 0 %}
+            {% for card in game.getDeck('forum').getCards() %}
+                {% embed "BoardElements/Card.twig" with
+                    {
+                        'card': card ,
+                        'action': card.getAction()
+                    } only
+                %}
+                {% endembed %}
+            {% endfor %}
+    {% endif %}
+    </div>
+
+    <h3>The Curia</h3>
+    <div class="row">
+    {% if game.getDeck('curia').getNumberOfCards() > 0 %}
+            {% for card in game.getDeck('curia').getCards() %}
+                {% embed "BoardElements/Card.twig" with
+                    {
+                        'card': card ,
+                        'action': card.getAction()
+                    } only
+                %}
+                {% endembed %}
+            {% endfor %}
+    {% endif %}
+    </div>
     
 {% endblock %}

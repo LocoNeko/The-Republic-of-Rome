@@ -85,6 +85,8 @@ class Party
     public function getUserName() { return $this->userName; }
     public function getReadyToStart() { return $this->readyToStart ; }
     public function getHand() { return $this->hand ; }
+    
+    /** @return \Entities\Senator[] */
     public function getSenators() { return $this->senators ; }
     public function getMessages() { return $this->messages ; }
     public function getLastUpdate() { return $this->lastUpdate ; }

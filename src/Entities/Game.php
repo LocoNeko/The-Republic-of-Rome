@@ -189,6 +189,10 @@ class Game
     public function getVariants() { return $this->variants ; }
     public function getUnrest() { return $this->unrest ; }
     public function getTreasury() { return $this->treasury ; }
+    /**
+     * 
+     * @return \Entities\Party[]
+     */
     public function getParties() { return $this->parties ; }
     public function getDecks() { return $this->decks ; }
     public function getLegions() { return $this->legions; }
@@ -306,6 +310,9 @@ class Game
         $this->initiative++;
     }
 
+    /**
+     * Sets all parties isDone to FALSE
+     */
     public function resetAllIsDone()
     {
         foreach($this->getParties() as $party)
@@ -369,6 +376,7 @@ class Game
     public function changeTreasury($amount)
     {
         $this->treasury+=(int)$amount ;
+        // TO DO : Check game over
     }
 
     /**
@@ -398,6 +406,10 @@ class Game
         return count($this->parties) ;
     }
     
+    /**
+     * @param string $deckName
+     * @return \Entities\Deck|boolean
+     */
     public function getDeck($deckName)
     {
         $results = $this->getDecks()->matching( Criteria::create()->where(Criteria::expr()->eq('name', $deckName)) );
@@ -1151,19 +1163,17 @@ class Game
         // TO DO : Add a "inPlay" value initialised at 0, which will keep the number of land bills of that level that are in play
         while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
             if (substr($data[0],0,1)!='#') {
-                $this->landBillsTable[$data[0]] = array();
-                array_push($this->landBillsTable[$data[0]] , array(
-                        'cost' => $data[1] ,
-                        'duration' => $data[2] ,
-                        'sponsor' => $data[3] ,
-                        'cosponsor' => $data[4] ,
-                        'against' => $data[5] ,
-                        'unrest' => $data[6] ,
-                        'repeal sponsor' => $data[7] ,
-                        'repeal vote' => $data[8] ,
-                        'repeal unrest' => $data[9] ,
-                        'inPlay' => 0
-                    )
+                $this->landBillsTable[$data[0]] = array(
+                    'cost' => $data[1] ,
+                    'duration' => $data[2] ,
+                    'sponsor' => $data[3] ,
+                    'cosponsor' => $data[4] ,
+                    'against' => $data[5] ,
+                    'unrest' => $data[6] ,
+                    'repeal sponsor' => $data[7] ,
+                    'repeal vote' => $data[8] ,
+                    'repeal unrest' => $data[9] ,
+                    'inPlay' => 0
                 );
             }
         }
@@ -1354,20 +1364,20 @@ class Game
             // Handle dead senators' controlled cards : Concessions, Provinces, Senators
             if ($deadSenator->hasControlledCards())
             {
-                foreach($deadSenator->getCards_controlled()->getCards() as $card)
+                foreach($deadSenator->getCardsControlled()->getCards() as $card)
                 {
                     
                     // Concession -> Curia
                     if ($card->getPreciseType()=='Concession')
                     {
-                        $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                        $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
                         $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
                     }
                     
                     // Province -> Forum
                     elseif ($card->getPreciseType()=='Province')
                     {
-                        $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('forum')) ;
+                        $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('forum')) ;
                         $message.=sprintf(_('%s goes to the forum. ') , $card->getName());
                     }
                     
@@ -1380,14 +1390,14 @@ class Game
                         {
                             // Now that the Satesman is dead, the family is the party leader
                             $party->setLeader($card) ;
-                            $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $party->getSenators()) ;
+                            $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $party->getSenators()) ;
                             $message.=sprintf(_('%s stays in the party and is now leader. ') , $card->getName());
                         }
                         
                         // Was not leader -> Curia
                         else
                         {
-                            $deadSenator->getCards_controlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                            $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
                             $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
                         }
                     }
@@ -1603,7 +1613,7 @@ class Game
     {
         $result ['total'] = 0 ;
         $result ['message'] = ',' ;
-        foreach ($this->landBillsTable as $level=>$details)
+        foreach ($this->getLandBillsTable() as $level=>$details)
         {
             $result ['message'].=sprintf(
                 _(' %1$d level %2$s bill%3$s,') ,
@@ -1611,7 +1621,7 @@ class Game
                 ($level==1 ? 'I' : ($level==2 ? 'II' : 'III' ) ) ,
                 ($level>1 ? 's' : '')
             ) ;
-            $result ['total'] += $details['cost']*$level ;
+            $result ['total'] += $details['cost']*$details['inPlay'] ;
         }
         $result ['message'] = substr($result ['message'], 0 , -1) ;
         return $result ;

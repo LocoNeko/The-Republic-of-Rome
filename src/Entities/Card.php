@@ -60,12 +60,14 @@ abstract class Card
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
     public function getPreciseType() { return $this->preciseType ; }
-    public function getCards_controlled() { return $this->cards_controlled; }
     public function getWithLegions() { return $this->withLegions; }
     public function getWithFleets() { return $this->withFleets; }
 
-     
     // Only create the cards_controlled deck when it becomes necessary
+    /**
+     * 
+     * @return \Entities\Deck
+     */
     public function getCardsControlled()
     {
         if ($this->cards_controlled === NULL)
