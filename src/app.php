@@ -1,4 +1,5 @@
 <?php
+
     use Silex\Provider;
     use Symfony\Component\HttpFoundation\Response;
     use Doctrine\Common\Collections\ArrayCollection;
@@ -99,6 +100,7 @@
     $app->mount($app['BASE_URL'].'/Setup'    , new Controllers\SetupControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Mortality', new Controllers\MortalityControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Revenue'  , new Controllers\RevenueControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Forum'    , new Controllers\ForumControllerProvider($app) );
     
     function getNewMessages($user_id , $game_id , $entityManager) {
         $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);

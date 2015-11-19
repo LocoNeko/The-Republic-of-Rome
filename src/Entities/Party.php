@@ -52,6 +52,9 @@ class Party
     /** @Column(type="boolean") @var boolean */
     protected $isDone = FALSE ;
 
+    /** @Column(type="integer") @var int */
+    protected $bid ;
+
     /**
      * ----------------------------------------------------
      * Getters & Setters
@@ -77,6 +80,7 @@ class Party
     }
     public function setTreasury($treasury) { $this->treasury = $treasury; }
     public function setIsDone($isDone) { $this->isDone = $isDone; }
+    public function setBid($bid) { $this->bid = $bid; }
 
     public function getId() { return $this->id; }
     public function getGame() { return $this->game ; }
@@ -95,8 +99,9 @@ class Party
     public function getLeader() { return $this->leader; }
     public function getTreasury() { return $this->treasury; }
     public function getIsDone() { return $this->isDone; }
- 
-    public function __construct($user_id , $userName , $name) {
+    public function getBid() { return $this->bid; }
+
+     public function __construct($user_id , $userName , $name) {
         $this->setName($name) ;
         $this->setUser_id($user_id) ;
         $this->setUserName($userName) ;
@@ -358,5 +363,38 @@ class Party
         return $result ;
     }
 
-
+    /**
+    * ----------------------------------------------------
+    * Forum
+    * ----------------------------------------------------
+    */
+    
+     /**
+     * This adds the ability to pay ransom of Senators captured during battle or barbarian raids<br>
+     * This function allows for payment at any time.<br>
+     * TO DO : Killing of captives should be checked when a war is defeated (captured during battle).<br>
+     * DONE : Killing by barbarians has been implemented already (beginning of forum phase).
+     * @return array 'captiveOf' , 'senatorID' , 'treasury' , 'ransom'
+     */
+    public function getListOfCaptives() {
+        $result = array () ;
+        /* @var $senator \Entities\Senator */
+        foreach($this->getSenators()->getCards() as $senator) {
+            if($senator->getCaptive() !==FALSE)
+            {
+                array_push( $result ,
+                    array(
+                        'captiveOf' => $senator->getCaptive() ,
+                        'senatorID' => $senator->getSenatorID() ,
+                        'treasury' => $senator->getTreasury() ,
+                        'ransom' => max( 10 , 2 * $senator->getINF() )
+                    )
+                );
+            }
+        }
+        if (count($result)==0) {
+            $result = FALSE ;
+        }
+        return $result ;
+    }
 }

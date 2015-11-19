@@ -79,6 +79,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/ContributionsDone', function($game_id , Request $request) use ($app)
         {
+            /* @var \Entities\Game $game  */
             $game = $app['getGame']((int)$game_id) ;
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
@@ -91,7 +92,32 @@ class RevenueControllerProvider implements ControllerProviderInterface
                     $app['saveGame']($game) ;
                     $game->resetAllIsDone() ;
                     $game->setPhase('Forum') ;
+                    // Remove events that expire at the beginning of the forum phase
+                    foreach ($game->getEvents() as $number => $event) {
+                        if ($event['level']>0) {
+                            if ( ($number != 174) && ($number != 175) && ($number != 176) ) {
+                                $game->setEventLevel ('number' , $number , 0) ;
+                                $game->log(_('Event %s is removed.') , 'log' , array($event['name'])) ;
+                            }
+                        }
+                    }
+                    // Barbarians kill captives
+                    /* @var \Entities\Party $party */
+                    foreach ($game->getParties() as $party) {
+                        $captiveList = $party->getListOfCaptives() ;
+                        if ($captiveList!==FALSE) {
+                            foreach ($captiveList as $captive) {
+                                if ($captive['captiveOf'] == 'barbarians') {
+                                    // TO DO - HERE NOW
+                                    $game->log(_('The barbarians slaughter %1$s, whose ransom was not paid by [['.$party->getUser_id().']]') , 'log' , array($captive['senatorID'])) ;
+                                    $game->log($game->killSenator($captive['senatorID'] , TRUE ) ) ;
+                                }
+                            }
+                        }
+                    }
                     $game->setSubPhase('RollEvent') ;
+                    $game->setInitiative(1) ;
+                    $game->log('Initiative #1' , 'alert' ) ;
                 }
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -185,7 +211,6 @@ class RevenueControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('verb_RedistributionDone');
-
 
         return $controllers ;
     }
@@ -453,7 +478,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
      * @param array $data array 'fromSenator', 'amount'<br>
      * @return boolean Success or failure
      */
-    private function doContribution(\Entities\Game $game , $user_id , array $data)
+    private function doContribution(Game $game , $user_id , array $data)
     {
         $party = $game->getParty($user_id) ;
         /* Checks on the data :
@@ -515,7 +540,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
      * Generates the revenues for Rome : 100T, Allied Enthusiasm, Provinces (both for aligned and unaligned Senators)
      * @param Game $game
      */
-    private function doRomeRevenue(\Entities\Game $game)
+    private function doRomeRevenue(Game $game)
     {
         $game->log(_('State revenues') , 'alert') ;
         $game->changeTreasury(100) ;
@@ -565,7 +590,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         }
     }
     
-    private function doStateExpenses(\Entities\Game $game)
+    private function doStateExpenses(Game $game)
     {
         $game->log(_('State expenses') , 'alert') ;
         // Wars
@@ -612,7 +637,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $game->changeTreasury( - 2 *($nbLegions+$nbFleets) ) ;
         // Returning governors
         foreach($game->getParties() as $party) {
-            /* @var $party \Entities\Party */
+            /* @var $party Party */
             foreach ($party->getSenators()->getCards() as $senator) {
                 // returningGovernor is used during the Senate phase : returning governors cannot be appointed governor again on the turn of their return without their approval
                 $senator->setReturningGovernor(FALSE) ;
@@ -639,7 +664,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 $senator->setReturningGovernor(FALSE) ;
                 foreach ($senator->getCardsControlled()->getCards() as $card)
                 {
-                    /* @var $card \Entities\Province */
+                    /* @var $card Province */
                     if ($card->getPreciseType()=='Province')
                     {
                         $card->changeMandate(1) ;
@@ -656,5 +681,4 @@ class RevenueControllerProvider implements ControllerProviderInterface
             }
         }
     }
-    
 }

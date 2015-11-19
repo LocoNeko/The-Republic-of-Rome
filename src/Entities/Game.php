@@ -583,7 +583,7 @@ class Game
     /**
      * Gets a specific Party by its user_id
      * @param int $user_id
-     * @return Party
+     * @return \Entities\Party\
      */
     public function getParty ($user_id)
     {
@@ -901,6 +901,13 @@ class Game
         }
     }
 
+    /**
+     * Set the level of an event, by its name or its number
+     * @param string $type
+     * @param string|int $search
+     * @param int $level
+     * @return boolean
+     */
     public function setEventLevel ($type , $search , $level) {
         if ($type=='name')
         {
@@ -908,14 +915,14 @@ class Game
             {
                if ($event['name'] == $search)
                 {
-                    $this->getEvents()[$key]['level'] = $level ;
+                    $this->getEvents()[$key]['level'] = (int)$level ;
                 }
             }
             return FALSE ;
         }
         elseif ($type=='number')
         {
-            $this->getEvents()[$search]['level'] = $level ;
+            $this->getEvents()[$search]['level'] = (int)$level ;
         }
         return FALSE ;
     }
