@@ -129,7 +129,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
             }
         })
-        ->bind('verb_RevenueDone');
+        ->bind('verb_ContributionsDone');
 
         /*
         * POST target
@@ -473,12 +473,12 @@ class RevenueControllerProvider implements ControllerProviderInterface
     
     /**
      * This function gives money to Rome based on the $data submitted.
-     * @param Game $game
+     * @param \Entities\Game $game
      * @param int $user_id
      * @param array $data array 'fromSenator', 'amount'<br>
      * @return boolean Success or failure
      */
-    private function doContribution(Game $game , $user_id , array $data)
+    private function doContribution($game , $user_id , array $data)
     {
         $party = $game->getParty($user_id) ;
         /* Checks on the data :
@@ -523,7 +523,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $fromSenator->changeINF($INFgain) ;
             $game->changeTreasury($amount) ;
             $game->log(
-                _('%1s ([['.$user_id.']]) gives %2d T. to Rome.%3s') ,
+                _('%1s ([['.$user_id.']]) gives %2dT to Rome.%3s') ,
                 'log' ,
                 array(
                     $fromSenator->getName() ,
@@ -538,9 +538,9 @@ class RevenueControllerProvider implements ControllerProviderInterface
     
     /**
      * Generates the revenues for Rome : 100T, Allied Enthusiasm, Provinces (both for aligned and unaligned Senators)
-     * @param Game $game
+     * @param \Entities\Game $game
      */
-    private function doRomeRevenue(Game $game)
+    private function doRomeRevenue($game)
     {
         $game->log(_('State revenues') , 'alert') ;
         $game->changeTreasury(100) ;
@@ -573,24 +573,31 @@ class RevenueControllerProvider implements ControllerProviderInterface
             }
         }
         // Provinces revenues for unaligned Senators
-        foreach ($game->getDeck('Forum')->getCards() as $senator)
+        if ($game->getDeck('forum')->getNumberOfCards()>0)
         {
-            if ($senator->getPreciseType()=='Senator' || $senator->getPreciseType()=='Statesman')
+            foreach ($game->getDeck('forum')->getCards() as $senator)
             {
-                foreach ($senator->getCardsControlled()->getCards() as $province)
+                if ($senator->getPreciseType()=='Senator' || $senator->getPreciseType()=='Statesman')
                 {
-                    if ($province->getPreciseType()=='Province')
+                    foreach ($senator->getCardsControlled()->getCards() as $province)
                     {
-                        $revenue = $province->rollRevenues('rome' , -$game->getEventProperty('name' , 'Evil Omens'));
-                        $game->changeTreasury($revenue);
-                        $game->log(_('%1$s : Rome\'s revenue is %2$dT .') , 'log' , array($province->getName() , $revenue) ) ;
+                        if ($province->getPreciseType()=='Province')
+                        {
+                            $revenue = $province->rollRevenues('rome' , -$game->getEventProperty('name' , 'Evil Omens'));
+                            $game->changeTreasury($revenue);
+                            $game->log(_('%1$s : Rome\'s revenue is %2$dT .') , 'log' , array($province->getName() , $revenue) ) ;
+                        }
                     }
                 }
             }
         }
     }
     
-    private function doStateExpenses(Game $game)
+    /**
+     * 
+     * @param \Entities\Game $game
+     */
+    private function doStateExpenses($game)
     {
         $game->log(_('State expenses') , 'alert') ;
         // Wars
@@ -598,10 +605,9 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $nbActiveWars = $game->getDeck('activeWars')->getNumberOfCards();
         $game->log(_('Rome pays %1$dT for %2$d unprosecuted war%3$s and %4$d active war%5$s.') , 'log' , 
             array(
-                $nbUnprosecutedWars*20 ,
+                ($nbUnprosecutedWars+$nbActiveWars)*20 ,
                 $nbUnprosecutedWars ,
                 ($nbUnprosecutedWars > 1 ? 's' : '') ,
-                $nbActiveWars*20 ,
                 $nbActiveWars ,
                 ($nbActiveWars > 1 ? 's' : '')
             )

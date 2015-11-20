@@ -708,11 +708,10 @@ class Game
     /**
      * 
      * @param boolean $presiding
-     * @return Senator
+     * @return \Entities\Senator
      */
     function getHRAO($presiding=FALSE)
     {
-        
         // We rank all senators in Rome with an Office by order of VALID_OFFICES key (Dictator is before Rome Consul which is before Field Consul, etc)
         // Reminder : $VALID_OFFICES = array('Dictator', 'Rome Consul' , 'Field Consul' , 'Censor' , 'Master of Horse' , 'Pontifex Maximus');
         $rankedSenators = Array() ;
@@ -1010,6 +1009,25 @@ class Game
         return ($evilOmensLevel==0 ? '' : sprintf(_(' (including %1$d from evil Omens)') , $effect*$evilOmensLevel) ) ;
     }
 
+    /**
+     * returns array of user_id from HRAO, clockwise in the same order as the array $this->party (order of joining game)
+     * @return array 
+     */
+    public function getOrderOfPlay()
+    {
+        $result = array() ;
+        foreach($this->getParties() as $party)
+        {
+            array_push($result , $party->getUser_id() );
+        }
+        $user_idHRAO = (int)$this->getHRAO()->getLocation()['value']->getUser_id() ;
+        while ((int)$result[0]!=$user_idHRAO)
+        {
+            array_push($result , array_shift($result) );
+        }
+        return $result ;
+    }
+    
     /**
      * ----------------------------------------------------
      * Setup
@@ -1634,4 +1652,43 @@ class Game
         return $result ;
     }
 
+    /**
+     * ----------------------------------------------------
+     * Forum
+     * ----------------------------------------------------
+     */
+
+    /**
+     * Returns the $user_id of the user currently having the initiative or FALSE if bidding is still underway
+     * @return boolean|array
+     */
+    public function whoseInitiative() {
+        // If the current initiative is <= nbPlayers, we don't need to bid. Initiative number X belongs to player number X in the order of play
+        if ($this->getInitiative() <= $this->getNumberOfPlayers())
+        {
+            $currentOrder = $this->getOrderOfPlay() ;
+            return $currentOrder[$this->initiative-1] ;
+        }
+        else
+        {
+        // This initiative was up for bidding, the winner has the initiative. The winner is the only one left with bidDone==FALSE
+        // This is to allow multiple rounds of initiative bidding as an option
+            $candidates=array() ;
+            foreach ($this->getParties() as $party)
+            {
+                if ($party->getIsDone()===FALSE)
+                {
+                    array_push($candidates , $party->getUser_id());
+                }
+            }
+            if (count($candidates)==1)
+            {
+                return $candidates[0] ;
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+    }
 }

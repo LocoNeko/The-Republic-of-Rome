@@ -7,7 +7,14 @@
 {% block content %}
 
     <h4>
-        Current HRAO: <strong>{{game.displayContextualName(game.getHRAO().getFullName() , app.user.id)}}</strong>
+        Current HRAO: <strong>{{game.displayContextualName(game.getHRAO().getFullName() , app.user.id)}}</strong> , 
+        Order of play : 
+        <strong>
+            {% set orderOfPlay = game.getOrderOfPlay() %}
+            {% for position in orderOfPlay %}
+                {{ position }} {{loop.last ? '' : '|' }}
+            {% endfor %}
+        </strong>
     </h4>
     
     {% embed game.getPhase() ~ '/phaseMain.twig' with {'game' : game } %}

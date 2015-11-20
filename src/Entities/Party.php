@@ -53,7 +53,7 @@ class Party
     protected $isDone = FALSE ;
 
     /** @Column(type="integer") @var int */
-    protected $bid ;
+    protected $bid = 0 ;
 
     /**
      * ----------------------------------------------------
