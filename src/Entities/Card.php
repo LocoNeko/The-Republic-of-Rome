@@ -167,16 +167,43 @@ abstract class Card
     * ----------------------------------------------------
     */
     
+    /**
+     * returns whether or not a card is a Senator (Family or Statesman)
+     * @return boolean
+     */
+    public function getIsSenatorOrStatesman()
+    {
+        return ($this->getPreciseType()=='Statesman' || $this->getPreciseType()=='Senator');
+    }
+    
+    /**
+     * Returns the value of the $property, using a getter, returns an exception if no getter exists
+     * @param string $property
+     * @return mixed The value of the property
+     */
     public function getValue($property)
     {
-        if (isset($this->$property))
+        $getter = 'get'.ucfirst($property);
+        if (method_exists($this, $getter))
         {
-            return $this->$property ;
+            return $this->$getter($property) ;
         }
         else
         {
-            throw new Exception(sprintf(_('Property %1$s doesn\'t exist.') , $property));
+            return FALSE ;
         }
+    }
+                
+    /**
+     * Returns a boolean indicating whether $property is equal to $value
+     * @param string $property
+     * @param mixed $value
+     * @return boolean
+     * @throws Exception
+     */
+    public function checkValue($property , $value)
+    {
+        return $this->getValue($property) == $value ;
     }
     
     /**
@@ -186,26 +213,33 @@ abstract class Card
      */
     public function getLocation()
     {
-        $deck = $this->getDeck() ;
-        if ($deck->getGame() != NULL)
+        if (method_exists($this, 'getDeck'))
         {
-            $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName()) ;
-        }
-        elseif ($deck->getControlled_by() != NULL)
-        {
-            $result = array ('type' => 'card' , 'value' => $deck->getControlled_by() , 'name' => $deck->getControlled_by()->getName()) ;
-        }
-        elseif ($deck->getInParty() != NULL)
-        {
-            $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;
-        }
-        elseif ($deck->getInHand() != NULL)
-        {
-            $result = array ('type' => 'hand' , 'value' => $deck->getInHand() , 'name' => $deck->getInHand()->getName()) ;
+            $deck = $this->getDeck() ;
+            if (method_exists($deck, 'getGame') && $deck->getGame() != NULL)
+            {
+                $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName()) ;
+            }
+            elseif (method_exists($deck, 'getControlled_by') && $deck->getControlled_by() != NULL)
+            {
+                $result = array ('type' => 'card' , 'value' => $deck->getControlled_by() , 'name' => $deck->getControlled_by()->getName()) ;
+            }
+            elseif (method_exists($deck, 'getInParty') && $deck->getInParty() != NULL)
+            {
+                $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;
+            }
+            elseif (method_exists($deck, 'getInHand') && $deck->getInHand() != NULL)
+            {
+                $result = array ('type' => 'hand' , 'value' => $deck->getInHand() , 'name' => $deck->getInHand()->getName()) ;
+            }
+            else
+            {
+                $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'Unknown location') ;
+            }
         }
         else
         {
-            $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'Unknown location') ;
+           $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'no getDeck method') ;
         }
         return $result ;
     }

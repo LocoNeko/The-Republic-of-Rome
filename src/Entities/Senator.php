@@ -173,17 +173,20 @@ class Senator extends Card
         }
     }
     
-    public function changeINF($value) {
+    public function changeINF($value)
+    {
         $this->INF += $value ;
         if ( $this->INF < 0 ) { $this->INF = 0 ; }
     }
 
-    public function changeORA($value) {
+    public function changeORA($value)
+    {
         $this->ORA += $value ;
         if ( $this->ORA < 0 ) { $this->ORA = 0 ; }
     }
 
-    public function changePOP($value) {
+    public function changePOP($value)
+    {
         $this->POP += $value ;
         if ( $this->POP < -9 ) { $this->POP = -9 ; }
         if ( $this->POP >  9 ) { $this->POP =  9 ; }
@@ -194,16 +197,20 @@ class Senator extends Card
      * @param string $office
      * @throws Exception : Invalid Office , Already has non-Censor Office
      */
-    public function appoint($office) {
-        if (!in_array($office, self::$VALID_OFFICES)) {
+    public function appoint($office)
+    {
+        if (!in_array($office, self::$VALID_OFFICES))
+        {
             throw new Exception(sprintf(_('%s is not a valid office') , $office)) ;
         }
         $currentOffice = $this->getOffice() ;
-        if ($currentOffice!=NULL && $currentOffice!='Censor') {
+        if ($currentOffice!=NULL && $currentOffice!='Censor')
+        {
             throw new Exception(sprintf(_('The Senator cannot hold another office while he is %s') , $currentOffice)) ;
         }
         $this->setOffice($office) ;
-        switch ($office) {
+        switch ($office) 
+        {
             case 'Dictator' :        $INFincrease = 7 ; break ;
             case 'Master of Horse' : $INFincrease = 3 ; break ;
             default :                $INFincrease = 5 ;
@@ -216,11 +223,16 @@ class Senator extends Card
      * @param string $criteria TRUE | 'alignedInRome' | a deck name
      * @return boolean
      */
-    public function checkCriteria($criteria) {
-        if ($criteria===TRUE) {
+    public function checkCriteria($criteria)
+    {
+        if ($criteria===TRUE)
+        {
             return TRUE ;
-        } else {
-            switch($criteria) {
+        }
+        else
+        {
+            switch($criteria) 
+            {
                 
                 // In a party & in Rome
                 case 'alignedInRome' : 
@@ -258,17 +270,22 @@ class Senator extends Card
         }
     }
     
-    public function inRome() {
+    public function inRome()
+    {
         $result = TRUE ;
         // Captive
-        if ($this->captive !== FALSE) {
+        if ($this->captive !== FALSE) 
+        {
             $result = FALSE ;
         }
         // Governor
         // TO DO : What about legates ?
-        if ($this->getCardsControlled()!=NULL) {
-            foreach ($this->getCardsControlled()->getCards() as $card) {
-                if($card->getPreciseType()=='Province') {
+        if ($this->getCardsControlled()!=NULL) 
+        {
+            foreach ($this->getCardsControlled()->getCards() as $card) 
+            {
+                if($card->getPreciseType()=='Province') 
+                {
                     $result = FALSE ;
                 }
             }
@@ -287,12 +304,14 @@ class Senator extends Card
      * Returns the family number of a Statesman
      * @return String Family number
      */
-    public function statesmanFamily () {
-        if ($this->getPreciseType()!= 'Statesman') {
-            return (string)$this->getSenatorID() ;
-        } else {
-            return str_replace ( Array('A' , 'B' , 'C') , Array('' , '' , '') , $this->getSenatorID() );
-        }
+    public function statesmanFamily () 
+    {
+        return
+        (
+            ($this->getPreciseType()!= 'Statesman') ?
+            (string)$this->getSenatorID() :
+            str_replace ( Array('A' , 'B' , 'C') , Array('' , '' , '') , $this->getSenatorID() )
+        ) ;
     }
     
     public function getFullName() {

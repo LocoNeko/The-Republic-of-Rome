@@ -108,9 +108,9 @@ class RevenueControllerProvider implements ControllerProviderInterface
                         if ($captiveList!==FALSE) {
                             foreach ($captiveList as $captive) {
                                 if ($captive['captiveOf'] == 'barbarians') {
-                                    // TO DO - HERE NOW
                                     $game->log(_('The barbarians slaughter %1$s, whose ransom was not paid by [['.$party->getUser_id().']]') , 'log' , array($captive['senatorID'])) ;
-                                    $game->log($game->killSenator($captive['senatorID'] , TRUE ) ) ;
+                                    $killMessage = $game->killSenator($captive['senatorID'] , TRUE ) ;
+                                    $game->log($killMessage[0] , $killMessage[1]) ;
                                 }
                             }
                         }

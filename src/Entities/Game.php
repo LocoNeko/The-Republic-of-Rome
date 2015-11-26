@@ -637,18 +637,19 @@ class Game
     }
     
     /**
-     * Goes through all decks in the game and returns an ArrayCollection of Senator Entitites satisfying an optional criteria (or all of them if no criteria)
-     * @param string $criteria
+     * 
+     * @param array $filters Format ('property1' => 'value1' , 'property2' => 'value2')
+     * @param string $criteria A criteria as defined in the checkCriteria function of the Senator entity
      * @return ArrayCollection
-     * @throws Exception 'Error retrieving senators'
+     * @throws \Exception
      */
-    public function getAllSenators($criteria = TRUE)
+    public function getFilteredCards($filters , $criteria = TRUE)
     {
-
         $result = new ArrayCollection() ;
         try
         {
-            // Senators in Parties
+            // First, put all cards (from parties, hands, and main decks) in $result
+            // Parties
             foreach ($this->getParties() as $party) 
             {
                 foreach($party->getSenators()->getCards() as $senator) 
@@ -660,22 +661,15 @@ class Game
                     {
                         foreach ($senator->getCardsControlled()->getCards() as $card) 
                         {
-                            if($card->getPreciseType()=='Senator') 
-                            {
-                                $result->add($card) ;
-                            }
+                            $result->add($card) ;
                         }
                     }
-
                 }
             
-                // Statesmen in Hand
+                // Cards in Hand
                 foreach($party->getHand()->getCards() as $card) 
                 {
-                    if($card->getPreciseType()=='Statesman') 
-                    {
-                        $result->add($card) ;
-                    }
+                    $result->add($card) ;
                 }
             }
             
@@ -684,25 +678,47 @@ class Game
             {
                 foreach($deck->getCards() as $card) 
                 {
-                    if (in_array($card->getPreciseType() , array('Senator' , 'Statesman'))) 
-                    {
-                        $result->add($card) ;
-                    }
+                    $result->add($card) ;
                 }
             }
             
-            // Filters the results based on criteria
-            $result = $result->filter(
-                function ($card) use ($criteria) {
-                    return $card->checkCriteria($criteria) ;
-                }
-            );
+            // Second, filter $results based on $filters
+            foreach ($filters as $filter)
+            {
+                $result = $result->filter(
+                    function ($card) use ($filter) {
+                        return $card->checkValue($filter[0] , $filter[1]) ;
+                    }
+                );
+            }
+            
+            // Third, criteria based filter (only for Senators)
+            // Removes all non-Senators as well
+            if ($criteria!==TRUE)
+            {
+                $result = $result->filter(
+                    function (\Entities\Senator $card) use ($criteria) {
+                        return ( $card->getIsSenatorOrStatesman() && $card->checkCriteria($criteria) );
+                    }
+                );
+            }
         }
         catch (Exception $e) 
         {
-             throw new \Exception(_('Error retrieving senators'));
+             throw new \Exception(_('Error retrieving cards'));
         }
         return $result ;
+    }
+    
+    /**
+     * Goes through all decks in the game and returns an ArrayCollection of Senator Entitites satisfying an optional criteria (or all of them if no criteria)
+     * @param string $criteria
+     * @return ArrayCollection
+     * @throws Exception 'Error retrieving senators'
+     */
+    public function getAllSenators($criteria = TRUE)
+    {
+        return $this->getFilteredCards(array(array('isSenatorOrStatesman' , TRUE)), $criteria) ;
     }
     
     /**
@@ -954,19 +970,20 @@ class Game
 
     /**
      * 
-     * @param integer $nb = Number of dice to roll (1 to 3)
-     * @param type $evilOmensEffectPassed = Whether evil omens affect the roll by -1 , +1 or 0
-     * @return array 'total' => the total roll , 'x' => value of die X so we can obtain 1 white die & 2 black dice
+     * @param int $nb = Number of dice to roll (1 to 3)
+     * @param int $evilOmensEffectPassed = Whether evil omens affect the roll by -1 , +1 or 0
+     * @return array|boolean 'total' => the total roll , 'x' => value of die X so we can obtain 1 white die & 2 black dice
      */
     public function rollDice($nb , $evilOmensEffectPassed)
     {
         $nb = (int)$nb;
         if ($nb<1) { $nb = 1 ; }
         if ($nb>3) { $nb = 3 ; }
+        // Sanitise $evilOmensEffect to be -1 ,+1 or 0
         $evilOmensEffect = (int)$evilOmensEffectPassed ;
-        if ( ($evilOmensEffect!=-1) && ($evilOmensEffect!=0) && ($evilOmensEffect!=1) )
+        if ( ($evilOmensEffect!=-1) && ($evilOmensEffect!=1) )
         {
-            return FALSE ;
+            $evilOmensEffect = 0 ;
         }
         $result = array() ;
         $result['total'] = 0 ;
@@ -1011,19 +1028,23 @@ class Game
 
     /**
      * returns array of user_id from HRAO, clockwise in the same order as the array $this->party (order of joining game)
-     * @return array 
+     * @return array An array of Parties
      */
     public function getOrderOfPlay()
     {
         $result = array() ;
         foreach($this->getParties() as $party)
         {
-            array_push($result , $party->getUser_id() );
+            array_push($result , $party );
         }
-        $user_idHRAO = (int)$this->getHRAO()->getLocation()['value']->getUser_id() ;
-        while ((int)$result[0]!=$user_idHRAO)
+        $partyOfHRAO = $this->getHRAO()->getLocation()['value'] ;
+        if (!is_null($partyOfHRAO))
         {
-            array_push($result , array_shift($result) );
+            $user_idHRAO = (int)$partyOfHRAO->getUser_id() ;
+            while ((int)$result[0]->getUser_id() != $user_idHRAO)
+            {
+                array_push($result , array_shift($result) );
+            }
         }
         return $result ;
     }
@@ -1144,7 +1165,14 @@ class Game
             throw new Exception(_('Could not open the events file'));
         }
         while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
-            $this->events[(int)$data[0]] = array( 'name' => $data[1] , 'increased_name' => $data[2] , 'description' => $data[3] , 'increased_description' => $data[4] , 'max_level' => $data[5] , 'level' => 0);
+            $this->events[(int)$data[0]] = array(
+                'name' => $data[1] ,
+                'increased_name' => $data[2] ,
+                'description' => $data[3] ,
+                'increased_description' => $data[4] ,
+                'max_level' => $data[5] ,
+                'level' => 0
+            );
         }
         fclose($filePointer);
         $filePointer2 = fopen(dirname(__FILE__).'/../../resources/tables/eventTable.csv', 'r');
@@ -1284,7 +1312,8 @@ class Game
      * FALSE (default)
      * @return array Just a one message-array, not an array of messages
      */
-    public function killSenator($senatorID , $specificID=FALSE , $specificParty_UserId=FALSE , $POPThreshold=FALSE , $epidemic=FALSE) {
+    public function killSenator($senatorID , $specificID=FALSE , $specificParty_UserId=FALSE , $POPThreshold=FALSE , $epidemic=FALSE)
+    {
         $message = '' ;
         
         // Case of a random mortality chit
@@ -1557,7 +1586,8 @@ class Game
             switch($outcome)
             {
                 case 'killed' :
-                    $this->killSenator($senator->getSenatorID(), TRUE) ;
+                    $killMessage = $this->killSenator($senator->getSenatorID(), TRUE) ;
+                    array_push($messages , $killMessage[0] , $killMessage[1]);
                     array_push($messages , array(sprintf(_('%s is killed by the barbaric barbarians.') , 'alert' , array($senator->getName()))));
                     break ;
                 case 'captured' :
@@ -1606,7 +1636,9 @@ class Game
         {
             // Revolt : Kill Senator, garrisons, and move Province to the Active War deck
             $message.=sprintf(_(' which is not greater than %d') , ($level == 1 ? '4' : '5')) ;
-            $this->killSenator($senator->getSenatorID() , TRUE);
+            $killMessage = $this->killSenator($senator->getSenatorID(), TRUE) ;
+            $this->log($killMessage[0] , $killMessage[1]);
+
             // Note : The war is now in the forum, because of the killSenator function, hence the $this->getDeck('Forum')
             $this->getDeck('Forum')->getFirstCardByProperty('id', $province->getId() , $this->getDeck('activeWars'));
             $message.=sprintf(_('%s is killed %s and %s becomes an active war') , $senator->getName() , ($garrisons>0 ? _(' with all ').$garrisons._(' garrisons, ') : '') , $province->getName() ) ;
@@ -1659,10 +1691,11 @@ class Game
      */
 
     /**
-     * Returns the $user_id of the user currently having the initiative or FALSE if bidding is still underway
+     * Returns the party currently having the initiative or FALSE if bidding is still underway
      * @return boolean|array
      */
-    public function whoseInitiative() {
+    public function whoseInitiative()
+    {
         // If the current initiative is <= nbPlayers, we don't need to bid. Initiative number X belongs to player number X in the order of play
         if ($this->getInitiative() <= $this->getNumberOfPlayers())
         {
@@ -1678,7 +1711,7 @@ class Game
             {
                 if ($party->getIsDone()===FALSE)
                 {
-                    array_push($candidates , $party->getUser_id());
+                    array_push($candidates , $party);
                 }
             }
             if (count($candidates)==1)
@@ -1688,6 +1721,169 @@ class Game
             else
             {
                 return FALSE;
+            }
+        }
+    }
+    
+    /**
+     * 
+     * @param string $type 'number'|'name|
+     * @param type $parameter
+     * @return boolean success or failure
+     */
+    public function putEventInPlay($type , $parameter)
+    {
+        $eventNumber = NULL ;
+        if ($type == 'number')
+        {
+            $eventNumber = (int)$parameter ;
+        }
+        elseif ($type == 'name')
+        {
+            foreach ($this->events() as $key=>$eventArray)
+            {
+                if ($eventArray['name'] == $parameter)
+                {
+                    $eventNumber = $key ;
+                }
+            }
+        }
+        // $type was wrong
+        else
+        {
+            $this->log(_('Error finding event.'), 'error') ;
+            return FALSE;
+        }
+        // $eventNumber couldn't be determined
+        if ($eventNumber==NULL)
+        {
+            $this->log(_('Error retrieving event.'), 'error') ;
+            return FALSE;
+        }
+        else
+        {
+            // The event is currently in play at maximum level & CANNOT increase
+            if ($this->events[$eventNumber]['level'] > 0 && $this->events[$eventNumber]['level'] == $this->events[$eventNumber]['max_level'])
+            {
+                $this->log(_('Event %1$s is already in play at its maximum level (%2%d).') , 'alert' ,
+                    array (
+                        $this->events[$eventNumber][( $this->events[$eventNumber]['level'] > 1 ? 'increased_' : '' ).'name'] ,
+                        $this->events[$eventNumber]['max_level']
+                    )
+                );
+            }
+            else
+            // The event is not in play or not at its maximum level, therefore it can increase
+            {
+                $this->events[$eventNumber]['level']++ ;
+                $this->log(_('Event %1$s %2$s') , 'alert' ,
+                    array (
+                        $this->events[$eventNumber]['name'] ,
+                        ($this->events[$eventNumber]['level'] == 1 ?
+                            _('is now in play.') :
+                            sprintf(
+                                _('has its level increased to %1$s (level %2$d)') ,
+                                $this->events[$eventNumber]['increased_name'] ,
+                                $this->events[$eventNumber]['level']
+                            )
+                        )
+                    )
+                );
+                // Events with an immediate effect
+                $level = $this->events[$eventNumber]['level'] ;
+                switch ($eventNumber)
+                {
+                    // Epidemic
+                    case 167 :
+                        $nbOfMortalityChits = $this->rollOneDie(1) ;
+                        $this->log(_('Number of mortality chit%1$s : %2$d'), 'log' ,
+                            array(
+                                ($nbOfMortalityChits>1 ? 's' : ''),
+                                $nbOfMortalityChits
+                            )
+                        ) ;
+                        foreach ($this->mortality_chits($nbOfMortalityChits) as $chit)
+                        {
+                            $this->log(_('Chit drawn : %d'), 'log' , array($chit)) ;
+                            if ($chit!='NONE' && $chit!='DRAW 2')
+                            {
+                                $message = $this->killSenator((string)$chit, FALSE , FALSE , FALSE , ($level==1 ? 'domestic' : 'foreign')) ;
+                                $this->log($message[0] , $message[1]);
+                            }
+                        }
+                        break ;
+                    // Mob Violence
+                    case 171 :
+                        $roll = $this->rollOneDie(1) ;
+                        $nbOfMortalityChits = $this->getUnrest() + ($level==1 ? 0 : $roll );
+                        $POPThreshold = $this->getUnrest() + ($level==1 ? 0 : 1 );
+                        $this->log (
+                            _('The unrest level is %1$d %2$s%3$s, so %4$d mortality chit%5$s are drawn. Senators in Rome with a POP below %6$d will be killed.') ,
+                            'alert' ,
+                            array (
+                                $this->getUnrest() ,
+                                ($level>1 ? ' +'.$roll : '') ,
+                                ($level>1 ? $this->getEvilOmensMessage(1) : '') ,
+                                $nbOfMortalityChits ,
+                                ($nbOfMortalityChits == 1 ? '' : 's'),
+                                $POPThreshold
+                            )
+                        );
+                        foreach ($this->mortality_chits($nbOfMortalityChits) as $chit)
+                        {
+                            $this->log(_('Chit drawn : %d'), 'log' , array($chit)) ;
+                            if ($chit!='NONE' && $chit!='DRAW 2')
+                            {
+                                $message = $this->killSenator((string)$chit, FALSE , FALSE , $POPThreshold) ;
+                                $this->log($message[0] , $message[1]);
+                            }
+                        }
+                        break ;
+
+                        
+                        
+                        
+                        
+                        // Natural Disaster
+                        case 172 :
+                            // First : Pay 50T the first time the vent is played
+                            if ($level==1)
+                            {
+                                $this->changeTreasury(-50) ;
+                                $this->log(_('Rome must pay 50T.') , 'alert') ;
+                            }
+                            // Then : Ruin some stuff
+                            $roll = $this->rollOneDie(0) ;
+                            $ruin = '' ;
+                            switch($roll)
+                            {
+                                case 1:
+                                case 2:
+                                    $ruin = 'MINING' ;
+                                    break ;
+                                case 3:
+                                case 4:
+                                    $ruin = 'HARBOR FEES' ;
+                                    break ;
+                                case 5 :
+                                    $ruin = 'ARMAMENTS' ;
+                                    break ;
+                                case 6:
+                                    $ruin = 'SHIP BUILDING' ;
+                                    break ;
+                            }
+                            //$ruinresult = $this->get getSpecificCard('name', $ruin) ;
+                            if ($ruinresult['where']=='forum') {
+                                $messages[] = array(sprintf(_('The %s concession was in the forum. It is destroyed and moved to the curia') , $ruinresult['card']->name) , 'alert') ;
+                                $this->curia->putOnTop($ruinresult['deck']->drawCardWithValue('name' , $ruin));
+                            }
+                            if ($ruinresult['where']=='senator' ) {
+                                $messages[] = array(sprintf(_('The %s concession was controlled by %s. It is destroyed and moved to the curia') , $ruinresult['card']->name , $ruinresult['senator']->name) , 'alert') ;
+                                $this->curia->putOnTop($ruinresult['deck']->drawCardWithValue('name' , $ruin));
+                            }
+
+                        
+                }
             }
         }
     }

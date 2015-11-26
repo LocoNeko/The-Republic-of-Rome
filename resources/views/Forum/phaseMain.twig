@@ -1,1 +1,22 @@
 <h1>Forum</h1>
+{#
+    We are bidding for the initiative
+#}
+{% if game.whoseInitiative()==FALSE %}
+{#
+    We have someone with the initiative
+#}
+{% else%}
+    {% if game.whoseInitiative().getUser_Id() == app.user.id %}
+        You have the initiative<br>
+        {% if game.getSubPhase()=='RollEvent' %}
+                <h3>Roll events</h3>
+                <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RollEvent'>
+                    <button type="submit" class="btn btn-warning">ROLL</button>
+                </form>
+
+        {% endif %}
+    {% else %}
+        {{game.whoseInitiative().getFullName()}} has the initiative
+    {% endif %}
+{% endif %}

@@ -9,17 +9,22 @@
     <h4>
         Current HRAO: <strong>{{game.displayContextualName(game.getHRAO().getFullName() , app.user.id)}}</strong> , 
         Order of play : 
-        <strong>
-            {% set orderOfPlay = game.getOrderOfPlay() %}
-            {% for position in orderOfPlay %}
-                {{ position }} {{loop.last ? '' : '|' }}
-            {% endfor %}
-        </strong>
+        {% set orderOfPlay = game.getOrderOfPlay() %}
+        {% for position in orderOfPlay %}
+            <span style="{{ game.whoseInitiative().getUser_id()==position.getUser_id() ? 'font-weight: bold;' : 'color: lightgrey;'}}">
+                <a href="#Party_{{position.getUser_id()}}" class="silent-link">{{ position.getName()}}</a>
+            </span>
+            {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
+        {% endfor %}
     </h4>
     
     {% embed game.getPhase() ~ '/phaseMain.twig' with {'game' : game } %}
     {% endembed %}
 
+    {#
+        Display your Party
+    #}
+    
     <h3>Your Party</h3>
     {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id) } %}
     {% endembed %}
@@ -41,40 +46,52 @@
         </div>
     {% endif %}
 
+    {#
+        Display other parties
+    #}
+
     <h3>Other Parties</h3>
     {% for party in game.getAllPartiesButOne(app.user.id).toArray() %}
         {% embed 'BoardElements/Party.twig' with {'self' : FALSE , 'party' : party } %}
         {% endembed %}
     {% endfor %}
 
+    {#
+        Display the Forum
+    #}
+
     <h3>The Forum</h3>
-    <div class="row">
     {% if game.getDeck('forum').getNumberOfCards() > 0 %}
-            {% for card in game.getDeck('forum').getCards() %}
-                {% embed "BoardElements/Card.twig" with
-                    {
-                        'card': card ,
-                        'action': card.getAction()
-                    } only
-                %}
-                {% endembed %}
-            {% endfor %}
+        <div class="row">
+                {% for card in game.getDeck('forum').getCards() %}
+                    {% embed "BoardElements/Card.twig" with
+                        {
+                            'card': card ,
+                            'action': card.getAction()
+                        } only
+                    %}
+                    {% endembed %}
+                {% endfor %}
+        </div>
     {% endif %}
-    </div>
+
+    {#
+        Display the Curia
+    #}
 
     <h3>The Curia</h3>
-    <div class="row">
     {% if game.getDeck('curia').getNumberOfCards() > 0 %}
-            {% for card in game.getDeck('curia').getCards() %}
-                {% embed "BoardElements/Card.twig" with
-                    {
-                        'card': card ,
-                        'action': card.getAction()
-                    } only
-                %}
-                {% endembed %}
-            {% endfor %}
+        <div class="row">
+                {% for card in game.getDeck('curia').getCards() %}
+                    {% embed "BoardElements/Card.twig" with
+                        {
+                            'card': card ,
+                            'action': card.getAction()
+                        } only
+                    %}
+                    {% endembed %}
+                {% endfor %}
+        </div>
     {% endif %}
-    </div>
     
 {% endblock %}
