@@ -638,74 +638,66 @@ class Game
     
     /**
      * 
-     * @param array $filters Format ('property1' => 'value1' , 'property2' => 'value2')
+     * @param array $filters Format (array('property1','value1') , array('property2','value2'))
      * @param string $criteria A criteria as defined in the checkCriteria function of the Senator entity
      * @return ArrayCollection
-     * @throws \Exception
      */
     public function getFilteredCards($filters , $criteria = TRUE)
     {
         $result = new ArrayCollection() ;
-        try
+        // First, put all cards (from parties, hands, and main decks) in $result
+        // Parties
+        foreach ($this->getParties() as $party) 
         {
-            // First, put all cards (from parties, hands, and main decks) in $result
-            // Parties
-            foreach ($this->getParties() as $party) 
+            foreach($party->getSenators()->getCards() as $senator) 
             {
-                foreach($party->getSenators()->getCards() as $senator) 
+                $result->add($senator) ;
+
+                // Senator cards controlled by their Statesman
+                if ($senator->hasControlledCards()) 
                 {
-                    $result->add($senator) ;
-                    
-                    // Senator cards controlled by their Statesman
-                    if ($senator->hasControlledCards()) 
+                    foreach ($senator->getCardsControlled()->getCards() as $card) 
                     {
-                        foreach ($senator->getCardsControlled()->getCards() as $card) 
-                        {
-                            $result->add($card) ;
-                        }
+                        $result->add($card) ;
                     }
                 }
-            
-                // Cards in Hand
-                foreach($party->getHand()->getCards() as $card) 
-                {
-                    $result->add($card) ;
-                }
             }
-            
-            // Game's main decks
-            foreach ($this->getDecks() as $deck) 
+
+            // Cards in Hand
+            foreach($party->getHand()->getCards() as $card) 
             {
-                foreach($deck->getCards() as $card) 
-                {
-                    $result->add($card) ;
-                }
-            }
-            
-            // Second, filter $results based on $filters
-            foreach ($filters as $filter)
-            {
-                $result = $result->filter(
-                    function ($card) use ($filter) {
-                        return $card->checkValue($filter[0] , $filter[1]) ;
-                    }
-                );
-            }
-            
-            // Third, criteria based filter (only for Senators)
-            // Removes all non-Senators as well
-            if ($criteria!==TRUE)
-            {
-                $result = $result->filter(
-                    function (\Entities\Senator $card) use ($criteria) {
-                        return ( $card->getIsSenatorOrStatesman() && $card->checkCriteria($criteria) );
-                    }
-                );
+                $result->add($card) ;
             }
         }
-        catch (Exception $e) 
+
+        // Game's main decks
+        foreach ($this->getDecks() as $deck) 
         {
-             throw new \Exception(_('Error retrieving cards'));
+            foreach($deck->getCards() as $card) 
+            {
+                $result->add($card) ;
+            }
+        }
+
+        // Second, filter $results based on $filters
+        foreach ($filters as $filter)
+        {
+            $result = $result->filter(
+                function (\Entities\Card $card) use ($filter) {
+                    return $card->checkValue($filter[0] , $filter[1]) ;
+                }
+            );
+        }
+        
+        // Third, criteria based filter (only for Senators)
+        // Removes all non-Senators as well
+        if ($criteria!==TRUE)
+        {
+            $result = $result->filter(
+                function (\Entities\Senator $card) use ($criteria) {
+                    return ( $card->getIsSenatorOrStatesman() && $card->checkCriteria($criteria) );
+                }
+            );
         }
         return $result ;
     }
@@ -1259,6 +1251,11 @@ class Game
      * ----------------------------------------------------
      */
     
+    /**
+     * 
+     * @param integer $qty
+     * @return array
+     */
     public function mortality_chits( $qty )
     {
         $result = array() ;
@@ -1315,11 +1312,11 @@ class Game
     public function killSenator($senatorID , $specificID=FALSE , $specificParty_UserId=FALSE , $POPThreshold=FALSE , $epidemic=FALSE)
     {
         $message = '' ;
-        
         // Case of a random mortality chit
         if (!$specificID)
         {
             // Creates an array of potentially dead senators, to handle both Statesmen & Families
+            // TO DO : Differentiate between Senators that were not in play, and senator that were in play but with the wrong paramters (POP threshold / in Rome / not in Rome)
             $deadSenators = array() ;
             foreach($this->getParties() as $party)
             {
@@ -1355,7 +1352,7 @@ class Game
             // Returns either no dead (Senator not in play), 1 dead (found just 1 senator matching the chit), or pick 1 of two brothers if they are both legally in play
             if (count($deadSenators)==0 && $specificID===FALSE && $specificParty_UserId===FALSE)
             {
-                return array(_('This senator is not in Play, nobody dies.')) ;
+                return array(_('This senator is not in Play, nobody dies.') , 'log') ;
             }
             elseif (count($deadSenators)>1)
             {
@@ -1368,7 +1365,6 @@ class Game
             {
                 $deadSenator = $deadSenators[0];
             }
-            
         }
         // Case of a specific Senator being targeted
         else
@@ -1381,7 +1377,7 @@ class Game
                 }
             }
         }
-        
+
         // Now that the dead Senator has been determined, kill him dead
         if (isset($deadSenator))
         {
@@ -1414,7 +1410,7 @@ class Game
                     $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. The family goes to the curia. ') , $deadSenator->getName() );
                 }
             }
-            
+    
             // Handle dead senators' controlled cards : Concessions, Provinces, Senators
             if ($deadSenator->hasControlledCards())
             {
@@ -1469,7 +1465,7 @@ class Game
         {
             return array(_('ERROR retrieving dead Senator data') , 'error' );
         }
-        return array($message) ;
+        return array($message , 'log') ;
     }
 
     /**
@@ -1804,7 +1800,7 @@ class Game
                         ) ;
                         foreach ($this->mortality_chits($nbOfMortalityChits) as $chit)
                         {
-                            $this->log(_('Chit drawn : %d'), 'log' , array($chit)) ;
+                            $this->log(_('Chit drawn : %1$s'), 'log' , array($chit)) ;
                             if ($chit!='NONE' && $chit!='DRAW 2')
                             {
                                 $message = $this->killSenator((string)$chit, FALSE , FALSE , FALSE , ($level==1 ? 'domestic' : 'foreign')) ;
@@ -1815,14 +1811,14 @@ class Game
                     // Mob Violence
                     case 171 :
                         $roll = $this->rollOneDie(1) ;
-                        $nbOfMortalityChits = $this->getUnrest() + ($level==1 ? 0 : $roll );
+                        $nbOfMortalityChits = $this->getUnrest() + ($level==1 ? 0 : $roll ) ;
                         $POPThreshold = $this->getUnrest() + ($level==1 ? 0 : 1 );
                         $this->log (
-                            _('The unrest level is %1$d %2$s%3$s, so %4$d mortality chit%5$s are drawn. Senators in Rome with a POP below %6$d will be killed.') ,
+                            _('The unrest level is %1$d%2$s%3$s, so %4$d mortality chit%5$s are drawn. Senators in Rome with a POP below %6$d will be killed.') ,
                             'alert' ,
                             array (
                                 $this->getUnrest() ,
-                                ($level>1 ? ' +'.$roll : '') ,
+                                ($level>1 ? '+'.$roll : '') ,
                                 ($level>1 ? $this->getEvilOmensMessage(1) : '') ,
                                 $nbOfMortalityChits ,
                                 ($nbOfMortalityChits == 1 ? '' : 's'),
@@ -1831,7 +1827,7 @@ class Game
                         );
                         foreach ($this->mortality_chits($nbOfMortalityChits) as $chit)
                         {
-                            $this->log(_('Chit drawn : %d'), 'log' , array($chit)) ;
+                            $this->log(_('Chit drawn : %1$s'), 'log' , array($chit)) ;
                             if ($chit!='NONE' && $chit!='DRAW 2')
                             {
                                 $message = $this->killSenator((string)$chit, FALSE , FALSE , $POPThreshold) ;
@@ -1839,50 +1835,45 @@ class Game
                             }
                         }
                         break ;
-
-                        
-                        
-                        
-                        
-                        // Natural Disaster
-                        case 172 :
-                            // First : Pay 50T the first time the vent is played
-                            if ($level==1)
-                            {
-                                $this->changeTreasury(-50) ;
-                                $this->log(_('Rome must pay 50T.') , 'alert') ;
-                            }
-                            // Then : Ruin some stuff
-                            $roll = $this->rollOneDie(0) ;
-                            $ruin = '' ;
-                            switch($roll)
-                            {
-                                case 1:
-                                case 2:
-                                    $ruin = 'MINING' ;
-                                    break ;
-                                case 3:
-                                case 4:
-                                    $ruin = 'HARBOR FEES' ;
-                                    break ;
-                                case 5 :
-                                    $ruin = 'ARMAMENTS' ;
-                                    break ;
-                                case 6:
-                                    $ruin = 'SHIP BUILDING' ;
-                                    break ;
-                            }
-                            //$ruinresult = $this->get getSpecificCard('name', $ruin) ;
-                            if ($ruinresult['where']=='forum') {
-                                $messages[] = array(sprintf(_('The %s concession was in the forum. It is destroyed and moved to the curia') , $ruinresult['card']->name) , 'alert') ;
-                                $this->curia->putOnTop($ruinresult['deck']->drawCardWithValue('name' , $ruin));
-                            }
-                            if ($ruinresult['where']=='senator' ) {
-                                $messages[] = array(sprintf(_('The %s concession was controlled by %s. It is destroyed and moved to the curia') , $ruinresult['card']->name , $ruinresult['senator']->name) , 'alert') ;
-                                $this->curia->putOnTop($ruinresult['deck']->drawCardWithValue('name' , $ruin));
-                            }
-
-                        
+                    // Natural Disaster
+                    case 172 :
+                        // First : Pay 50T the first time the Event is played
+                        if ($level==1)
+                        {
+                            $this->changeTreasury(-50) ;
+                            $this->log(_('Rome must pay 50T.') , 'alert') ;
+                        }
+                        // Then : Ruin some stuff
+                        $roll = $this->rollOneDie(0) ;
+                        $ruin = '' ;
+                        switch($roll)
+                        {
+                            case 1:
+                            case 2:
+                                $ruin = 'MINING' ;
+                                break ;
+                            case 3:
+                            case 4:
+                                $ruin = 'HARBOR FEES' ;
+                                break ;
+                            case 5 :
+                                $ruin = 'ARMAMENTS' ;
+                                break ;
+                            case 6:
+                                $ruin = 'SHIP BUILDING' ;
+                                break ;
+                        }
+                        $ruinresult = reset($this->getFilteredCards(array(array('name' , $ruin)))->toArray()) ;
+                        if ($ruinresult->getLocation()['name']=='forum')
+                        {
+                            $this->log(_('Rolled a %1$d. The %2$s concession was in the forum. It is destroyed and moved to the curia'), 'log' , array($roll , $ruin)) ;
+                            $this->getDeck('forum')->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
+                        }
+                        else
+                        {
+                            $this->log(_('Rolled a %1$d. The %2$s concession was controlled by %3$s. It is destroyed and moved to the curia') , 'log' , array($roll , $ruin , $ruinresult->getLocation()['name'])) ;
+                            $ruinresult->getLocation()['value']->getCardsControlled()->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
+                        }
                 }
             }
         }

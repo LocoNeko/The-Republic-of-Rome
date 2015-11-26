@@ -203,7 +203,7 @@ abstract class Card
      */
     public function checkValue($property , $value)
     {
-        return $this->getValue($property) == $value ;
+        return ($this->getValue($property) == $value) ;
     }
     
     /**

@@ -54,6 +54,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
+                $this->doRollEvent($game) ;
                 return $app->json( 'SUCCESS' , 201);
             }
             else
@@ -109,11 +110,14 @@ class ForumControllerProvider implements ControllerProviderInterface
             /*
              * A 7 was rolled - an event is played
              */
+            // TO DO : TESTING
+            $roll['total']=7 ;
             if ($roll['total']==7)
             {
                 $eventRoll = $game->rollDice(3, 0) ;
+                $eventRoll['total']=3 ;
                 $eventNumber = $game->getEventTable()[(int)$eventRoll['total']][$game->getScenario()];
-
+                $game->putEventInPlay('number', $eventNumber);
             /*
                 $eventMessage = $this->forum_putEventInPlay('number' , $eventNumber) ;
                 foreach ($eventMessage as $message) {
@@ -124,6 +128,8 @@ class ForumControllerProvider implements ControllerProviderInterface
             else
             {
             }
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
         }
         else
         {
