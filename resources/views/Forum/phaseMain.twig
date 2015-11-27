@@ -2,12 +2,12 @@
 {#
     We are bidding for the initiative
 #}
-{% if game.whoseInitiative()==FALSE %}
+{% if game.whoseTurn()==FALSE %}
 {#
     We have someone with the initiative
 #}
 {% else%}
-    {% if game.whoseInitiative().getUser_Id() == app.user.id %}
+    {% if game.whoseTurn().getUser_Id() == app.user.id %}
         You have the initiative<br>
         {% if game.getSubPhase()=='RollEvent' %}
                 <h3>Roll events</h3>
@@ -17,6 +17,6 @@
 
         {% endif %}
     {% else %}
-        {{game.whoseInitiative().getFullName()}} has the initiative
+        {{game.whoseTurn().getFullName()}} has the initiative
     {% endif %}
 {% endif %}

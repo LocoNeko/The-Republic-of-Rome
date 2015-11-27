@@ -1681,46 +1681,56 @@ class Game
     }
 
     /**
+     * Returns the party whose turn it is to play based on the current phase
+     * @return boolean|\Entities\Party\
+     */
+    public function whoseTurn()
+    {
+        // FORUM phase - whoseTurn depends on the initiative
+        if ($this->getPhase()=='forum')
+        {
+            // If the current initiative is <= nbPlayers, we don't need to bid. Initiative number X belongs to player number X in the order of play
+            if ($this->getInitiative() <= $this->getNumberOfPlayers())
+            {
+                $currentOrder = $this->getOrderOfPlay() ;
+                return $currentOrder[$this->initiative-1] ;
+            }
+            else
+            {
+            // This initiative was up for bidding, the winner has the initiative. The winner is the only one left with bidDone==FALSE
+            // This is to allow multiple rounds of initiative bidding as an option
+                $candidates=array() ;
+                foreach ($this->getParties() as $party)
+                {
+                    if ($party->getIsDone()===FALSE)
+                    {
+                        array_push($candidates , $party);
+                    }
+                }
+                if (count($candidates)==1)
+                {
+                    return $candidates[0] ;
+                }
+                else
+                {
+                    return FALSE;
+                }
+            }
+        }
+        // Other phases - return the party of the HRAO
+        else
+        {
+            return $this->getHRAO()->getLocation()['value'] ;
+        }
+    }
+    
+
+    /**
      * ----------------------------------------------------
      * Forum
      * ----------------------------------------------------
      */
 
-    /**
-     * Returns the party currently having the initiative or FALSE if bidding is still underway
-     * @return boolean|array
-     */
-    public function whoseInitiative()
-    {
-        // If the current initiative is <= nbPlayers, we don't need to bid. Initiative number X belongs to player number X in the order of play
-        if ($this->getInitiative() <= $this->getNumberOfPlayers())
-        {
-            $currentOrder = $this->getOrderOfPlay() ;
-            return $currentOrder[$this->initiative-1] ;
-        }
-        else
-        {
-        // This initiative was up for bidding, the winner has the initiative. The winner is the only one left with bidDone==FALSE
-        // This is to allow multiple rounds of initiative bidding as an option
-            $candidates=array() ;
-            foreach ($this->getParties() as $party)
-            {
-                if ($party->getIsDone()===FALSE)
-                {
-                    array_push($candidates , $party);
-                }
-            }
-            if (count($candidates)==1)
-            {
-                return $candidates[0] ;
-            }
-            else
-            {
-                return FALSE;
-            }
-        }
-    }
-    
     /**
      * 
      * @param string $type 'number'|'name|

@@ -11,7 +11,7 @@
         Order of play : 
         {% set orderOfPlay = game.getOrderOfPlay() %}
         {% for position in orderOfPlay %}
-            <span style="{{ game.whoseInitiative().getUser_id()==position.getUser_id() ? 'font-weight: bold;' : 'color: lightgrey;'}}">
+            <span style="{{ ( game.whoseTurn()!=false and game.whoseTurn().getUser_id()==position.getUser_id() ) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
                 <a href="#Party_{{position.getUser_id()}}" class="silent-link">{{ position.getName()}}</a>
             </span>
             {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
