@@ -115,15 +115,8 @@ class ForumControllerProvider implements ControllerProviderInterface
             if ($roll['total']==7)
             {
                 $eventRoll = $game->rollDice(3, 0) ;
-                $eventRoll['total']=3 ;
                 $eventNumber = $game->getEventTable()[(int)$eventRoll['total']][$game->getScenario()];
                 $game->putEventInPlay('number', $eventNumber);
-            /*
-                $eventMessage = $this->forum_putEventInPlay('number' , $eventNumber) ;
-                foreach ($eventMessage as $message) {
-                    $messages[] = $message;
-                }
-            */
             }
             else
             {

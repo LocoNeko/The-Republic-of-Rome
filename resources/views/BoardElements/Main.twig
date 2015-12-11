@@ -93,5 +93,29 @@
                 {% endfor %}
         </div>
     {% endif %}
+        
+    <h3>Events in play</h3>
+        <table class="table table-bordered" style="width:auto; font-size: 100%; font-weight: bold; ">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Level</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, event in game.getEvents %}
+                    {% if event['level']>0 %}
+                        <tr>
+                            <td>{{key}}</td>
+                            <td>{{game.getEventProperty('number',key,'name')}}</td>
+                            <td>{{event['level']}}</td>
+                            <td style="font-size: 90%; font-weight: normal; ">{{game.getEventProperty('number',key,'description')}}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
     
 {% endblock %}

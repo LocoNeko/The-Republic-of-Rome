@@ -879,7 +879,7 @@ class Game
         }
         elseif ($type=='number')
         {
-            $event = $this->getEvents()[$search]['level'] ;
+            $event = $this->getEvents()[$search] ;
         }
         if ($event == NULL)
         {
@@ -1874,15 +1874,22 @@ class Game
                                 break ;
                         }
                         $ruinresult = reset($this->getFilteredCards(array(array('name' , $ruin)))->toArray()) ;
+                        // Card was in the Forum
                         if ($ruinresult->getLocation()['name']=='forum')
                         {
-                            $this->log(_('Rolled a %1$d. The %2$s concession was in the forum. It is destroyed and moved to the curia'), 'log' , array($roll , $ruin)) ;
+                            $this->log(_('Rolled a %1$d. The %2$s concession was in the forum. It is destroyed and moved to the curia.'), 'log' , array($roll , $ruin)) ;
                             $this->getDeck('forum')->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
                         }
+                        // Card was on a Senator
+                        elseif ($ruinresult->getLocation()['type']=='card' && $ruinresult->getLocation()['value']->getIsSenatorOrStatesman())
+                        {
+                            $this->log(_('Rolled a %1$d. The %2$s concession was controlled by %3$s. It is destroyed and moved to the curia.') , 'log' , array($roll , $ruin , $ruinresult->getLocation()['name'])) ;
+                            $ruinresult->getLocation()['value']->getCardsControlled()->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
+                        }
+                        // Card was not in play
                         else
                         {
-                            $this->log(_('Rolled a %1$d. The %2$s concession was controlled by %3$s. It is destroyed and moved to the curia') , 'log' , array($roll , $ruin , $ruinresult->getLocation()['name'])) ;
-                            $ruinresult->getLocation()['value']->getCardsControlled()->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
+                            $this->log(_('Rolled a %1$d. The %2$s concession was not in play.') , 'log' , array($roll , $ruin)  ) ;
                         }
                 }
             }
