@@ -54,7 +54,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
-                $this->doRollEvent($game) ;
+                $this->doRollEvent($user_id , $game) ;
                 return $app->json( 'SUCCESS' , 201);
             }
             else
@@ -99,10 +99,11 @@ class ForumControllerProvider implements ControllerProviderInterface
     
     /**
      * 
+     * @param int $user_id
      * @param \Entities\Game $game
      * @return boolean
      */
-    public function doRollEvent($game)
+    public function doRollEvent($user_id , $game)
     {
         if ($game->getPhase()=='Forum' && $game->getSubPhase()=='RollEvent')
         {
@@ -110,16 +111,102 @@ class ForumControllerProvider implements ControllerProviderInterface
             /*
              * A 7 was rolled - an event is played
              */
-            // TO DO : TESTING
-            $roll['total']=7 ;
+            $roll['total']=7;
             if ($roll['total']==7)
             {
                 $eventRoll = $game->rollDice(3, 0) ;
                 $eventNumber = $game->getEventTable()[(int)$eventRoll['total']][$game->getScenario()];
+                $game->log(_('[['.$user_id.']] {roll,rolls} a 7, then a %1$d on the event table.') , 'log' , array((int)$eventRoll['total']) ) ;
+
                 $game->putEventInPlay('number', $eventNumber);
             }
+            /*
+             * A 7 was not rolled - The player draws a card
+             */
             else
             {
+                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and draws a card.') , 'log' , array((int)$eventRoll['total']) ) ;
+                $card = $game->getDeck('drawDeck')->drawFirstCard() ;
+                if ($card !== NULL)
+                {
+                    /**
+                     * Statesman, Faction, Concession
+                     */
+                    if ($card->getPreciseType()=='Statesman' || $card->getPreciseType()=='Faction' || $card->getPreciseType()=='Concession')
+                    {
+                        $game->getParty($user_id)->getHand()->putCardOnTop($card);
+                        $game->log(_('[['.$user_id.']] {draw a faction card and put it in your hand.,draws a faction card and puts it in his hand.}')) ;
+                    }
+                    /**
+                     * Family - Check if a corresponding Statesman is in play
+                     */
+                    elseif ($card->getPreciseType()=='Family')
+                    {
+                        // Make a list of possible Statesmen
+                        $possibleStatemen = array() ;
+                        foreach ($game->getParties() as $party)
+                        {
+                            foreach ($party->getSenators()->getCards() as $senator)
+                            {
+                                if ($senator->getPreciseType()=='Statesman' && $senator->statesmanFamily() == $card->getSenatorID())
+                                {
+                                    array_push($possibleStatemen , array('senator' => $senator , 'party' => $party)) ;
+                                }
+                            }
+                        }
+                        $game->log(_('[['.$user_id.']] {draw,draws} %1$s') , 'log' , array($card->getName()) ) ;
+                        // No corresponding statesman : Family goes to the Forum
+                        if (count($possibleStatemen)==0)
+                        {
+                            $game->getDeck('forum')->putCardOnTop($card) ;
+                            $game->log(_('he goes to the forum.'));
+                        }
+                        // Found one or more (in case of brothers) corresponding Statesmen : put the Family under them
+                        // Case 1 : only one Statesman
+                        elseif (count($possibleStatemen)==1)
+                        {
+                            $possibleStatemen[0]['senator']->getControlled_by()->putCardOnTop($card) ;
+                            $game->log(_('[['.$possibleStatemen[0]['party']->getUser_id().']] {have,has} %1$s so the family joins him') , 'log' , array($possibleStatemen[0]['senator']->getName()) ) ;
+                        // Case 2 : brothers are in play
+                        }
+                        else
+                        {
+                            // Sorts the possibleStatemen in SenatorID order, so 'xxA' is before 'xxB'
+                            // This is only relevant to brothers
+                            usort ($possibleStatemen, function($a, $b) {
+                                return strcmp($a['senator']->getSenatorID() , $b['senator']->getSenatorID());
+                            });
+                            $possibleStatemen[0]['senator']->getControlled_by()->putCardOnTop($card) ;
+                            $game->log(_('[['.$possibleStatemen[0]['party']->getUser_id().']] {have,has} %1$s (who has the letter "A" and takes precedence over his brother) so the family joins him') , 'log' , array($possibleStatemen[0]['senator']->getName()) ) ;
+                        }
+
+                    }
+                    /**
+                     * Conflict
+                     */
+                    elseif ($card->getPreciseType()=='Conflict')
+                    {
+                        
+                    }
+                    /**
+                     * Leader
+                     */
+                    elseif ($card->getPreciseType()=='Leader')
+                    {
+                        
+                    }
+                    /**
+                     * Other
+                     */
+                    else
+                    {
+                        
+                    }
+                }
+                else
+                {
+                    $game->log(_('There is no more cards in the deck.') , 'alert') ;
+                }
             }
             $this->entityManager->persist($game);
             $this->entityManager->flush();

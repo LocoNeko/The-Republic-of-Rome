@@ -14,7 +14,6 @@
                 <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RollEvent'>
                     <button type="submit" class="btn btn-warning">ROLL</button>
                 </form>
-
         {% endif %}
     {% else %}
         {{game.whoseTurn().getFullName()}} has the initiative

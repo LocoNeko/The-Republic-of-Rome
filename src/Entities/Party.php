@@ -88,8 +88,8 @@ class Party
     public function getUser_id() { return $this->user_id ; }
     public function getUserName() { return $this->userName; }
     public function getReadyToStart() { return $this->readyToStart ; }
+    /** @return \Entities\Deck\ */
     public function getHand() { return $this->hand ; }
-    
     /** @return \Entities\Senator[] */
     public function getSenators() { return $this->senators ; }
     public function getMessages() { return $this->messages ; }
