@@ -1,0 +1,710 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: The Republic of Rome\n"
+"POT-Creation-Date: 2015-11-25 17:23+0900\n"
+"PO-Revision-Date: 2015-11-25 17:26+0900\n"
+"Last-Translator: LocoNeko <loconeko73@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"Language: fr_FR\n"
+"X-Poedit-SearchPath-0: ../src\n"
+
+#: ../src/Entities/Game.php:131
+#, php-format
+msgid "Invalid scenario %1$s"
+msgstr "Scénario %1$s invalide "
+
+#: ../src/Entities/Game.php:144
+#, php-format
+msgid "Phase : %1$s"
+msgstr ""
+
+#: ../src/Entities/Game.php:146 ../src/Entities/SavedGame.php:66
+msgid "Invalid phase"
+msgstr ""
+
+#: ../src/Entities/Game.php:153
+#, php-format
+msgid "Sub Phase : %1$s."
+msgstr ""
+
+#: ../src/Entities/Game.php:349
+msgid "Variant already included"
+msgstr ""
+
+#: ../src/Entities/Game.php:354
+#, php-format
+msgid "Invalid variant %1$s"
+msgstr ""
+
+#: ../src/Entities/Game.php:367
+#, php-format
+msgid "Variant %1$s was not found."
+msgstr ""
+
+#: ../src/Entities/Game.php:493
+msgid "Could not open the file"
+msgstr ""
+
+#: ../src/Entities/Game.php:703
+msgid "Error retrieving senators"
+msgstr ""
+
+#: ../src/Entities/Game.php:788
+#, php-format
+msgid "ERROR - %1$s is not a Statesman"
+msgstr ""
+
+#: ../src/Entities/Game.php:794
+#, php-format
+msgid "ERROR - %1$s is not in [["
+msgstr ""
+
+#: ../src/Entities/Game.php:829
+msgid " He has the Family and puts it under the Statesman."
+msgstr ""
+
+#: ../src/Entities/Game.php:836
+msgid " He takes the Family from the forum and puts it under the Statesman."
+msgstr ""
+
+#: ../src/Entities/Game.php:848 ../src/Entities/Game.php:1098
+#: ../src/Entities/Game.php:1120 ../src/Entities/Party.php:204
+#: ../src/Controllers/SetupControllerProvider.php:169
+#: ../src/Controllers/RevenueControllerProvider.php:232
+#: ../src/Controllers/RevenueControllerProvider.php:461
+#: ../src/Controllers/RevenueControllerProvider.php:469
+#, php-format
+msgid "[["
+msgstr ""
+
+#: ../src/Entities/Game.php:1010
+#, php-format
+msgid " (including %1$d from evil Omens)"
+msgstr ""
+
+#: ../src/Entities/Game.php:1062
+msgid "The First Punic War goes to the \"Inactive\" Wars deck."
+msgstr ""
+
+#: ../src/Entities/Game.php:1064
+msgid "The \"Era Ends\" card goes to the discard. (MUST FIX)"
+msgstr ""
+
+#: ../src/Entities/Game.php:1079
+msgid "Rome starts with 4 regular Legions."
+msgstr ""
+
+#: ../src/Entities/Game.php:1121
+#, php-format
+msgid "You receive the following cards in hand : %1$s"
+msgstr ""
+
+#: ../src/Entities/Game.php:1130
+#, php-format
+msgid "%1$s is appointed temporary Rome Consul"
+msgstr ""
+
+#: ../src/Entities/Game.php:1149
+msgid "Could not open the events file"
+msgstr ""
+
+#: ../src/Entities/Game.php:1164
+msgid "Could not open the event table file"
+msgstr ""
+
+#: ../src/Entities/Game.php:1183
+msgid "Could not open the Appeal table file"
+msgstr ""
+
+#: ../src/Entities/Game.php:1198
+msgid "Could not open the Land Bills table file"
+msgstr ""
+
+#: ../src/Entities/Game.php:1228
+msgid "Could not open the Population table file"
+msgstr ""
+
+#: ../src/Entities/Game.php:1341
+msgid "This senator is not in Play, nobody dies."
+msgstr ""
+
+#: ../src/Entities/Game.php:1348
+msgid " The two brothers are in play. "
+msgstr ""
+
+#: ../src/Entities/Game.php:1375
+msgid "ERROR retrieving the party of the dead Senator"
+msgstr ""
+
+#: ../src/Entities/Game.php:1383 ../src/Entities/Game.php:1392
+#: ../src/Entities/Game.php:1397
+#, php-format
+msgid "%s of party [["
+msgstr ""
+
+#: ../src/Entities/Game.php:1411 ../src/Entities/Game.php:1438
+#, php-format
+msgid "%s goes to the curia. "
+msgstr ""
+
+#: ../src/Entities/Game.php:1418
+#, php-format
+msgid "%s goes to the forum. "
+msgstr ""
+
+#: ../src/Entities/Game.php:1431
+#, php-format
+msgid "%s stays in the party and is now leader. "
+msgstr ""
+
+#: ../src/Entities/Game.php:1445
+msgid ""
+"Error - A card controlled by the dead Senator was neither a Family, a "
+"Concession nor a Province."
+msgstr ""
+
+#: ../src/Entities/Game.php:1453
+msgid "ERROR retrieving dead Senator data"
+msgstr ""
+
+#: ../src/Entities/Game.php:1523
+#, php-format
+msgid ""
+"Province %s is attacked by %s Barabarian raids. Military force is %d "
+"(written force) + %d (for %d legions) + %d (%s's MIL), a %d (white die %d, "
+"black die %d) is rolled for a total of %d%s "
+msgstr ""
+
+#: ../src/Entities/Game.php:1539
+#, php-format
+msgid " which is greater than %d, the province is safe."
+msgstr ""
+
+#: ../src/Entities/Game.php:1545
+#, php-format
+msgid " which is not greater than %d, the province is overrun."
+msgstr ""
+
+#: ../src/Entities/Game.php:1550
+msgid "The Province reverts to undeveloped status"
+msgstr ""
+
+#: ../src/Entities/Game.php:1553
+#, php-format
+msgid "The black die was a %d, so %d mortality chits are drawn : "
+msgstr ""
+
+#: ../src/Entities/Game.php:1564
+msgid "captured"
+msgstr "capturé"
+
+#: ../src/Entities/Game.php:1564
+msgid "killed"
+msgstr "tué"
+
+#: ../src/Entities/Game.php:1573
+#, php-format
+msgid "%s is killed by the barbaric barbarians."
+msgstr ""
+
+#: ../src/Entities/Game.php:1577
+#, php-format
+msgid ""
+"%s is captured by the barbaric barbarians. Ransom must be paid before next "
+"Forum phase or he's BBQ."
+msgstr ""
+
+#: ../src/Entities/Game.php:1580
+#, php-format
+msgid "%s is safe."
+msgstr ""
+
+#: ../src/Entities/Game.php:1602
+#, php-format
+msgid ""
+"Province %s faces internal disorder, %s rolls a %d%s + %d garrisons for a "
+"total of %d"
+msgstr ""
+
+#: ../src/Entities/Game.php:1612
+#, php-format
+msgid ""
+" which is greater than %d. The province will not generate revenue and cannot "
+"be improved this turn."
+msgstr ""
+
+#: ../src/Entities/Game.php:1620
+#, php-format
+msgid " which is not greater than %d"
+msgstr ""
+
+#: ../src/Entities/Game.php:1624
+#, php-format
+msgid "%s is killed %s and %s becomes an active war"
+msgstr ""
+
+#: ../src/Entities/Game.php:1624
+msgid " with all "
+msgstr ""
+
+#: ../src/Entities/Game.php:1624
+msgid " garrisons, "
+msgstr ""
+
+#: ../src/Entities/Game.php:1656
+#, php-format
+msgid " %1$d level %2$s bill%3$s,"
+msgstr ""
+
+#: ../src/Entities/Game.php:1734
+msgid "Error finding event."
+msgstr ""
+
+#: ../src/Entities/Game.php:1740
+msgid "Error retrieving event."
+msgstr ""
+
+#: ../src/Entities/Game.php:1748
+msgid "Event %1$s is already in play at its maximum level (%2%d)."
+msgstr ""
+
+#: ../src/Entities/Game.php:1759
+#, php-format
+msgid "Event %1$s %2$s"
+msgstr ""
+
+#: ../src/Entities/Game.php:1763
+msgid "is now in play."
+msgstr ""
+
+#: ../src/Entities/Game.php:1765
+#, php-format
+msgid "has its level increased to %1$s (level %2$d)"
+msgstr ""
+
+#: ../src/Entities/Game.php:1779
+#, php-format
+msgid "Number of mortality chit%1$s : %2$d"
+msgstr ""
+
+#: ../src/Entities/Game.php:1787
+#, php-format
+msgid "Chit drawn : %d"
+msgstr ""
+
+#: ../src/Entities/Card.php:178
+#, php-format
+msgid "Property %1$s doesn't exist."
+msgstr ""
+
+#: ../src/Entities/Deck.php:207
+#, php-format
+msgid "ERROR - Can't draw first card : deck %1$d is empty"
+msgstr ""
+
+#: ../src/Entities/Senator.php:199
+#, php-format
+msgid "%s is not a valid office"
+msgstr ""
+
+#: ../src/Entities/Senator.php:203
+#, php-format
+msgid "The Senator cannot hold another office while he is %s"
+msgstr ""
+
+#: ../src/Entities/Senator.php:321
+msgid "Senator"
+msgstr ""
+
+#: ../src/Entities/Senator.php:324
+msgid "ERROR - The Statesman is not a statesman"
+msgstr ""
+
+#: ../src/Entities/Senator.php:328
+msgid "ERROR - The statesman is not in hand"
+msgstr ""
+
+#: ../src/Entities/Senator.php:338
+#, php-format
+msgid "The Family is already in party %s"
+msgstr ""
+
+#: ../src/Entities/Senator.php:340
+msgid "You have the family"
+msgstr ""
+
+#: ../src/Entities/Senator.php:346
+#, php-format
+msgid "The related statesman %s is already in play."
+msgstr ""
+
+#: ../src/Entities/Senator.php:349
+#, php-format
+msgid "%1$s playable, but the other brother %2$s is in play."
+msgstr ""
+
+#: ../src/Entities/Senator.php:356
+msgid "The corresponding family card is in the forum"
+msgstr ""
+
+#: ../src/Entities/Senator.php:360
+msgid "ERROR - This is not a hand"
+msgstr ""
+
+#: ../src/Entities/Senator.php:362
+msgid "The corresponding family card is not in play"
+msgstr ""
+
+#: ../src/Entities/Party.php:197
+msgid "This user has already joined the game."
+msgstr ""
+
+#: ../src/Entities/Party.php:199
+#, php-format
+msgid "A party with name %1$s already exists in this game."
+msgstr ""
+
+#: ../src/Entities/Message.php:73
+msgid "ERROR - Message test cannot be empty."
+msgstr ""
+
+#: ../src/Entities/Message.php:76 ../src/Entities/Message.php:117
+msgid "ERROR - Invalid message type."
+msgstr ""
+
+#: ../src/Entities/Message.php:79
+msgid "ERROR - Invalid Sender."
+msgstr ""
+
+#: ../src/Entities/Message.php:82
+msgid "ERROR - Sender present in recipients list."
+msgstr ""
+
+#: ../src/Entities/Message.php:85
+msgid "ERROR - Sender for a non-chat message."
+msgstr ""
+
+#: ../src/Entities/Message.php:88
+msgid "ERROR - Chat without a sender."
+msgstr ""
+
+#: ../src/Entities/Message.php:94 ../src/Entities/Message.php:136
+msgid "ERROR - Invalid recipient."
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:27
+#: ../src/Controllers/SetupControllerProvider.php:116
+#: ../src/Controllers/SetupControllerProvider.php:117
+#: ../src/Controllers/SetupControllerProvider.php:145
+#: ../src/Controllers/SetupControllerProvider.php:146
+#: ../src/Controllers/SetupControllerProvider.php:190
+#: ../src/Controllers/SetupControllerProvider.php:191
+#: ../src/Controllers/SetupControllerProvider.php:222
+#: ../src/Controllers/SetupControllerProvider.php:223
+#: ../src/Controllers/RevenueControllerProvider.php:27
+#: ../src/Controllers/RevenueControllerProvider.php:69
+#: ../src/Controllers/RevenueControllerProvider.php:70
+#: ../src/Controllers/RevenueControllerProvider.php:128
+#: ../src/Controllers/RevenueControllerProvider.php:129
+#: ../src/Controllers/RevenueControllerProvider.php:152
+#: ../src/Controllers/RevenueControllerProvider.php:153
+#: ../src/Controllers/RevenueControllerProvider.php:176
+#: ../src/Controllers/RevenueControllerProvider.php:177
+#: ../src/Controllers/RevenueControllerProvider.php:209
+#: ../src/Controllers/RevenueControllerProvider.php:210
+#: ../src/Controllers/MortalityControllerProvider.php:26
+#: ../src/Controllers/MortalityControllerProvider.php:71
+#: ../src/Controllers/MortalityControllerProvider.php:72
+#: ../src/Controllers/LobbyControllerProvider.php:60
+#: ../src/Controllers/LobbyControllerProvider.php:86
+#: ../src/Controllers/LobbyControllerProvider.php:109
+#: ../src/Controllers/LobbyControllerProvider.php:155
+#: ../src/Controllers/ForumControllerProvider.php:27
+#: ../src/Controllers/ForumControllerProvider.php:60
+#: ../src/Controllers/ForumControllerProvider.php:61
+#, php-format
+msgid "Error - Game %1$s not found."
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:32
+#: ../src/Controllers/RevenueControllerProvider.php:32
+#: ../src/Controllers/MortalityControllerProvider.php:31
+#: ../src/Controllers/ForumControllerProvider.php:32
+#, php-format
+msgid "Error - Game %1$s not started."
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:68
+#, php-format
+msgid "%1$s is appointed leader of %2$s"
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:71
+msgid "For testing purpose : add provinces to all senators"
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:97
+#: ../src/Controllers/SetupControllerProvider.php:98
+msgid "ERROR - Wrong user or Senator not in a party"
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:104
+#: ../src/Controllers/SetupControllerProvider.php:105
+#: ../src/Controllers/SetupControllerProvider.php:184
+#: ../src/Controllers/SetupControllerProvider.php:185
+msgid "ERROR - Senator not found"
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:177
+#: ../src/Controllers/SetupControllerProvider.php:178
+msgid "ERROR - Concession not found"
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:208
+msgid "{are,is} done playing cards."
+msgstr ""
+
+#: ../src/Controllers/SetupControllerProvider.php:211
+msgid "Everyone is done playing cards."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:100
+#, php-format
+msgid "Event %s is removed."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:112
+#, php-format
+msgid "The barbarians slaughter %1$s, whose ransom was not paid by [["
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:255
+#, php-format
+msgid ""
+"%1$s : %2$s decides to earn an extra %3$d during the drought, causing him a "
+"loss of %4$d POP."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:264
+#, php-format
+msgid "%1$s : %2$s decides not to earn more during the drought."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:272
+msgid ""
+"ERROR - Drought-related choices were made without a drought. Stop cheating."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:291
+msgid " He was already corrupt."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:296
+msgid " He is now corrupt."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:333
+#, php-format
+msgid "%1$s : %2$s takes Provincial spoils for %3$d%4$s.%5$s%6$s"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:344
+#, php-format
+msgid "%1$s : %2$s decides not to take Provincial spoils"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:357
+#, php-format
+msgid "The province is developed. %s gains 3 INFLUENCE"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:363
+msgid "The province is not developed."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:366
+#, php-format
+msgid "Province development : A %1$d is rolled%2$s%3$s. %4$s"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:368
+msgid " (modified by +1 since senator is not corrupt)"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:388
+msgid "ERROR - Some revenue decisions have not been processed"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:423
+msgid "ERROR - Redistributing from or to wrong Seantor or with invalid amount"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:435
+#: ../src/Controllers/RevenueControllerProvider.php:448
+msgid "ERROR - Insufficient funds for Redistribution"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:440
+msgid " party treasury"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:461
+msgid "party treasury"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:493
+msgid "ERROR - Contribution from wrong Senator or with invalid amount"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:526
+#, php-format
+msgid "%1s ([["
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:545
+msgid "State revenues"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:547
+msgid "Rome collects 100T."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:570
+#: ../src/Controllers/RevenueControllerProvider.php:588
+#, php-format
+msgid "%1$s : Rome's revenue is %2$dT ."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:602
+msgid "State expenses"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:606
+#, php-format
+msgid "Rome pays %1$dT for %2$d unprosecuted war%3$s and %4$d active war%5$s."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:620
+#, php-format
+msgid "Rome pays %1$dT for %2$s"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:634
+#, php-format
+msgid "Rome pays %1$dT for %2$d legion%3$s and %4$d fleet%5$s."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:654
+#, php-format
+msgid "%1$s returns from %2$s which is placed in the Forum."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:659
+#, php-format
+msgid "%1$s spends %2$s game turn in %3$s"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:659
+#: ../src/Controllers/RevenueControllerProvider.php:683
+msgid "First"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:659
+#: ../src/Controllers/RevenueControllerProvider.php:683
+msgid "Second"
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:678
+#, php-format
+msgid "%1$s (unaligned) returns from %2$s which is placed in the Forum."
+msgstr ""
+
+#: ../src/Controllers/RevenueControllerProvider.php:683
+#, php-format
+msgid "%1$s (unaligned) spends %2$s game turn in %3$s"
+msgstr ""
+
+#: ../src/Controllers/MortalityControllerProvider.php:85
+msgid "There is no imminent conflicts to activate."
+msgstr ""
+
+#: ../src/Controllers/MortalityControllerProvider.php:100
+#, php-format
+msgid "Imminent conflict %1$s has been activated."
+msgstr ""
+
+#: ../src/Controllers/MortalityControllerProvider.php:123
+#, php-format
+msgid "Chit drawn : %1$s. %2$s"
+msgstr ""
+
+#: ../src/Controllers/MortalityControllerProvider.php:130
+#, php-format
+msgid "Chit drawn : %1$s"
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:134
+#, php-format
+msgid "You joined and named your party %s"
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:169
+#: ../src/Controllers/LobbyControllerProvider.php:170
+msgid "You are ready to start"
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:174
+msgid "Error - Invalid user."
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:212
+msgid "Game loaded"
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:281
+msgid "ERROR - A game with the same name already exists."
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:286
+msgid "ERROR - Game name too short."
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:291
+#, php-format
+msgid "ERROR - %1$s is not a valid Scenario."
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:300
+#, php-format
+msgid "ERROR - %1$s is not a valid Variant."
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:315
+#, php-format
+msgid "Game \"%1$s\" created. Scenario : %2$s"
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:322
+msgid "Error"
+msgstr ""
+
+#: ../src/Controllers/LobbyControllerProvider.php:348
+#, php-format
+msgid "Game %1$s (ID : %2$d) loaded. Turn %3$d - %4$s - %5$s"
+msgstr ""
+
+#: ../src/Controllers/ForumControllerProvider.php:86
+#, php-format
+msgid " %1$s with a bid of %2$dT."
+msgstr ""
+
+#: ../src/Controllers/ForumControllerProvider.php:92
+#, php-format
+msgid "The HRAO (%s) as all bets are 0."
+msgstr ""

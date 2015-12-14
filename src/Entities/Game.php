@@ -1041,6 +1041,39 @@ class Game
         return $result ;
     }
     
+    
+    /**
+     * Returns the number of matched active Conflicts :<br>
+     * Either in the active wars or unprosecuted wars deck
+     * @param \Entities\Conflict  $conflict
+     * @return int|boolean
+     */
+    public function getNumberOfMatchedConflicts($conflict)
+    {
+        $result = 0 ;
+        if ($conflict->getPreciseType() != 'Conflict')
+        {
+            return $result ;
+        }
+        foreach ($this->getDeck('activeWars')->getCards() as $active)
+        {
+            if ( $active->getMatches() == $conflict->getMatches())
+            {
+                $result++;
+            }
+        }
+        foreach ($this->getDeck('unprosecutedWars')->getCards()  as $unprosecuted)
+        {
+            if ( $unprosecuted->getMatches() == $conflict->getMatches() )
+            {
+                $result++;
+            }
+        }
+        return $result ;
+    }
+    
+    
+    
     /**
      * ----------------------------------------------------
      * Setup
@@ -1136,6 +1169,11 @@ class Game
             $temporaryRomeConsul->appoint('Rome Consul') ;
             $temporaryRomeConsul->setPriorConsul(TRUE) ;
             $this->log(_('%1$s is appointed temporary Rome Consul') , 'log' , array($temporaryRomeConsul->getName())) ;
+            do
+            {
+                $this->getDeck('drawDeck')->putCardOnTop($this->getDeck('earlyRepublic')->drawFirstCard()) ;
+            }
+            while ($this->getDeck('earlyRepublic')->getNumberOfCards()>0) ;
         }
         catch (Exception $e)
         {

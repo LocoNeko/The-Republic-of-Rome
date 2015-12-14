@@ -56,6 +56,8 @@
         {% endembed %}
     {% endfor %}
 
+    <h3>There is currently {{game.getDeck('drawDeck').getNumberOfCards()}} cards left to draw.</h3>
+    
     {#
         Display the Forum
     #}
@@ -94,6 +96,33 @@
         </div>
     {% endif %}
         
+    {#
+        Wars
+    #}
+
+    <h3>Wars</h3>
+    {% set wars = [] %}
+    {% set wars = wars|merge({'inactiveWars': 'Inactive'}) %}
+    {% set wars = wars|merge({'activeWars': 'Active'}) %}
+    {% set wars = wars|merge({'imminentWars': 'Imminent'}) %}
+    {% set wars = wars|merge({'unprosecutedWars': 'Unprosecuted'}) %}
+    {% for key,war in wars %}
+        {% if game.getDeck(key).getNumberOfCards()>0%}
+            <h4>{{war}}</h4>
+            <div class="row">
+                    {% for card in game.getDeck(key).getCards() %}
+                        {% embed "BoardElements/Card.twig" with
+                            {
+                                'card': card ,
+                                'action': card.getAction()
+                            } only
+                        %}
+                        {% endembed %}
+                    {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
     <h3>Events in play</h3>
         <table class="table table-bordered" style="width:auto; font-size: 100%; font-weight: bold; ">
             <thead>

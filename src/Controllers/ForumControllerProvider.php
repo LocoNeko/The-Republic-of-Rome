@@ -111,13 +111,11 @@ class ForumControllerProvider implements ControllerProviderInterface
             /*
              * A 7 was rolled - an event is played
              */
-            $roll['total']=7;
             if ($roll['total']==7)
             {
                 $eventRoll = $game->rollDice(3, 0) ;
                 $eventNumber = $game->getEventTable()[(int)$eventRoll['total']][$game->getScenario()];
                 $game->log(_('[['.$user_id.']] {roll,rolls} a 7, then a %1$d on the event table.') , 'log' , array((int)$eventRoll['total']) ) ;
-
                 $game->putEventInPlay('number', $eventNumber);
             }
             /*
@@ -125,17 +123,17 @@ class ForumControllerProvider implements ControllerProviderInterface
              */
             else
             {
-                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and draws a card.') , 'log' , array((int)$eventRoll['total']) ) ;
+                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and draws a card.') , 'log' , array((int)$roll['total']) ) ;
                 $card = $game->getDeck('drawDeck')->drawFirstCard() ;
                 if ($card !== NULL)
                 {
                     /**
                      * Statesman, Faction, Concession
                      */
-                    if ($card->getPreciseType()=='Statesman' || $card->getPreciseType()=='Faction' || $card->getPreciseType()=='Concession')
+                    if ($card->getPreciseType()=='Statesman' || $card->getPreciseType()=='Faction card' || $card->getPreciseType()=='Concession')
                     {
                         $game->getParty($user_id)->getHand()->putCardOnTop($card);
-                        $game->log(_('[['.$user_id.']] {draw a faction card and put it in your hand.,draws a faction card and puts it in his hand.}')) ;
+                        $game->log(_('[['.$user_id.']] {draw faction card %1$s and put it in your hand.,draws a faction card and puts it in his hand.}') , 'log' , array($card->getName())) ;
                     }
                     /**
                      * Family - Check if a corresponding Statesman is in play
@@ -186,21 +184,113 @@ class ForumControllerProvider implements ControllerProviderInterface
                      */
                     elseif ($card->getPreciseType()=='Conflict')
                     {
-                        
+                        $matchedConflicts = $game->getNumberOfMatchedConflicts($card) ;
+                        /*
+                         *  There is a matched active conflict : War goes to imminent deck
+                         */
+                        if ($matchedConflicts !== 0)
+                        {
+                            $game->getDeck('imminentWars')->putCardOnTop($card) ;
+                            $game->log(_('[['.$user_id.']] {draw,draws} %1$s, there is %2$d matched conflicts, the card goes to the imminent deck.') , 'log' , array($card->getName() , $matchedConflicts)) ; 
+                        }
+                        else
+                        {
+                            $matchedInactiveWar = $game->getFilteredCards(array(array('matches' , $card->getMatches())))->toArray() ;
+                            /*
+                             *  There is a matched inactive war.
+                             */
+                            $activateInCaseOfLeader = FALSE ;
+                            
+                            if (count($matchedInactiveWar)>0 && reset($matchedInactiveWar)->getLocation()['name']=='inactiveWars')
+                            {
+                                $cardPicked = $game->getDeck('inactiveWars')->getFirstCardByProperty('id', reset($matchedInactiveWar)->getId() , $game->getDeck('active'));
+                                $game->getDeck('imminentWars')->putCardOnTop($card) ;
+                                $game->log(
+                                    _('[['.$user_id.']] {draw,draws} %1$s, the card goes to the imminent deck and the inactive card %2$s is now active.') ,
+                                    'log' ,
+                                    array(
+                                        $card->getName() ,
+                                        $cardPicked->getName()
+                                    )
+                                ) ; 
+                            }
+                            /*
+                             *  The active/inactive icon determines where the card goes
+                             */
+                            elseif($card->getActive())
+                            {
+                                $game->getDeck('activeWars')->putCardOnTop($card) ;
+                                $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now active.') , 'log' , array($card->getName())) ; 
+                            }
+                            else
+                            {
+                                $game->getDeck('inactiveWars')->putCardOnTop($card) ;
+                                $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now inactive.') , 'log' , array($card->getName())) ; 
+                                $activateInCaseOfLeader = TRUE ;
+                            }
+                            // Move any matched leaders from the curia to the Conflict card
+                            foreach ($game->getDeck('curia')->getCards() as $curiaCard) {
+                                if ($curiaCard->getPreciseType()=='Leader' && $curiaCard->getMatches()==$card->getMatches())
+                                {
+                                    $pickedLeader = $game->getDeck('curia')->getFirstCardByProperty('id' , $curiaCard->getId()) ;
+                                    $card->getCardsControlled()->putCardOnTop($pickedLeader) ;
+                                    // A leader activates an inactive conflict
+                                    $activationMessage='' ;
+                                    if ($activateInCaseOfLeader)
+                                    {
+                                        $game->getDeck('inactiveWars')->getFirstCardByProperty('id', $card->getId()) ;
+                                        $activationMessage = _(' This activates the conflict.'); 
+                                    }
+                                    $game->log(
+                                        _('The leader %1$s is matched with %2$s, so moves from the Curia to the card.%3$s') ,
+                                        'log' ,
+                                        array($pickedLeader->getName() , $card->getName() , $activationMessage)
+                                    ) ; 
+                                }
+                            }
+                        }
                     }
                     /**
                      * Leader
                      */
                     elseif ($card->getPreciseType()=='Leader')
                     {
-                        
+                        $matchedWar = $game->getFilteredCards(array(array('matches' , $card->getMatches())))->toArray() ;
+                        // There is no matching conflict, the leader goes to the Curia
+                        if (count($matchedWar)==0)
+                        {
+                            $game->getDeck('curis')->putCardOnTop($card) ;
+                            $game->log(_('[['.$user_id.']] {draw,draws} %s, without a matched conflict, the card goes to the Curia.') , 'log' , array($card->getName())) ; 
+                        }
+                        // There is a matching conflict.
+                        else
+                        {
+                            reset($matchedWar)->getCardsControlled()->putCardOnTop($card) ;
+                            // Activate the war if it was not
+                            $activationMessage='' ;
+                            if (reset($matchedWar)->getLocation()['name']=='inactiveWars')
+                            {
+                                $game->getDeck('inactiveWars')->getFirstCardByProperty('id', reset($matchedWar)->getId() , $game->getDeck('activeWars')) ;
+                                $activationMessage = _(' This activates the conflict.'); 
+                            }
+                            $game->log(
+                                _('[['.$user_id.']] {draw,draws} %1$s, which is placed on the matched conflict %2$s.%3$s') ,
+                                'log' ,
+                                array(
+                                    $card->getName() ,
+                                    reset($matchedWar)->getName() ,
+                                    $activationMessage
+                                )
+                            ) ; 
+                        }
                     }
                     /**
                      * Other
                      */
                     else
                     {
-                        
+                        $game->getDeck('forum')->putCardOnTop($card) ;
+                        $game->log(_('[['.$user_id.']] {draw,draws} %s that goes to the forum.') , 'log' , array($card->getName())) ; 
                     }
                 }
                 else
