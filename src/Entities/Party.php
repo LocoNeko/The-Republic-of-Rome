@@ -162,7 +162,7 @@ class Party
                         $setter = 'set'.ucfirst($key);
                         // TO DO  : Uncomment once happy
                         // $this->.$setter($value) ;
-                        error_log('$party->'.$setter.' ('.$value.')') ;
+                        error_log('LOAD - $party->'.$setter.' ('.$value.')') ;
                     }
                 }
             }

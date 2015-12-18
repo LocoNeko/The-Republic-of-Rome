@@ -150,7 +150,7 @@ abstract class Card
                         $setter = 'set'.ucfirst($key);
                         // TO DO  : Uncomment once happy
                         // $this->.$setter($value) ;
-                        error_log('$card->'.$setter.' ('.$value.')') ;
+                        error_log('LOAD - $card->'.$setter.' ('.$value.')') ;
                     }
                 }
             }
@@ -186,7 +186,7 @@ abstract class Card
         $getter = 'get'.ucfirst($property);
         if (method_exists($this, $getter))
         {
-            return $this->$getter($property) ;
+            return $this->$getter() ;
         }
         else
         {
@@ -216,14 +216,17 @@ abstract class Card
         if (method_exists($this, 'getDeck'))
         {
             $deck = $this->getDeck() ;
+            // Deck
             if (method_exists($deck, 'getGame') && $deck->getGame() != NULL)
             {
                 $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName()) ;
             }
+            // Card
             elseif (method_exists($deck, 'getControlled_by') && $deck->getControlled_by() != NULL)
             {
                 $result = array ('type' => 'card' , 'value' => $deck->getControlled_by() , 'name' => $deck->getControlled_by()->getName()) ;
             }
+            // Party
             elseif (method_exists($deck, 'getInParty') && $deck->getInParty() != NULL)
             {
                 $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;

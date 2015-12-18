@@ -55,7 +55,9 @@ class ForumControllerProvider implements ControllerProviderInterface
             if ($game!==FALSE)
             {
                 $this->doRollEvent($user_id , $game) ;
-                return $app->json( 'SUCCESS' , 201);
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
             }
             else
             {
@@ -123,7 +125,8 @@ class ForumControllerProvider implements ControllerProviderInterface
              */
             else
             {
-                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and draws a card.') , 'log' , array((int)$roll['total']) ) ;
+                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and draw a card.') , 'log' , array((int)$roll['total']) ) ;
+
                 $card = $game->getDeck('drawDeck')->drawFirstCard() ;
                 if ($card !== NULL)
                 {
@@ -184,50 +187,59 @@ class ForumControllerProvider implements ControllerProviderInterface
                      */
                     elseif ($card->getPreciseType()=='Conflict')
                     {
-                        $matchedConflicts = $game->getNumberOfMatchedConflicts($card) ;
-                        /*
-                         *  There is a matched active conflict : War goes to imminent deck
-                         */
-                        if ($matchedConflicts !== 0)
+                        $matchedCards = $game->getFilteredCards(array(array('matches' , $card->getMatches()) ))->toArray() ;
+                        // Is there a matched card in the activeWars or inactiveWars decks ?
+                        $matchedActive = FALSE ;
+                        $matchedInactive = FALSE ;
+                        foreach($matchedCards as $key=>$matchedCard)
+                        {
+                            if($matchedCard->getLocation()['name']=='activeWars')
+                            {
+                                $matchedActive = $key ;
+                            }
+                            if($matchedCard->getLocation()['name']=='inactiveWars')
+                            {
+                                $matchedInactive = $key ;
+                            }
+                        }
+                        // We found a matched card in the activeWars deck - move the drawn card to 'imminent'
+                        if ($matchedActive !== FALSE)
                         {
                             $game->getDeck('imminentWars')->putCardOnTop($card) ;
-                            $game->log(_('[['.$user_id.']] {draw,draws} %1$s, there is %2$d matched conflicts, the card goes to the imminent deck.') , 'log' , array($card->getName() , $matchedConflicts)) ; 
+                            $game->log(_('[['.$user_id.']] {draw,draws} %1$s, there is %2$d matched conflicts, the card goes to the imminent deck.') , 'log' , array($card->getName() , $matchedCards[$matchedActive])) ; 
                         }
-                        else
+                        // We found a matched war in the inactiveWars deck
+                        // The card goes to the imminent deck and the inactive card is now active
+                        elseif ($matchedInactive !== FALSE)
                         {
-                            $matchedInactiveWar = $game->getFilteredCards(array(array('matches' , $card->getMatches())))->toArray() ;
-                            /*
-                             *  There is a matched inactive war.
-                             */
-                            $activateInCaseOfLeader = FALSE ;
-                            
-                            if (count($matchedInactiveWar)>0 && reset($matchedInactiveWar)->getLocation()['name']=='inactiveWars')
-                            {
-                                $cardPicked = $game->getDeck('inactiveWars')->getFirstCardByProperty('id', reset($matchedInactiveWar)->getId() , $game->getDeck('active'));
-                                $game->getDeck('imminentWars')->putCardOnTop($card) ;
+                            $game->getDeck('imminentWars')->putCardOnTop($card) ;
+                            $game->getDeck('inactiveWars')->getFirstCardByProperty('id', $matchedCards[$matchedInactive]->getId() , $game->getDeck('activeWars'));
                                 $game->log(
                                     _('[['.$user_id.']] {draw,draws} %1$s, the card goes to the imminent deck and the inactive card %2$s is now active.') ,
                                     'log' ,
                                     array(
                                         $card->getName() ,
-                                        $cardPicked->getName()
+                                        $matchedCards[$matchedInactive]->getName()
                                     )
                                 ) ; 
-                            }
-                            /*
-                             *  The active/inactive icon determines where the card goes
-                             */
-                            elseif($card->getActive())
-                            {
-                                $game->getDeck('activeWars')->putCardOnTop($card) ;
-                                $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now active.') , 'log' , array($card->getName())) ; 
-                            }
-                            else
-                            {
-                                $game->getDeck('inactiveWars')->putCardOnTop($card) ;
-                                $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now inactive.') , 'log' , array($card->getName())) ; 
-                                $activateInCaseOfLeader = TRUE ;
-                            }
+                        }
+                        // The armed icon sends the card to the activeWars deck
+                        elseif($card->getActive())
+                        {
+                            $game->getDeck('activeWars')->putCardOnTop($card) ;
+                            $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now active.') , 'log' , array($card->getName())) ; 
+                        }
+                        // The armed icon sends the card to the inactiveWars deck
+                        else
+                        {
+                            $game->getDeck('inactiveWars')->putCardOnTop($card) ;
+                            $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now inactive.') , 'log' , array($card->getName())) ; 
+                        }
+                        // TO DO : Handle activating leaders in the Curia - most of the code below can be copied
+                        
+                        /*
+                        else
+                        {
                             // Move any matched leaders from the curia to the Conflict card
                             foreach ($game->getDeck('curia')->getCards() as $curiaCard) {
                                 if ($curiaCard->getPreciseType()=='Leader' && $curiaCard->getMatches()==$card->getMatches())
@@ -249,13 +261,23 @@ class ForumControllerProvider implements ControllerProviderInterface
                                 }
                             }
                         }
+                        */
                     }
                     /**
                      * Leader
                      */
                     elseif ($card->getPreciseType()=='Leader')
                     {
-                        $matchedWar = $game->getFilteredCards(array(array('matches' , $card->getMatches())))->toArray() ;
+                        $matchedWar = $game->getFilteredCards(array(array('matches' , $card->getMatches()) , array('preciseType' , 'Conflict')))->toArray() ;
+                        // Only keep active, inactive wars
+                        // TO DO : We should actually order cards based on their decks : active firstm then inactive, so the leader goes on an active war first
+                        foreach($matchedWar as $war)
+                        {
+                            if($war->getLocation()['name']!='activeWars' && $war->getLocation()['name']!='inactiveWars' && $war->getLocation()['name']!='unprosecutedWars')
+                            {
+                                array_shift($matchedWar);
+                            }
+                        }
                         // There is no matching conflict, the leader goes to the Curia
                         if (count($matchedWar)==0)
                         {
@@ -298,8 +320,6 @@ class ForumControllerProvider implements ControllerProviderInterface
                     $game->log(_('There is no more cards in the deck.') , 'alert') ;
                 }
             }
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
         }
         else
         {

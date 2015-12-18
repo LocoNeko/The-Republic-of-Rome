@@ -87,26 +87,26 @@ This template gets the following parameters :
     </div>
 {% endif %}
 
-    {#
-        Does this card have other cards under its control ? If yes, display them in a collapsable row
-    #}
-    {% if card.hasControlledCards() %}
-        <div class="sprite-position-topleft">
-            <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
-                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-            </a>
-            <div id="CardsControlledBy_{{card.getId()}}" class="row collapse sprite-modal">
-                {% for controlledCard in card.getCardsControlled().getCards() %}
-                    {% embed "BoardElements/Card.twig" with
-                        {
-                            'card': controlledCard ,
-                            'action': controlledCard.getAction()
-                        } only 
-                    %}
-                    {% endembed %}
-                {% endfor %}
-            </div>
+{#
+    Does this card have other cards under its control ? If yes, display them in a collapsable row
+#}
+{% if card.hasControlledCards() %}
+    <div class="sprite-position-topleft">
+        <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
+            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+        </a>
+        <div id="CardsControlledBy_{{card.getId()}}" class="row collapse sprite-modal">
+            {% for controlledCard in card.getCardsControlled().getCards() %}
+                {% embed "BoardElements/Card.twig" with
+                    {
+                        'card': controlledCard ,
+                        'action': controlledCard.getAction()
+                    } only 
+                %}
+                {% endembed %}
+            {% endfor %}
         </div>
-    {% endif %}
+    </div>
+{% endif %}
 
     </div>

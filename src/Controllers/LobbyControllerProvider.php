@@ -345,7 +345,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $query2->setParameter(1 , $savedGame->getGame_id() ) ;
             $query2->setParameter(2 , $savedGame->getSavedTime()->format('Y-m-d H:i:s')) ;
             $count = $query2->getSingleScalarResult();
-            error_log(sprintf(_('Game %1$s (ID : %2$d) loaded. Turn %3$d - %4$s - %5$s') , $savedGame->getName() , $savedGame->getGame_id() , $savedGame->getTurn() , $savedGame->getPhase() , $savedGame->getSubPhase()) ) ;
+            error_log(sprintf(_('LOAD - Game %1$s (ID : %2$d) loaded. Turn %3$d - %4$s - %5$s') , $savedGame->getName() , $savedGame->getGame_id() , $savedGame->getTurn() , $savedGame->getPhase() , $savedGame->getSubPhase()) ) ;
             // Actual load function : Find the id of the game to be loaded, then load
             $query3 = $this->entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id= ?1') ;
             $query3->setParameter(1 , $savedGame->getGame_id() ) ;

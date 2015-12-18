@@ -113,7 +113,7 @@ class Deck
                         $setter = 'set'.ucfirst($key);
                         // TO DO  : Uncomment once happy
                         // $this->$setter($value) ;
-                        error_log('$deck->'.$setter.' ('.$value.')') ;
+                        error_log('LOAD - $deck->'.$setter.' ('.$value.')') ;
                     }
                 }
             }
@@ -140,12 +140,11 @@ class Deck
                             if ($cardType=='Era ends') { $cardType='EraEnds' ; }
                             $class = __NAMESPACE__.'\\'.$cardType ;
                             $card = new $class ($value2 , FALSE);
-                            error_log($card->getPreciseType()) ;
                             // Here : transform the $value2 array into something that can be used by the constructor of the relevant entity
                             /*
                             $card = new $class ($value2);
                             $this->getCards()[$key2] = $card ;
-                            error_log($class) ;
+                            error_log(LOAD - $class) ;
                              */
                         }
                     }
@@ -212,7 +211,7 @@ class Deck
     {
         $arrayValues = $this->getCards()->toArray() ;
         shuffle($arrayValues) ;
-        $this->cards = new ArrayCollection( $arrayValues );
+        $this->setCards(new ArrayCollection( $arrayValues ));
     }
     
     /**

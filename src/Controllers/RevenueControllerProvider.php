@@ -267,10 +267,13 @@ class RevenueControllerProvider implements ControllerProviderInterface
                     );
                 }
             }
+            // TO DO : Figure out what this error was about. Shouldn't it be an elseif with a test on $data[$concession['card']->getId()] ?
+            /*
             else
             {
                 $game->log(_('ERROR - Drought-related choices were made without a drought. Stop cheating.') , 'error') ;
             }
+             */
         }
 
         // Handle Provincial spoils, choice should be in 'data'

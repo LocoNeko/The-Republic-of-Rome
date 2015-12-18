@@ -267,7 +267,7 @@ class Game
                         $setter = 'set'.ucfirst($key);
                         // TO DO  : Uncomment once happy
                         // $this->.$setter($value) ;
-                        error_log('$this->'.$setter.' ('.$value.')') ;
+                        error_log('LOAD - $this->'.$setter.' ('.$value.')') ;
                     }
                 }
             }
@@ -639,10 +639,10 @@ class Game
     /**
      * 
      * @param array $filters Format (array('property1','value1') , array('property2','value2'))
-     * @param string $criteria A criteria as defined in the checkCriteria function of the Senator entity
+     * @param string|boolean $criteria A criteria as defined in the checkCriteria function of the Senator entity
      * @return ArrayCollection
      */
-    public function getFilteredCards($filters , $criteria = TRUE)
+    public function getFilteredCards($filters , $criteria = NULL)
     {
         $result = new ArrayCollection() ;
         // First, put all cards (from parties, hands, and main decks) in $result
@@ -688,10 +688,10 @@ class Game
                 }
             );
         }
-        
+
         // Third, criteria based filter (only for Senators)
         // Removes all non-Senators as well
-        if ($criteria!==TRUE)
+        if ($criteria!==NULL)
         {
             $result = $result->filter(
                 function (\Entities\Senator $card) use ($criteria) {
@@ -1041,39 +1041,6 @@ class Game
         return $result ;
     }
     
-    
-    /**
-     * Returns the number of matched active Conflicts :<br>
-     * Either in the active wars or unprosecuted wars deck
-     * @param \Entities\Conflict  $conflict
-     * @return int|boolean
-     */
-    public function getNumberOfMatchedConflicts($conflict)
-    {
-        $result = 0 ;
-        if ($conflict->getPreciseType() != 'Conflict')
-        {
-            return $result ;
-        }
-        foreach ($this->getDeck('activeWars')->getCards() as $active)
-        {
-            if ( $active->getMatches() == $conflict->getMatches())
-            {
-                $result++;
-            }
-        }
-        foreach ($this->getDeck('unprosecutedWars')->getCards()  as $unprosecuted)
-        {
-            if ( $unprosecuted->getMatches() == $conflict->getMatches() )
-            {
-                $result++;
-            }
-        }
-        return $result ;
-    }
-    
-    
-    
     /**
      * ----------------------------------------------------
      * Setup
@@ -1174,6 +1141,7 @@ class Game
                 $this->getDeck('drawDeck')->putCardOnTop($this->getDeck('earlyRepublic')->drawFirstCard()) ;
             }
             while ($this->getDeck('earlyRepublic')->getNumberOfCards()>0) ;
+            $this->getDeck('drawDeck')->shuffle();
         }
         catch (Exception $e)
         {
@@ -1425,13 +1393,17 @@ class Game
             {
                 return array(_('ERROR retrieving the party of the dead Senator') , 'error' );
             }
+            else
+            {
+                $party = $location['value'] ;
+            }
 
             // Death of a Statesman
             if ($deadSenator->getPreciseType() == 'Statesman')
             {
                 $deadStatesman = $party->getSenators()->getFirstCardByProperty('senatorID' , $deadSenator->getSenatorID() , $this->getDeck('Discard')) ;
                 $deadStatesman->resetSenator();
-                $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. The card is discarded. ') , $deadStatesman->getName()) ;
+                $message.=sprintf(_('%s of {your party,party [['.$party->getUser_id()._(']]} dies. The card is discarded. ')) , $deadStatesman->getName()) ;
             }
             
             // Death of a normal Senator
@@ -1440,12 +1412,12 @@ class Game
                 $deadSenator->resetSenator() ;
                 if ($party->getLeader()->getSenatorID() == $senatorID)
                 {
-                    $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. This senator was party leader, the family stays in the party. ') , $deadSenator->getName() );
+                    $message.=sprintf(_('%s of {your party,party [['.$party->getUser_id()._(']]} dies. This senator was party leader, the family stays in the party. ')) , $deadSenator->getName() );
                 }
                 else
                 {
                     $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID, $this->getDeck('Curia') ) ;
-                    $message.=sprintf(_('%s of party [['.$party->getUser_id().']] dies. The family goes to the curia. ') , $deadSenator->getName() );
+                    $message.=sprintf(_('%s of {your party,party [['.$party->getUser_id()._(']]} dies. The family goes to the curia. ')) , $deadSenator->getName() );
                 }
             }
     
