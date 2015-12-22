@@ -409,12 +409,16 @@ class Senator extends Card
     }
 
     /**
-     * Changes the Senator's tresury by (int)$amount
+     * Changes the Senator's treasury by (int)$amount
      * @param int $amount
      */
     public function changeTreasury($amount)
     {
         $this->treasury+=(int)$amount ;
+        if ($this->treasury<0)
+        {
+            $this->treasury=0 ;
+        }
     }
     
 }

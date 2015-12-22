@@ -312,22 +312,22 @@ class RevenueControllerProvider implements ControllerProviderInterface
                         // The Senator decided to let Rome pay for it
                         {
                             $game->changeTreasury($revenue);
-                            $romeMessage=(' He decides to let Rome pay for it.') ;
+                            $romeMessage=_(' He decides to let Rome pay for it.') ;
                         }
                         else
                         {
                             // The senator is forced to let Rome pay because of his treasury
-                            if ($province['senator']->getTreasury()<$revenue)
+                            if ($province['senator']->getTreasury()<-$revenue)
                             {
                                 $game->changeTreasury($revenue);
-                                $romeMessage=(' Rome pays for it since he can\'t.') ;
+                                $romeMessage=_(' Rome pays for it since he can\'t.') ;
                             }
 
                             // The Senator decided to pay for it
                             else
                             {
                                 $province['senator']->changeTreasury($revenue);
-                                $romeMessage=(' He decides to pay for it.') ;
+                                $romeMessage=_(' He decides to pay for it.') ;
                             }
                         }
                     }

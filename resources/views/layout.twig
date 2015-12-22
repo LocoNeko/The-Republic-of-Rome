@@ -79,7 +79,8 @@
             - Flashbag messages
             - Main content
         -->
-        <div class="container-fluid" style="
+        <div id="main-area" 
+            class="container-fluid" style="
              top:52px;
              height:100%;
              width:100%;
@@ -91,6 +92,8 @@
              overflow-x:hidden;
              padding-left: 80px;
              padding-right: 80px;
+             padding-bottom: 5px;
+             padding-top: 5px;
         ">
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
@@ -101,72 +104,78 @@
             {% block content %}
             {% endblock %}
         </div>
-
+        
         <!--
             - Forces
         -->
         {% if game is defined %}
-            <div style="position: absolute; right:15px; top:52px;">
-                <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="focus">ROME</a>
-                <div id='RomeCurrentState_content' style="display: none">
-                    <div id="VariousInfo">
-                        <table class="table table-bordered" style="width:auto; font-weight: bold; ">
-                            <tbody>
-                                <tr>
-                                    <th>Treasury</th>
-                                    <td>{{game.getTreasury()}} T</td>
-                                </tr>
-                                <tr>
-                                    <th>Unrest</th>
-                                    <td>{{game.getUnrest()}}</td>
-                                </tr>
-                                <tr>
-                                    <th>Land Bills</th>
-                                    <td>TO DO</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div id="Forces">
-                        <h3>Legions</h3>
-                        <h4>In Rome</h4>
-                        <ul class="list-unstyled">
-                        {% for legion in game.getLegions() %}
-                            {% if legion.getOtherLocation=='Rome' %}
-                                {{legion.getName()}},  
-                            {% endif %}
-                        {% endfor %}
-                        </ul>
-                        <h4>In Garrison</h4>
-                    </div>
+        <div style="position: absolute; right:15px; top:52px;">
+            <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="focus">ROME</a>
+            <div id='RomeCurrentState_content' style="display: none">
+                <div id="VariousInfo">
+                    <table class="table table-bordered" style="width:auto; font-weight: bold; ">
+                        <tbody>
+                            <tr>
+                                <th>Treasury</th>
+                                <td>{{game.getTreasury()}} T</td>
+                            </tr>
+                            <tr>
+                                <th>Unrest</th>
+                                <td>{{game.getUnrest()}}</td>
+                            </tr>
+                            <tr>
+                                <th>Land Bills</th>
+                                <td>TO DO</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="Forces">
+                    <h3>Legions</h3>
+                    <h4>In Rome</h4>
+                    <ul class="list-unstyled">
+                    {% for legion in game.getLegions() %}
+                        {% if legion.getOtherLocation=='Rome' %}
+                            {{legion.getName()}},  
+                        {% endif %}
+                    {% endfor %}
+                    </ul>
+                    <h4>In Garrison</h4>
                 </div>
             </div>
+        </div>
         {% endif %}
-        
-        
+        <!--
+            TESTING PURPOSE - Remove when happy
+        -->
+        <div style="position: absolute; right:15px; top:102px;">
+            <a class="btn btn-danger" onClick="alert('Main area : '+$('#main-area').height()+'\nFooter : '+$('#footer').height());">
+                TEST
+            </a>
+        </div>
         <!--
             Footer with :
             - Log
         -->
 
         {% if game is defined %}
-            <div class="footer" style="overflow-y: auto; height: 150px; position: fixed; bottom: 0px; width: 100%; background-color: #f5f5f5; padding: 5px;">
-                <div class="container-fluid">
-                    <p class="text-success">This will also contain the chat interface</p>
-                    <table class="table table-stripped">
-                        {% for message in game.getAllMessages(app.user.id)%}
-                            <tr>
-                                <th style="white-space: nowrap;">
-                                    {{message.getTime()|date('Y/m/d H:i:s')}}
-                                </th>
-                                <td style="color: {{message.getColour()}}; width:100%; ">
-                                    {{message.show(app.user.id , game.getPartiesNames())}}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </table>
-                </div>
+        <div id="footer" class="footer" style="overflow-y: auto; height: 150px; position: fixed; bottom: 0px; width: 100%; background-color: #f5f5f5; padding: 5px;">
+            <div class="container-fluid">
+                <p class="text-success">This will also contain the chat interface</p>
+                <table class="table table-stripped">
+                    {% for message in game.getAllMessages(app.user.id)%}
+                    <tr>
+                        <th style="white-space: nowrap;">
+                            {{message.getTime()|date('Y/m/d H:i:s')}}
+                        </th>
+                        <td style="color: {{message.getColour()}}; width:100%; ">
+                            {{message.show(app.user.id , game.getPartiesNames())}}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
             </div>
+        </div>
         {% endif %}
         
         <!--
@@ -182,6 +191,7 @@
         <script>
         /* jquery code for jqueryUI to handle :
          * - Sortable lists
+         * - Resizable (like the footer)
          * - Draggable cards
          * - Droppable card Slots
          * - Droppable Senator cards
@@ -240,7 +250,7 @@
                 //prevent Default functionality
                 e.preventDefault();
 
-                // Add FORM data to a json variable made of [name] => value
+                // Add FORM data to a json; variable made of [name] => value
                 var data = $(this).serializeArray();
                 var json = {};
                 $.each(data, function() {
