@@ -366,9 +366,9 @@ class RevenueControllerProvider implements ControllerProviderInterface
                         $developMessage = _('The province is not developed.') ;
                     }
                     $game->log(
-                        _('Province development : A %1$d is rolled%2$s%3$s. %4$s') ,
+                        _('Development of %5$s: A %1$d is rolled%2$s%3$s. %4$s') ,
                         'log' ,
-                        array( $roll , ($modifier==1 ? _(' (modified by +1 since senator is not corrupt)') : '') , $game->getEvilOmensMessage(-1) , $developMessage )
+                        array( $roll , ($modifier==1 ? _(' (modified by +1 since senator is not corrupt)') : '') , $game->getEvilOmensMessage(-1) , $developMessage , $province['card']->getName() )
                     );
                 }
             }

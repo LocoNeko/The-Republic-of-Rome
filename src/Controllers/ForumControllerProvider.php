@@ -125,7 +125,7 @@ class ForumControllerProvider implements ControllerProviderInterface
              */
             else
             {
-                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and draw a card.') , 'log' , array((int)$roll['total']) ) ;
+                $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and {draw,draws} a card.') , 'log' , array((int)$roll['total']) ) ;
 
                 $card = $game->getDeck('drawDeck')->drawFirstCard() ;
                 if ($card !== NULL)
@@ -206,7 +206,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                         if ($matchedActive !== FALSE)
                         {
                             $game->getDeck('imminentWars')->putCardOnTop($card) ;
-                            $game->log(_('[['.$user_id.']] {draw,draws} %1$s, there is %2$d matched conflicts, the card goes to the imminent deck.') , 'log' , array($card->getName() , $matchedCards[$matchedActive])) ; 
+                            $game->log(_('[['.$user_id.']] {draw,draws} %1$s, there is a matched conflict, the card goes to the imminent deck.') , 'log' , array($card->getName())) ; 
                         }
                         // We found a matched war in the inactiveWars deck
                         // The card goes to the imminent deck and the inactive card is now active

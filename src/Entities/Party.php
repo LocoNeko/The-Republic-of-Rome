@@ -102,6 +102,11 @@ class Party
     public function getBid() { return $this->bid; }
 
      public function __construct($user_id , $userName , $name) {
+         // Prevent creation of a party with a name that is less than 3 letters long
+        if (strlen($name)<=3)
+        {
+            throw new \Exception(_('Party name is too short')) ;
+        }
         $this->setName($name) ;
         $this->setUser_id($user_id) ;
         $this->setUserName($userName) ;
@@ -224,6 +229,11 @@ class Party
         $this->treasury+=(int)$amount ;
     }
         
+    public function setLastUpdateToNow()
+    {
+        $this->setLastUpdate(new \DateTime('NOW') ) ;
+    }
+
     /**
     * ----------------------------------------------------
     * Setup

@@ -136,7 +136,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $e)
             {
-                $app['session']->getFlashBag()->add('error', $e->getMessage());
+                $app['session']->getFlashBag()->add('danger', $e->getMessage());
                 return $app->json( $e->getMessage() , 201);
             }
         })

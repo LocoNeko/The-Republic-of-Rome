@@ -549,7 +549,6 @@ class Game
                         }
                     }
                 }
-                $party->setLastUpdate(new \DateTime('NOW') ) ;
                 return $messages ;
             }
         }
@@ -1416,7 +1415,7 @@ class Game
                 else
                 {
                     $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID, $this->getDeck('Curia') ) ;
-                    $message.=sprintf(_('%s of {your party,party [['.$party->getUser_id()._(']]} dies. The family goes to the curia. ')) , $deadSenator->getName() );
+                    $message.=sprintf(_('%1$s of party [[').$party->getUser_id()._(']] dies. The family goes to the curia. ') , $deadSenator->getName() );
                 }
             }
     
@@ -1780,7 +1779,7 @@ class Game
             // The event is currently in play at maximum level & CANNOT increase
             if ($this->events[$eventNumber]['level'] > 0 && $this->events[$eventNumber]['level'] == $this->events[$eventNumber]['max_level'])
             {
-                $this->log(_('Event %1$s is already in play at its maximum level (%2%d).') , 'alert' ,
+                $this->log(_('Event %1$s is already in play at its maximum level (%2$d).') , 'alert' ,
                     array (
                         $this->events[$eventNumber][( $this->events[$eventNumber]['level'] > 1 ? 'increased_' : '' ).'name'] ,
                         $this->events[$eventNumber]['max_level']

@@ -170,15 +170,18 @@ class Message
             if (strpos($formattedMessage, '[['.$party_id.']]') !==FALSE) {
                 $name = ( ($party_id==$user_id) ? 'you' : $party_name ) ;
                 $formattedMessage = str_replace('[['.$party_id.']]' , $name , $formattedMessage);
-                // Replace the optional {receive,receives} value
-                $plural_pos = strpos($formattedMessage , '{') ;
-                $plural_pos2 = strpos($formattedMessage , '}' , $plural_pos) ;
-                if ($plural_pos!=FALSE && $plural_pos2!=FALSE) {
-                    $plural = substr($formattedMessage, $plural_pos, $plural_pos2-$plural_pos+1) ;
-                    $plurals = explode(',', substr(substr($plural,1),0,-1)) ;
-                    $plural_text = ( ($party_id==$user_id) ? $plurals[0] : $plurals[1]) ;
-                    $formattedMessage = str_replace($plural , $plural_text , $formattedMessage);
-                }
+                // Replace the optional {receive,receives} values
+                while (strpos($formattedMessage , '{')!==FALSE)
+                {
+                    $plural_pos = strpos($formattedMessage , '{') ;
+                    $plural_pos2 = strpos($formattedMessage , '}' , $plural_pos) ;
+                    if ($plural_pos!=FALSE && $plural_pos2!=FALSE) {
+                        $plural = substr($formattedMessage, $plural_pos, $plural_pos2-$plural_pos+1) ;
+                        $plurals = explode(',', substr(substr($plural,1),0,-1)) ;
+                        $plural_text = ( ($party_id==$user_id) ? $plurals[0] : $plurals[1]) ;
+                        $formattedMessage = str_replace($plural , $plural_text , $formattedMessage);
+                    }
+                } 
             }
         }
         

@@ -95,11 +95,18 @@
              padding-bottom: 5px;
              padding-top: 5px;
         ">
+            <div id="message" style="position: absolute; top: 52px; right: 100px; padding: 5px; z-index: 10;">
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
-                    <div class="alert alert-{{type}} alert-dismissible">{{message}}</div>
+                        <div style="float: right; clear: right; display: inline-block;">
+                            <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;">
+                                {{message}}
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            </div>
+                        </div>
                 {% endfor %}
             {% endfor %}
+            </div>
 
             {% block content %}
             {% endblock %}
@@ -109,7 +116,7 @@
             - Forces
         -->
         {% if game is defined %}
-        <div style="position: absolute; right:15px; top:52px;">
+        <div style="position: absolute; right:15px; top:52px; margin-top:5px;">
             <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="focus">ROME</a>
             <div id='RomeCurrentState_content' style="display: none">
                 <div id="VariousInfo">
@@ -145,14 +152,6 @@
             </div>
         </div>
         {% endif %}
-        <!--
-            TESTING PURPOSE - Remove when happy
-        -->
-        <div style="position: absolute; right:15px; top:102px;">
-            <a class="btn btn-danger" onClick="alert('Main area : '+$('#main-area').height()+'\nFooter : '+$('#footer').height());">
-                TEST
-            </a>
-        </div>
         <!--
             Footer with :
             - Log
