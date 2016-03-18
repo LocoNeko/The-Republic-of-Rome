@@ -751,7 +751,7 @@ class Game
          * So we check highest INF, break ties with Oratory then lowest ID
          * I'm very proud of this function ! ;-)
          */
-        $allSenators = $this->getAllSenators()->toArray() ;
+        $allSenators = $this->getAllSenators('alignedInRome')->toArray() ;
         usort ($allSenators, function($a, $b)
         {
             if (($a->getINF()) != ($b->getINF())) 
@@ -777,7 +777,16 @@ class Game
                 array_shift($allSenators) ;
             }
         }
-        return $allSenators[0] ;
+        // Return the first senator
+        if (count($allSenators)> 0)
+        {
+            return $allSenators[0] ;
+        }
+        // We could not find any senator aligned in Rome, return anyone (this is so unlikely it's not even considered in the rules)
+        else
+        {
+            return $this->getAllSenators()->toArray()[0] ;
+        }
     }
     
     /**

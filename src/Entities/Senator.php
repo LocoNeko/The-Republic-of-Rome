@@ -235,7 +235,7 @@ class Senator extends Card
             {
                 
                 // In a party & in Rome
-                case 'alignedInRome' : 
+                case 'alignedInRome' :
                     return ( ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
                     
                 // Holding an office & in Rome

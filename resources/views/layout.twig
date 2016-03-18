@@ -16,13 +16,6 @@
             .ui-resizable-handle { position: absolute;font-size: 0.1px; display: block; }
             .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
             .ui-resizable-n { cursor: n-resize; height: 7px; width: 100%; top: -5px; left: 0; }
-            .ui-resizable-s { cursor: s-resize; height: 7px; width: 100%; bottom: -5px; left: 0; }
-            .ui-resizable-e { cursor: e-resize; width: 7px; right: -5px; top: 0; height: 100%; }
-            .ui-resizable-w { cursor: w-resize; width: 7px; left: -5px; top: 0; height: 100%; }
-            .ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
-            .ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: -5px; bottom: -5px; }
-            .ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
-            .ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
         </style>
         <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -30,7 +23,7 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
     </head>
     
-    <body style="{{ game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%;">
+    <body style="{{ game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%; overflow-y: hidden ;">
         <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
             <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
@@ -77,6 +70,23 @@
 
         <!--
             - Flashbag messages
+        -->
+        {% if game is defined %}
+            <div id="message" style="position: absolute; top: 52px; right: 100px; padding: 5px; z-index: 10;">
+            {% for type , messages in app.session.flashbag.all() %}
+                {%for message in messages %}
+                        <div style="float: right; clear: right; display: inline-block;">
+                            <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;">
+                                {{message}}
+                                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            </div>
+                        </div>
+                {% endfor %}
+            {% endfor %}
+            </div>
+        {% endif %}
+
+        <!--
             - Main content
         -->
         <div id="main-area" 
@@ -95,18 +105,6 @@
              padding-bottom: 5px;
              padding-top: 5px;
         ">
-            <div id="message" style="position: absolute; top: 52px; right: 100px; padding: 5px; z-index: 10;">
-            {% for type , messages in app.session.flashbag.all() %}
-                {%for message in messages %}
-                        <div style="float: right; clear: right; display: inline-block;">
-                            <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;">
-                                {{message}}
-                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            </div>
-                        </div>
-                {% endfor %}
-            {% endfor %}
-            </div>
 
             {% block content %}
             {% endblock %}
@@ -158,8 +156,8 @@
         -->
 
         {% if game is defined %}
-        <div id="footer" class="footer" style="overflow-y: auto; height: 150px; position: fixed; bottom: 0px; width: 100%; background-color: #f5f5f5; padding: 5px;">
-            <div class="container-fluid">
+        <div id="footer" style="border-top: thick solid darkgray; height: 150px;">
+            <div class="footer" style="overflow-y: scroll; bottom: 0px; width: 100%; height: 100%; background-color: #f5f5f5; padding: 5px;">
                 <p class="text-success">This will also contain the chat interface</p>
                 <table class="table table-stripped">
                     {% for message in game.getAllMessages(app.user.id)%}
@@ -229,6 +227,12 @@
                     return $('#RomeCurrentState_content').html();
                 }
             });
+            
+            // jQueryUI resizable
+            $( "#footer" ).resizable({
+                handles: 'n' ,
+                alsoResizeReverse: "#main-area"
+            });
 
         });
         
@@ -283,6 +287,52 @@
                     "json"
                 );
             });
+        });
+        
+        // Add a AlsoResize reverse function
+        $.ui.plugin.add("resizable", "alsoResizeReverse", {
+            start: function() {
+                var that = $(this).resizable( "instance" ),
+                    o = that.options;
+
+                $(o.alsoResizeReverse).each(function() {
+                    var el = $(this);
+                    el.data("ui-resizable-alsoresizeReverse", {
+                        height: parseInt(el.height(), 10), top: parseInt(el.css("top"), 10)
+                    });
+                });
+            },
+
+            resize: function(event, ui) {
+                var that = $(this).resizable( "instance" ),
+                    o = that.options,
+                    os = that.originalSize,
+                    op = that.originalPosition,
+                    delta = {
+                        height: (that.size.height - os.height) || 0,
+                        top: (that.position.top - op.top) || 0
+                    };
+
+                $(o.alsoResizeReverse).each(function() {
+                    var el = $(this), start = $(this).data("ui-resizable-alsoresize-reverse"), style = {},
+                        css = el.parents(ui.originalElement[0]).length ?
+                            [ "height" ] :
+                            [ "height", "top" ];
+
+                    $.each(css, function(i, prop) {
+                        var sum = (start[prop] || 0) - (delta[prop] || 0);
+                        if (sum && sum >= 0) {
+                            style[prop] = sum || null;
+                        }
+                    });
+
+                    el.css(style);
+                });
+            },
+
+            stop: function() {
+                $(this).removeData("resizable-alsoresize-reverse");
+            }
         });
         
         </script>

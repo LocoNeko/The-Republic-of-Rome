@@ -57,12 +57,12 @@
         {
             $data = json_decode($request->getContent() , TRUE);
             $request->request->replace(is_array($data) ? $data : array());
-          }
+        }
         else
         {
             // Getting new messages should never be done for json requests, as they don't trigger display
             if ($app['user'] !== NULL)
-            {
+            {   
                 $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
                 if ($messages!==FALSE && count($messages['messages'])>0)
                 {
@@ -132,6 +132,18 @@
         $app['orm.em']->flush() ;
     });
 
+    // Persist & Flush the Game entity, as it might have been updated during rendering (e.g. when updating the LastUpdate of each Party)
+    $app->after(function (Request $request) use ($app)
+    {
+        $game_id = $app['session']->get('game_id') ;
+        $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
+        $result = $query->getResult() ;
+        if (count($result)==1) {
+            $app['orm.em']->persist($result[0]) ;
+            $app['orm.em']->flush() ;
+        }
+    });
+    
     /*
     $app->error(function (\Exception $e, $code) {
         switch ($code) {
