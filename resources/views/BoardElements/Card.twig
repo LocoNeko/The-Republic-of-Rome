@@ -11,7 +11,7 @@ This template gets the following parameters :
             - The Statesman message will be set as a tooltip ('title' property)
             - If the card has a Statesman, put brackets around SenatorID
          #}
-        <div class="sprite-position-name" {{card.isLeader() ? 'style="color: red;"' : ''}} title="{{card.statesmanPlayable(app.user.id)['message']|default('')}}">
+        <div class="sprite-position-name" {{card.isLeader() ? 'style="color: red;"' : ''}} data-toggle="popover" data-content="{{card.statesmanPlayable(app.user.id)['message']|default('')}}" data-trigger="hover" data-placement="bottom">
             {{ card.getName() }}<br>
             {{ card.getHasStatesman() ? '[' ~ card.getSenatorID() ~ ']' : card.getSenatorID() }}
         </div>

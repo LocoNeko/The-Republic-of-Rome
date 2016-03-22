@@ -76,7 +76,7 @@
             {% for type , messages in app.session.flashbag.all() %}
                 {%for message in messages %}
                         <div style="float: right; clear: right; display: inline-block;">
-                            <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;">
+                            <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;" alert_number="{{loop.index}}">
                                 {{message}}
                                 <button type="button" class="close" data-dismiss="alert">&times;</button>
                             </div>
@@ -115,7 +115,7 @@
         -->
         {% if game is defined %}
         <div style="position: absolute; right:15px; top:52px; margin-top:5px;">
-            <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="focus">ROME</a>
+            <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="hover">ROME</a>
             <div id='RomeCurrentState_content' style="display: none">
                 <div id="VariousInfo">
                     <table class="table table-bordered" style="width:auto; font-weight: bold; ">
@@ -219,7 +219,8 @@
                 });
             });
             
-            // Popover for Rome Current State
+            // Popover
+            // - Rome Current State
             $('#RomeCurrentState').popover({ 
                 container : 'body',
                 html : true,
@@ -227,8 +228,11 @@
                     return $('#RomeCurrentState_content').html();
                 }
             });
-            
+
+            $('.sprite-position-name').popover();
+
             // jQueryUI resizable
+            // - Footer
             $( "#footer" ).resizable({
                 handles: 'n' ,
                 alsoResizeReverse: "#main-area"
@@ -273,7 +277,7 @@
                     }
                 });
 
-        /* Emit the Update event to socket.io
+                /* Emit the Update event to socket.io
                  * This requires a gameId in the "realm" attribute of the title
                  */
                 socket.emit('Update', $("title").attr('realm'));

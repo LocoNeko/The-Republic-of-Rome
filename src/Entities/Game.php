@@ -793,7 +793,7 @@ class Game
      * 
      * @param int $user_id The user_id of the player playing the Statesman
      * @param string $statesmanId The card id of the Statesman being played
-     * @return boolean Sucess or Failure
+     * @return boolean Success or Failure
      */
     public function playStatesman($user_id , $statesmanId) 
     {

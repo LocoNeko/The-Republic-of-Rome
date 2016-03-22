@@ -287,6 +287,10 @@ abstract class Card
         }
         elseif ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
         {
+            // Prevent from playing land commissioner if there are no Land Bill
+            if (($this->getSpecial()=='land bill') && ($game->getLandBillsTotalCost()['total']==0) ) {
+                return array() ;
+            }
             return [ 'drag' => 'Play Concession' ] ;
         } else {
             return array();

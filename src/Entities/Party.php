@@ -249,13 +249,18 @@ class Party
     public function hasPlayableCards() {
         try {
             foreach($this->getHand()->getCards() as $card) {
-                if (    ($card->getPreciseType()=='Statesman' && $card->statesmanPlayable($this->getUser_id())['flag']==TRUE)
-                    ||  ($card->getPreciseType()=='Concession')
-                ) {
+                /* @var \Entities\Card $card */
+                $cardAction = $card->getAction(TRUE) ;
+                if (
+                    ( key_exists('menu', $cardAction) && ($cardAction['menu'] == 'Play Statesman' ) ) ||
+                    ( key_exists('drag', $cardAction) && ($cardAction['drag'] == 'Play Concession') )
+                )
+                {
                     return TRUE ;
                 }
             }
         } catch (Exception $e) {
+            error_log($e->getMessage()) ;
             return FALSE ;
         }
         return FALSE ;

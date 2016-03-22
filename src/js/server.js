@@ -1,4 +1,5 @@
 var io = require('socket.io')(8080);
+console.log('Started Republic of Rome node socket.io server');
 
 io.on('connection', function(socket){
     socket.on('Update', function(gameId){
