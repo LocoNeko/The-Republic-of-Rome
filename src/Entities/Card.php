@@ -27,6 +27,9 @@ abstract class Card
     
     /** @Column(type="string") @var string */
     protected $name ;
+
+    /** @Column(type="integer") @var int */
+    protected $position ;
     
     // A Card can have a deck (of controlled cards)
     /** @OneToOne(targetEntity="Deck", inversedBy="controlled_by", cascade={"persist"}) **/
@@ -54,11 +57,13 @@ abstract class Card
     public function setId($id) { $this->id = (int)$id ; }
     public function setName($name) { $this->name = (string)$name ; }
     public function setDeck($deck) { $this->deck = $deck ; }
+    public function setPosition($position) { $this->position = $position ; }
     public function setPreciseType($preciseType) { $this->preciseType = $preciseType ; }
      
     public function getId() { return $this->id ; }
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
+    public function getPosition() { return $this->position ; }
     public function getPreciseType() { return $this->preciseType ; }
     public function getWithLegions() { return $this->withLegions; }
     public function getWithFleets() { return $this->withFleets; }
@@ -219,7 +224,7 @@ abstract class Card
             // Deck
             if (method_exists($deck, 'getGame') && $deck->getGame() != NULL)
             {
-                $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName()) ;
+                $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName() ) ;
             }
             // Card
             elseif (method_exists($deck, 'getControlled_by') && $deck->getControlled_by() != NULL)
@@ -229,7 +234,7 @@ abstract class Card
             // Party
             elseif (method_exists($deck, 'getInParty') && $deck->getInParty() != NULL)
             {
-                $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName() ) ;
+                $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName()) ;
             }
             elseif (method_exists($deck, 'getInHand') && $deck->getInHand() != NULL)
             {
@@ -245,6 +250,15 @@ abstract class Card
            $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'no getDeck method') ;
         }
         return $result ;
+    }
+    
+    /**
+     * Changes the position of a card by (int) $change
+     * @param int $change
+     */
+    public function changePosition ($change)
+    {
+        $this->position+=(int)$change ;
     }
     
     /**

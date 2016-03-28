@@ -67,14 +67,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                             $party->setLeader($leader) ;
                             $game->log( _('%1$s is appointed leader of %2$s').' ([['.$user_id.']])','log',array($leader->getName() , $party->getName()) );
                             
-                            // TO DO : remove this - Testing only
-                            $game->log( _('For testing purpose : add provinces to all senators'));
-                            foreach($party->getSenators()->getCards() as $senator)
-                            {
-                                $game->getDeck('unplayedProvinces')->getFirstCardByProperty('overrun' , FALSE , $senator->getCardsControlled()) ;
-                            }
-                            
-                            // If veryone has picked a leader, move to next phase
+                            // If everyone has picked a leader, move to next phase
                             $finished = TRUE ;
                             foreach ($game->getParties() as $aParty)
                             {

@@ -72,11 +72,11 @@ This template gets the following parameters :
     Is there a drop down menu for this card ? In which case, display it with its action
 #}
 {% if action['menu']|default(FALSE) != FALSE %}
-    <div class="sprite-position-topright dropdown">
+    <div class="sprite-position-topright dropdown" style="z-index:50; opacity: 0.9;">
         <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.getId()}}" data-toggle="dropdown" aria-expanded="true">
             <span class="glyphicon glyphicon-collapse-down" aria-hidden="true" style="font-size: 1.5em;"></span>
         </button>
-        <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.getId()}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px;">
+        <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.getId()}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
             <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{action['menu']|default()}}'>
                 <li role="presentation">
                     <input type="hidden" name="card_id" value="{{card.getId()}}">

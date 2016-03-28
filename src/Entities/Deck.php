@@ -48,7 +48,16 @@ class Deck
     public function setInHand($inHand) { $this->inHand = $inHand; }
  
     /** @return \Entities\Card\[] */
-    public function getCards() { return $this->cards ; }
+    public function getCards()
+    {
+        $cards = $this->cards ;
+        $iterator = $cards->getIterator();
+        $iterator->uasort(function ($a, $b) {
+            return ($a->getPosition() < $b->getPosition()) ? -1 : 1;
+        });
+        return new ArrayCollection(iterator_to_array($iterator));
+    }
+
     public function getName() { return $this->name ; }
     public function getId() { return $this->id; }
     public function getGame() { return $this->game; }
@@ -61,6 +70,36 @@ class Deck
         $this->setName($name) ;
         $this->cards = new ArrayCollection();
     }
+
+    /**
+     * Returns the value of the $property, using a getter, returns an exception if no getter exists
+     * @param string $property
+     * @return mixed The value of the property
+     */
+    public function getValue($property)
+    {
+        $getter = 'get'.ucfirst($property);
+        if (method_exists($this, $getter))
+        {
+            return $this->$getter() ;
+        }
+        else
+        {
+            return FALSE ;
+        }
+    }
+
+    /**
+     * Returns a boolean indicating whether $property is equal to $value
+     * @param string $property
+     * @param mixed $value
+     * @return boolean
+     */
+    public function checkValue($property , $value)
+    {
+        return ($this->getValue($property) == $value) ;
+    }
+    
 
     public function saveData()
     {
@@ -172,14 +211,44 @@ class Deck
         $controlled_by->getCardsControlled()->add($this) ;
     }
     
+    /**
+     * Returns the position of all cards in the Deck in an array
+     * @return array
+     */
+    public function getPositions()
+    {
+        $positions = array() ;
+        foreach($this->getCards() as $card)
+        {
+            $positions[] = $card->getPosition();
+        }
+        return $positions ;
+    }
+    
     public function putCardOnTop($card) 
     {
+        if ($this->getNumberOfCards()>0)
+        {
+            foreach($this->getCards() as $card2)
+            {
+                $card2->changePosition(1);
+            }
+        }
+        $card->setPosition(0) ;
         $this->getCards()->add($card) ;
         $card->setDeck($this) ;
     }
     
     public function removeCard($card) 
     {
+        $cardPosition = $card->getPosition();
+        foreach($this->getCards() as $card2)
+        {
+            if ($card2->getPosition() > $cardPosition)
+            {
+                $card2->changePosition(-1);
+            }
+        }
         $this->getCards()->removeElement($card) ;
     }
 
@@ -199,6 +268,10 @@ class Deck
         if ($card!=NULL)
         {
             $this->getCards()->removeElement($card) ;
+            foreach($this->getCards() as $card2)
+            {
+                $card2->changePosition(-1);
+            }
             return $card ;
         }
         else
@@ -209,9 +282,13 @@ class Deck
 
     public function shuffle()
     {
-        $arrayValues = $this->getCards()->toArray() ;
-        shuffle($arrayValues) ;
-        $this->setCards(new ArrayCollection( $arrayValues ));
+        $positions = $this->getPositions() ;
+        shuffle($positions) ;
+        $i=0;
+        foreach($this->getCards() as $card)
+        {
+            $card->setPosition($positions[$i++]) ;
+        }
     }
     
     /**

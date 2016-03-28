@@ -429,10 +429,6 @@ class Game
         {
             $result ='STARTED' ;
         }
-        elseif (count($parties) == $this::$MAX_PLAYERS)
-        {
-            $result = 'FULL' ;
-        }
         elseif($result == 'JOINED')
         {
             foreach($parties as $party)
@@ -442,6 +438,10 @@ class Game
                     $result = 'READY' ;
                 }
             }
+        }
+        elseif (count($parties) == $this::$MAX_PLAYERS)
+        {
+            $result = 'FULL' ;
         }
         return $result ;
     }
@@ -635,13 +635,54 @@ class Game
         return $output ;
     }
     
+    public function getFilteredDecks($filters=array())
+    {
+        $result = new ArrayCollection() ;
+        foreach ($this->getParties() as $party) 
+        {
+            $result->add($party->getSenators()) ;
+            $result->add($party->getHand()) ;
+            foreach($party->getSenators()->getCards() as $senator) 
+            {
+                if ($senator->hasControlledCards()) 
+                {
+                    $result->add($senator->getCardsControlled()) ;
+                }
+            }
+        }
+
+        // Game's main decks
+        foreach ($this->getDecks() as $deck) 
+        {
+            $result->add($deck) ;
+            foreach($deck->getCards() as $card) 
+            {
+                if ($card->hasControlledCards()) 
+                {
+                    $result->add($card->getCardsControlled()) ;
+                }
+            }
+        }
+        
+        // Filter $results based on $filters
+        foreach ($filters as $filterKey=>$filter)
+        {
+            $result = $result->filter(
+                function (\Entities\Deck $deck) use ($filterKey , $filter) {
+                    return $deck->checkValue($filterKey , $filter) ;
+                }
+            );
+        }
+
+        return $result ;
+    }
+    
     /**
-     * 
-     * @param array $filters Format (array('property1','value1') , array('property2','value2'))
+     * @param array $filters Format array('property1' => 'value1' , 'property2' => 'value2')
      * @param string|boolean $criteria A criteria as defined in the checkCriteria function of the Senator entity
      * @return ArrayCollection
      */
-    public function getFilteredCards($filters , $criteria = NULL)
+    public function getFilteredCards($filters = array() , $criteria = NULL)
     {
         $result = new ArrayCollection() ;
         // First, put all cards (from parties, hands, and main decks) in $result
@@ -675,15 +716,22 @@ class Game
             foreach($deck->getCards() as $card) 
             {
                 $result->add($card) ;
+                if ($card->hasControlledCards()) 
+                {
+                    foreach ($card->getCardsControlled()->getCards() as $subCard) 
+                    {
+                        $result->add($subCard) ;
+                    }
+                }
             }
         }
 
         // Second, filter $results based on $filters
-        foreach ($filters as $filter)
+        foreach ($filters as $filterKey=>$filter)
         {
             $result = $result->filter(
-                function (\Entities\Card $card) use ($filter) {
-                    return $card->checkValue($filter[0] , $filter[1]) ;
+                function (\Entities\Card $card) use ($filterKey , $filter) {
+                    return $card->checkValue($filterKey , $filter) ;
                 }
             );
         }
@@ -709,7 +757,7 @@ class Game
      */
     public function getAllSenators($criteria = TRUE)
     {
-        return $this->getFilteredCards(array(array('isSenatorOrStatesman' , TRUE)), $criteria) ;
+        return $this->getFilteredCards( array( 'isSenatorOrStatesman' => TRUE ) , $criteria ) ;
     }
     
     /**
@@ -1079,7 +1127,7 @@ class Game
         $earlyRepublicDeck->getFirstCardByProperty('id' , 1 , $this->getDeck('inactiveWars')) ;
         $this->log(_('The "Era Ends" card goes to the discard. (MUST FIX)') , 'error' ) ;
         $earlyRepublicDeck->getFirstCardByProperty('id' , 65 , $this->getDeck('discard')) ;
-
+        
         // Then create 4 legions in Rome, the rest of the legions and all the fleets are non-existent (Legions and Fleet objects should never be created during a game)
         for($i=1;$i<=25;$i++) 
         {
@@ -1120,6 +1168,7 @@ class Game
             {
                 $earlyRepublicDeck->shuffle() ;
                 $card = $earlyRepublicDeck->drawFirstCard() ;
+                
                 switch ($card->getPreciseType())
             {
                     case 'Faction card' :
@@ -1410,7 +1459,7 @@ class Game
             {
                 $deadStatesman = $party->getSenators()->getFirstCardByProperty('senatorID' , $deadSenator->getSenatorID() , $this->getDeck('Discard')) ;
                 $deadStatesman->resetSenator();
-                $message.=sprintf(_('%s of {your party,party [['.$party->getUser_id()._(']]} dies. The card is discarded. ')) , $deadStatesman->getName()) ;
+                $message.=sprintf(_('%s of party [['.$party->getUser_id()._(']] dies. The card is discarded. ')) , $deadStatesman->getName()) ;
             }
             
             // Death of a normal Senator
@@ -1419,7 +1468,7 @@ class Game
                 $deadSenator->resetSenator() ;
                 if ($party->getLeader()->getSenatorID() == $senatorID)
                 {
-                    $message.=sprintf(_('%s of {your party,party [['.$party->getUser_id()._(']]} dies. This senator was party leader, the family stays in the party. ')) , $deadSenator->getName() );
+                    $message.=sprintf(_('%s of party [['.$party->getUser_id()._(']] dies. This senator was party leader, the family stays in the party. ')) , $deadSenator->getName() );
                 }
                 else
                 {
@@ -1890,7 +1939,7 @@ class Game
                                 $ruin = 'SHIP BUILDING' ;
                                 break ;
                         }
-                        $ruinresult = reset($this->getFilteredCards(array(array('name' , $ruin)))->toArray()) ;
+                        $ruinresult = reset( $this->getFilteredCards( array ( 'name' => $ruin ) )->toArray() ) ;
                         // Card was in the Forum
                         if ($ruinresult->getLocation()['name']=='forum')
                         {

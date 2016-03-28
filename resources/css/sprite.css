@@ -330,9 +330,9 @@
 .sprite-position-topright {
     position: absolute;
     text-align: right ;
-    width: 385px;
+    width: 370px;
     margin-right: 15px;
-    top: 0px;
+    top: 15px;
 }
 
 .sprite-position-name {

@@ -100,7 +100,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         /*
          * Save game
          */
-        $controllers->get('/Debug/{game_id}', function($game_id) use ($app)
+        $controllers->get('/SaveGame/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
             $game = $app['getGame']((int)$game_id) ;
@@ -117,7 +117,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 ));
             }
         })
-        ->bind('DebugGame');
+        ->bind('SaveGame');
 
         /*
         * POST target

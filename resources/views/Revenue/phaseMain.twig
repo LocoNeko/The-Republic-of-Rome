@@ -217,6 +217,12 @@
             TO DO
             #}
         {% else %}
+            <ul>
+                <li>Drag and drop to transfer money</li>
+                <li>Zones below : To/From treasury of your party and other players</li>
+                <li>Senators : To/From this Senator</li>
+            </ul>
+
             <div class="btn btn-default btn-lg draggable revenueRedistribution" title='Drag and drop to transfer money to/from your party treasury' treasury='{{game.getParty(app.user.id).getTreasury()}}' item_name='your party treasury' user_id="{{game.getParty(app.user.id).getUser_id()}}">
                 Your party : {{game.getParty(app.user.id).getTreasury()}}T
             </div>

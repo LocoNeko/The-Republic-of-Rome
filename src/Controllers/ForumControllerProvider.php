@@ -57,7 +57,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->doRollEvent($user_id , $game) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
+                return $app->json( 'SUCCESS' , 201);
             }
             else
             {
@@ -66,6 +66,36 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('verb_RollEvent');
+
+        /*
+        * POST target
+        * Verb : MoveCard
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/MoveCard', function($game_id , Request $request) use ($app)
+        {
+            /** @var \Entities\Game\ $game */
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game!==FALSE)
+            {
+                // TO DO : Move card
+                $data = $request->request->all();
+                $fromCard = $game->getFilteredCards(array('id' => $data['FromCard'])) ;
+                $fromLocation = $fromCard->first()->getDeck();
+                $toDeck = $game->getFilteredDecks(array('id' => $data['ToDeck'])) ;
+                $fromLocation->getFirstCardByProperty('id' , $fromCard->first()->getId() , $toDeck->first()) ;
+                $game->log('DEBUG - Moving card '.$fromCard->first()->getName().' from '.$fromLocation->getName().' to '.$toDeck->first()->getName() , 'alert');
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_MoveCard');
 
         return $controllers ;
     }
@@ -126,7 +156,6 @@ class ForumControllerProvider implements ControllerProviderInterface
             else
             {
                 $game->log(_('[['.$user_id.']] {roll,rolls} %1$d and {draw,draws} a card.') , 'log' , array((int)$roll['total']) ) ;
-
                 $card = $game->getDeck('drawDeck')->drawFirstCard() ;
                 if ($card !== NULL)
                 {
@@ -187,7 +216,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                      */
                     elseif ($card->getPreciseType()=='Conflict')
                     {
-                        $matchedCards = $game->getFilteredCards(array(array('matches' , $card->getMatches()) ))->toArray() ;
+                        $matchedCards = $game->getFilteredCards( array('matches' => $card->getMatches()) )->toArray() ;
                         // Is there a matched card in the activeWars or inactiveWars decks ?
                         $matchedActive = FALSE ;
                         $matchedInactive = FALSE ;
@@ -268,20 +297,24 @@ class ForumControllerProvider implements ControllerProviderInterface
                      */
                     elseif ($card->getPreciseType()=='Leader')
                     {
-                        $matchedWar = $game->getFilteredCards(array(array('matches' , $card->getMatches()) , array('preciseType' , 'Conflict')))->toArray() ;
+                        $matchedWar = $game->getFilteredCards( array ('preciseType' => 'Conflict' , 'matches' => $card->getMatches() ) )->toArray() ;
                         // Only keep active, inactive wars
-                        // TO DO : We should actually order cards based on their decks : active firstm then inactive, so the leader goes on an active war first
-                        foreach($matchedWar as $war)
+                        foreach($matchedWar as $key=>$war)
                         {
                             if($war->getLocation()['name']!='activeWars' && $war->getLocation()['name']!='inactiveWars' && $war->getLocation()['name']!='unprosecutedWars')
                             {
-                                array_shift($matchedWar);
+                                unset($matchedWar[$key]);
                             }
                         }
+                        // Order cards based on their decks : active first, then inactive, so the leader goes on an active war first
+                        usort($matchedWar , function ($a , $b)
+                        {
+                            return ( ($a->getLocation()['name']=='activeWars') ? 1 : -1 ) ;
+                        }) ;
                         // There is no matching conflict, the leader goes to the Curia
                         if (count($matchedWar)==0)
                         {
-                            $game->getDeck('curis')->putCardOnTop($card) ;
+                            $game->getDeck('curia')->putCardOnTop($card) ;
                             $game->log(_('[['.$user_id.']] {draw,draws} %s, without a matched conflict, the card goes to the Curia.') , 'log' , array($card->getName())) ; 
                         }
                         // There is a matching conflict.

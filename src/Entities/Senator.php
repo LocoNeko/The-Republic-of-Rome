@@ -376,7 +376,7 @@ class Senator extends Card
                 }
             }
         } else {
-            return array('flag' => FALSE , 'message' => _('ERROR - This is not a hand'));
+            return array('flag' => FALSE , 'message' => _('Statesman is in a party'));
         }
         return array('flag' => TRUE , 'message' => _('The corresponding family card is not in play') );
     }
