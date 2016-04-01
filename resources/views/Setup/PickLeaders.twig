@@ -1,17 +1,3 @@
-{% if game.getParty(app.user.id).getLeader() == NULL %}
-    <div class="btn btn-default btn-lg draggable" verb='PickLeader' title='Drag and drop on top of a Senator to make him Party leader'>
-        <span class="glyphicon glyphicon-star" aria-hidden="true"></span> Leader
-    </div>
-{% else %}
-    You have set your party's leader and are currently waiting for :
-    <ul>
-        {% for party in game.getAllPartiesButOne(app.user.id) %}
-            {% if party.getLeader() == NULL%}
-                <li>{{party.getFullName()}}</li>
-            {% endif %}
-        {% endfor %}
-    </ul>
-{% endif %}
 <script>
     /*
      * A (droppable) Senator card needs to have these attributes :

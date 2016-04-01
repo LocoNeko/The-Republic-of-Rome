@@ -1,0 +1,26 @@
+{#
+    Creates an action token from the action array
+    The type of token is determined by action['type'] which can be 'icon' or 'button'
+#}
+
+{% if action['type']=='icon' %}
+    {#
+        An icon has :
+        - verb : the action verb used when the token is dropped
+        - caption : The tooltip on the icon
+        - text : The text next to the icon
+    #}
+    <div class="btn btn-default btn-lg draggable" verb='{{action['verb']}}' title='{{action['caption']}}'>
+        <span class="glyphicon glyphicon-star" aria-hidden="true"></span>{{action['text']}}
+    </div>
+{% elseif action['type']=='button' %}
+    {#
+        A button has :
+        - verb : the action verb used when the form is submitted by the click of the button
+        - text : The text on the button
+        - user_id : The user_id of the user clicking the button
+    #}
+    <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
+        <button type="submit" class="btn btn-warning">{{action['text']}}</button>
+    </form>
+{% endif %}

@@ -3,19 +3,25 @@
     We are bidding for the initiative
 #}
 {% if game.whoseTurn()==FALSE %}
+    Bidding for the initiative
 {#
     We have someone with the initiative
 #}
 {% else%}
-    {% if game.whoseTurn().getUser_Id() == app.user.id %}
-        You have the initiative<br>
-        {% if game.getSubPhase()=='RollEvent' %}
-                <h3>Roll events</h3>
-                <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RollEvent'>
-                    <button type="submit" class="btn btn-warning">ROLL</button>
-                </form>
-        {% endif %}
-    {% else %}
-        {{game.whoseTurn().getFullName()}} has the initiative
+    {{
+        (game.whoseTurn().getUser_Id() == app.user.id) ?
+        'You have the initiative' :
+        game.whoseTurn().getFullName() ~ 'has the initiative'
+    }}
+    {% if game.getSubPhase()=='RollEvent' %}
+        <h3>Roll events</h3>
+        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RollEvent'>
+            <button type="submit" class="btn btn-warning">ROLL</button>
+        </form>
+    {% elseif game.getSubPhase()=='Persuasion' %}
+        <h2>Persuasion</h2>
+        {% set verbForHand = 'Play cards' %}
+        {% embed 'Forum/Persuasion.twig' %}
+        {% endembed %}
     {% endif %}
 {% endif %}

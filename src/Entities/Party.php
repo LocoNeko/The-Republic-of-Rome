@@ -52,6 +52,9 @@ class Party
     /** @Column(type="boolean") @var boolean */
     protected $isDone = FALSE ;
 
+    /** @Column(type="boolean") @var boolean */
+    protected $initiativeWon = FALSE ;
+
     /** @Column(type="integer") @var int */
     protected $bid = 0 ;
 
@@ -80,6 +83,7 @@ class Party
     }
     public function setTreasury($treasury) { $this->treasury = $treasury; }
     public function setIsDone($isDone) { $this->isDone = $isDone; }
+    public function setInitiativeWon($initiativeWon) { $this->initiativeWon = $initiativeWon; }
     public function setBid($bid) { $this->bid = $bid; }
 
     public function getId() { return $this->id; }
@@ -88,7 +92,7 @@ class Party
     public function getUser_id() { return $this->user_id ; }
     public function getUserName() { return $this->userName; }
     public function getReadyToStart() { return $this->readyToStart ; }
-    /** @return \Entities\Deck\ */
+    /** @return \Entities\Deck */
     public function getHand() { return $this->hand ; }
     /** @return \Entities\Senator[] */
     public function getSenators() { return $this->senators ; }
@@ -99,6 +103,7 @@ class Party
     public function getLeader() { return $this->leader; }
     public function getTreasury() { return $this->treasury; }
     public function getIsDone() { return $this->isDone; }
+    public function getInitiativeWon() { return $this->initiativeWon; }
     public function getBid() { return $this->bid; }
 
      public function __construct($user_id , $userName , $name) {

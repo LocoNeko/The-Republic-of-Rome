@@ -33,9 +33,11 @@ class MortalityControllerProvider implements ControllerProviderInterface
             }
             else
             {
+                $gameView = new \Presenters\GamePresenter($game) ;
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
-                    'game' => $game
+                    'game' => $game,
+                    'gameView' => $gameView
                 ));
             }
         })

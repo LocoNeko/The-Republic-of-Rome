@@ -34,9 +34,12 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             else
             {
+                $gameView = new \Presenters\GamePresenter($game) ;
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
-                    'game' => $game
+                    'game' => $game ,
+                    'gameView' => $gameView ,
+                    'persuasion_state' => $this->getPersuasionState($game , (int)$app['user']->getId())
                 ));
             }
         })
@@ -49,7 +52,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/RollEvent', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game\ $game */
+            /** @var \Entities\Game $game */
             $game = $app['getGame']((int)$game_id) ;
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
@@ -100,7 +103,12 @@ class ForumControllerProvider implements ControllerProviderInterface
         return $controllers ;
     }
     
-    // TO DO : Check if this should be here
+    /**
+     * 
+     * CONTROLLER'S FUNCTIONS
+     * 
+     */
+
     /**
      * A message saying who is currently the highest bidder<br>
      * The message can also indicate that the HRAO currently would have the initiative if nobody is betting
@@ -264,33 +272,26 @@ class ForumControllerProvider implements ControllerProviderInterface
                             $game->getDeck('inactiveWars')->putCardOnTop($card) ;
                             $game->log(_('[['.$user_id.']] {draw,draws} %s, there are no matched conflicts, so based on the card\'s icon, the war is now inactive.') , 'log' , array($card->getName())) ; 
                         }
-                        // TO DO : Handle activating leaders in the Curia - most of the code below can be copied
-                        
-                        /*
-                        else
+                        // Activate matched leaders in the Curia
+                        foreach ($game->getDeck('curia')->getCards() as $curiaCard)
                         {
-                            // Move any matched leaders from the curia to the Conflict card
-                            foreach ($game->getDeck('curia')->getCards() as $curiaCard) {
-                                if ($curiaCard->getPreciseType()=='Leader' && $curiaCard->getMatches()==$card->getMatches())
+                            if ($curiaCard->getPreciseType()=='Leader' && $curiaCard->getMatches()==$card->getMatches())
+                            {
+                                $pickedLeader = $game->getDeck('curia')->getFirstCardByProperty('id' , $curiaCard->getId() , $card->getCardsControlled()) ;
+                                // A leader activates an inactive conflict
+                                $activationMessage='' ;
+                                if ( ($card->getLocation()['type'] == 'game') && ($card->getLocation()['value'] == 'inactiveWars') )
                                 {
-                                    $pickedLeader = $game->getDeck('curia')->getFirstCardByProperty('id' , $curiaCard->getId()) ;
-                                    $card->getCardsControlled()->putCardOnTop($pickedLeader) ;
-                                    // A leader activates an inactive conflict
-                                    $activationMessage='' ;
-                                    if ($activateInCaseOfLeader)
-                                    {
-                                        $game->getDeck('inactiveWars')->getFirstCardByProperty('id', $card->getId()) ;
-                                        $activationMessage = _(' This activates the conflict.'); 
-                                    }
-                                    $game->log(
-                                        _('The leader %1$s is matched with %2$s, so moves from the Curia to the card.%3$s') ,
-                                        'log' ,
-                                        array($pickedLeader->getName() , $card->getName() , $activationMessage)
-                                    ) ; 
+                                    $game->getDeck('inactiveWars')->getFirstCardByProperty('id', $card->getId() , $game->getDeck('activeWars')) ;
+                                    $activationMessage = _(' This activates the conflict.'); 
                                 }
+                                $game->log(
+                                    _('The leader %1$s is matched with %2$s, so moves from the Curia to the card.%3$s') ,
+                                    'log' ,
+                                    array($pickedLeader->getName() , $card->getName() , $activationMessage)
+                                ) ; 
                             }
                         }
-                        */
                     }
                     /**
                      * Leader
@@ -345,7 +346,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                     else
                     {
                         $game->getDeck('forum')->putCardOnTop($card) ;
-                        $game->log(_('[['.$user_id.']] {draw,draws} %s that goes to the forum.') , 'log' , array($card->getName())) ; 
+                        $game->log(_('[['.$user_id.']] {draw,draws} %s. The card goes to the forum.') , 'log' , array($card->getName())) ; 
                     }
                 }
                 else
@@ -353,11 +354,84 @@ class ForumControllerProvider implements ControllerProviderInterface
                     $game->log(_('There is no more cards in the deck.') , 'alert') ;
                 }
             }
+            $game->setSubPhase('Persuasion');
+            $game->resetPersuasion();
+            $game->setCurrentBidder($game->getParty($user_id)) ;
         }
         else
         {
             return FALSE ;
         }
+    }
+    
+    /**
+     * Resets persuasion vars
+     * @param \Entities\Game $game
+     */
+    public function resetPersuasion($game)
+    {
+        foreach($game->getParties() as $party)
+        {
+            /* @var \Entities\Party\ $party */
+            $party->setBid(FALSE) ;
+            $party->setIsDone(FALSE) ;
+        }
+        $game->setCurrentBidder(NULL) ;
+        $game->setPersuasionTarget(NULL) ;
+    }
+
+    /**
+     * Returns the current state during Forum phase, Persuasion subPhase, for this $user_id
+     * @param \Entities\Game $game
+     * @param int $user_id
+     * @return string "NOT PERSUASION" | "PICK TARGET" | "WAIT TARGET"
+     */
+    public function getPersuasionState($game , $user_id)
+    {
+        $result = "PROUT";
+        if ($game->getPhase()!='Forum' || $game->getSubPhase()!='Persuasion')
+        {
+            $result = "NOT PERSUASION";
+        }
+        /*
+         *  We don't know who is the target yet.
+         */
+        if ($game->getPersuasionTarget()===NULL)
+        {
+            // Pick target - The player with $user_id has the initiative and must pick a persuasion target
+            if ($user_id==$game->whoseTurn()->getId())
+            {
+                $result = "PICK TARGET" ;
+            }
+            // Pick target - The player with $user_id doesn't have the initiative and must wait for a persuasion target to be picked
+            else
+            {
+                $result = "WAIT TARGET" ;
+            }
+        }
+        /* 
+         * We know the target, this is a bribe     
+         */
+        else
+        {
+            /* 
+             * Before the first round of bribes, all Parties have isDone = FALSE
+             * Once all parties have isDone = TRUE , the current bidder can either roll or bribe
+             * If he bribes, every party isDone must be set to FALSE
+             */
+            foreach ($game->getParties() as $party)
+            {
+                $result = "BRIBE OR ROLL" ;
+                if ($party->getIsDone()===FALSE)
+                {
+                    if ($user_id == $party->getId())
+                    {
+                        $result = "BRIBE" ;
+                    }
+                }
+            }
+        }
+        return $result ;
     }
 
 }

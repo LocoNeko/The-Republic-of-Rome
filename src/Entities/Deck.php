@@ -50,12 +50,12 @@ class Deck
     /** @return \Entities\Card\[] */
     public function getCards()
     {
-        $cards = $this->cards ;
-        $iterator = $cards->getIterator();
+        $iterator = $this->cards->getIterator();
         $iterator->uasort(function ($a, $b) {
             return ($a->getPosition() < $b->getPosition()) ? -1 : 1;
         });
-        return new ArrayCollection(iterator_to_array($iterator));
+        $this->setCards(new ArrayCollection(iterator_to_array($iterator))) ;
+        return $this->cards;
     }
 
     public function getName() { return $this->name ; }
@@ -317,6 +317,36 @@ class Deck
             }
         }
         return FALSE ;
+    }
+    
+    public function getFullName($self=FALSE)
+    {
+        $fullNames = array(
+            'drawDeck' => _('The draw deck') ,
+            'earlyRepublic' => _('The early republic') ,
+            'middleRepublic' => _('The middle republic') ,
+            'lateRepublic' => _('The late republic') ,
+            'discard' => _('The discard pile') ,
+            'unplayedProvinces' => _('Unplayed provinces') ,
+            'inactiveWars' => _('Inactive wars') ,
+            'activeWars' => _('Active Wars') ,
+            'imminentWars' => _('Imminent Wars') ,
+            'unprosecutedWars' => _('Unprosecuted Wars') ,
+            'forum' => _('The Forum') ,
+            'curia' => _('The Curia')
+        ) ;
+        if (key_exists($this->getName(), $fullNames))
+        {
+            return $fullNames[$this->getName()] ;
+        }
+        else
+        {
+            if ($this->getInHand()!=NULL && $self)
+            {
+                return _('Your hand');
+            }
+            return $this->getName() ;
+        }
     }
     
 }

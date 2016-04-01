@@ -311,5 +311,4 @@ abstract class Card
         }
     }
     
-
 }

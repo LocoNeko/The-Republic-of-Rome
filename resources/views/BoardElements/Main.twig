@@ -1,131 +1,85 @@
 {% extends layout_template  %}
 
 {% block title %}
-    <title realm="{{game.getId()}}">{{game.getPhase()}}</title>
+    <title realm="{{gameView.realm}}">
+        The Republic of Rome - Game {{gameView.gameName}} - {{gameView.phase}} phase
+    </title>
 {% endblock %}
 
 {% block content %}
 
-    <h4>
-        Current HRAO: <strong>{{game.displayContextualName(game.getHRAO().getFullName() , app.user.id)}}</strong> , 
-        Order of play : 
-        {% set orderOfPlay = game.getOrderOfPlay() %}
-        {% for position in orderOfPlay %}
-            <span style="{{ ( game.whoseTurn()!=false and game.whoseTurn().getUser_id()==position.getUser_id() ) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
-                <a href="#Party_{{position.getUser_id()}}" class="silent-link">{{ position.getName()}}</a>
-            </span>
-            {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
-        {% endfor %}
-    </h4>
+    {# HEADER : CURRENT HRAO, ORDER OF PLAY , CURRENT PHASE & SUBPHASE #}
+
+    <table class="table table-condensed table-responsive" style="display: block;">
+        <tr>
+            <td class="text-right"><h4>Phase</h4></td>
+            <td><strong><h4>{{gameView.phase}}</h4></strong></td>
+        </tr>
+        <tr>
+            <td class="text-right">Sub Phase</td>
+            <td><strong>{{gameView.subPhase}}</strong></td>
+        </tr>
+        <tr>
+            <td class="text-right">HRAO</td>
+            <td><strong>{{gameView.getNameOfHRAO(app.user.id)}}</strong></td>
+        </tr>
+        <tr>
+            <td class="text-right">Order of play</td>
+            <td>
+                {% for position in gameView.getOrderOfPlay(app.user.id) %}
+                    <span style="{{ (position['user_id'] == gameView.whoseTurn.getUser_id()) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
+                        <a href="#Party_{{position['user_id']}}" class="silent-link">{{ position['name']}}</a>
+                    </span>
+                    {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
     
-    {% embed game.getPhase() ~ '/phaseMain.twig' with {'game' : game } %}
+    {# THE CURRENT PHASE'S TEMPLATE #}
+    
+    {% embed gameView.phase ~ '/phaseMain.twig' %}
     {% endembed %}
 
-    {#
-        Display your Party
-    #}
+    {# YOUR PARTY #}
     
     <h3>Your Party</h3>
-    {% embed 'BoardElements/Party.twig' with {'self' : TRUE , 'party' : game.getParty(app.user.id) } %}
+    {% embed 'BoardElements/Party.twig' with {'party' : gameView.party[app.user.id] , 'self' : TRUE} %}
     {% endembed %}
 
-    {% if game.getParty(app.user.id).getHand().getNumberOfCards() == 0 %}
-        <h3>Your Hand is empty</h3>
-    {% else%}
-        <h3>Your Hand</h3>
-        <div class="row">
-            {% for card in game.getParty(app.user.id).getHand().getCards() %}
-                {% embed "BoardElements/Card.twig" with
-                    {
-                        'card': card ,
-                        'action': card.getAction(TRUE)
-                    } only
-                %}
-                {% endembed %}
-            {% endfor %}
-        </div>
-    {% endif %}
+    {# YOUR HAND #}
+    
+    {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.party[app.user.id].getHand() , 'self' : TRUE} %}
+    {% endembed %}
 
-    {#
-        Display other parties
-    #}
-
+    {# OTHER PARTIES #}
+    
     <h3>Other Parties</h3>
-    {% for party in game.getAllPartiesButOne(app.user.id).toArray() %}
-        {% embed 'BoardElements/Party.twig' with {'self' : FALSE , 'party' : party } %}
+    {% for party in gameView.getAllPartiesButOne(app.user.id) %}
+        {% embed 'BoardElements/Party.twig' with {'party' : party , 'self' : FALSE } %}
         {% endembed %}
     {% endfor %}
 
-    <h3>There is currently {{game.getDeck('drawDeck').getNumberOfCards()}} cards left to draw.</h3>
+    <h3>There is currently {{gameView.deck['drawDeck'].getNumberOfCards()}} cards left to draw.</h3>
     
-    {#
-        Display the Forum
-    #}
+    {# FORUM #}
+    
+    {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.deck['forum'] , 'self' : FALSE} %}
+    {% endembed %}
 
-    <h3>The Forum</h3>
-    {% if game.getDeck('forum').getNumberOfCards() > 0 %}
-        <div class="row">
-                {% for card in game.getDeck('forum').getCards() %}
-                    {% embed "BoardElements/Card.twig" with
-                        {
-                            'card': card ,
-                            'action': card.getAction()
-                        } only
-                    %}
-                    {% endembed %}
-                {% endfor %}
-        </div>
-    {% endif %}
-
-    {#
-        Display the Curia
-    #}
-
-    <h3>The Curia</h3>
-    {% if game.getDeck('curia').getNumberOfCards() > 0 %}
-        <div class="row">
-                {% for card in game.getDeck('curia').getCards() %}
-                    {% embed "BoardElements/Card.twig" with
-                        {
-                            'card': card ,
-                            'action': card.getAction()
-                        } only
-                    %}
-                    {% endembed %}
-                {% endfor %}
-        </div>
-    {% endif %}
+    {# CURIA #}
+    
+    {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.deck['curia'] , 'self' : FALSE} %}
+    {% endembed %}
         
-    {#
-        Wars
-    #}
-
-    <h3>Wars</h3>
-    {% set wars = [] %}
-    {% set wars = wars|merge({'inactiveWars': 'Inactive'}) %}
-    {% set wars = wars|merge({'activeWars': 'Active'}) %}
-    {% set wars = wars|merge({'imminentWars': 'Imminent'}) %}
-    {% set wars = wars|merge({'unprosecutedWars': 'Unprosecuted'}) %}
-    {% for key,war in wars %}
-        {% if game.getDeck(key).getNumberOfCards()>0%}
-            <h4>{{war}}</h4>
-            <div class="row">
-                    {% for card in game.getDeck(key).getCards() %}
-                        {% embed "BoardElements/Card.twig" with
-                            {
-                                'card': card ,
-                                'action': card.getAction()
-                            } only
-                        %}
-                        {% endembed %}
-                    {% endfor %}
-            </div>
-        {% endif %}
+    {# WARS  #}
+    
+    {% for warName in gameView.warDecksNames %}
+        {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.deck[warName] , 'self' : FALSE} %}
+        {% endembed %}
     {% endfor %}
-        
-    {#
-        Events
-    #}
+
+    {# EVENTS #}
 
     <h3>Events in play</h3>
         <table class="table table-bordered" style="width:auto; font-size: 100%; font-weight: bold; ">
@@ -151,9 +105,7 @@
             </tbody>
         </table>
         
-    {#
-        Debug : show all cards & decks, and allow moving a card to a deck
-    #}
+    {# DEBUG - : show all cards & decks, and allow moving a card to a deck #}
 
     <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MoveCard' gameId='{{game.getId()}}'>
         <h3>Debug - Cards</h3>

@@ -21,6 +21,7 @@ class SetupControllerProvider implements ControllerProviderInterface
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', (int)$game_id);
+            /* @var \Entities\Game $game */
             $game = $app['getGame']((int)$game_id) ;
             if ($game===FALSE)
             {
@@ -32,11 +33,20 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , (int)$game_id ));
                 return $app->redirect('/') ;
             }
+            elseif($game->getSubPhase() !='PickLeaders' && $game->getSubPhase()!='PlayCards')
+            {
+                $app['session']->getFlashBag()->add('error', _('Error - Sub phase not recognised.'));
+                return $app->redirect('/') ;
+            }
             else
             {
+                $gameView = new \Presenters\GamePresenter($game) ;
+                $setupView = new \Presenters\SetupPhasePresenter($game) ;
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
-                    'game' => $game
+                    'game' => $game ,
+                    'gameView' => $gameView ,
+                    'setupView' => $setupView->getHeader((int)$app['user']->getId())
                 ));
             }
         })
@@ -220,5 +230,4 @@ class SetupControllerProvider implements ControllerProviderInterface
 
         return $controllers ;
     }
-
 }

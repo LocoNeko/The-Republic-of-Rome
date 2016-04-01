@@ -157,7 +157,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             }
             else
             {
-                if ($game->setPartyToReady($app['user']->getId()) )
+                if ($this->setPartyToReady($game, $app['user']->getId()) )
                 {
                     // If the game was started, save it
                     if ($game->gameStarted())
@@ -222,6 +222,12 @@ class LobbyControllerProvider implements ControllerProviderInterface
 
         return $controllers ;
     }
+    
+    /**
+     * 
+     * CONTROLLER'S FUNCTIONS
+     * 
+     */
     
     /**
      * Returns a list of all Games in an array. Includes a 'canJoin' flag based on $user_id
@@ -354,5 +360,260 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $game->loadData($savedGame->getGameData()) ;
         }
     }
+    
+    /**
+     * Sets the party with $user_id in game $game to ready to start ($party->readyToStart=TRUE)
+     * 
+     * @param \Entities\Game $game
+     * @param int $user_id
+     * @return boolean
+     */
+    public function setPartyToReady($game , $user_id)
+    {
+        foreach($game->getParties() as $party)
+        {
+            if ($party->getUser_id() == $user_id)
+            {
+                $party->setReadyToStart() ;
+                if ($game->gameStarted())
+                {
+                    $this->doSetup($game) ;
+                }
+                return TRUE ;
+            }
+        }
+        return FALSE ;
+    }
+
+    /**
+     * Sets-up a game
+     * @param \Entities\Game\ $game
+     */
+    public function doSetup($game)
+    {
+        $game->setPhase('Setup') ;
+        $game->nextTurn() ;
+
+        // Create all tables : Events, Appeal, Land bill, Population
+        $this->createEvents($game) ;
+        $this->createAppealTable($game) ;
+        $this->createLandBillsTable($game) ;
+        $this->createPopulationTable($game) ;
+        
+        // Early Republic deck
+        $earlyRepublicDeck = $game->getDeck('earlyRepublic') ;
+        $this->populateDeckFromFile($game , $game->getScenario() , 'earlyRepublic') ;
+
+        // Unplayed provinces deck
+        $this->populateDeckFromFile($game , 'Provinces' , 'unplayedProvinces') ;
+        
+        // Handle special cards : The First Punic war & Era ends
+        $game->log(_('The First Punic War goes to the "Inactive" Wars deck.') , 'alert' ) ;
+        $earlyRepublicDeck->getFirstCardByProperty('id' , 1 , $game->getDeck('inactiveWars')) ;
+        $game->log(_('The "Era Ends" card goes to the discard. (MUST FIX)') , 'error' ) ;
+        $earlyRepublicDeck->getFirstCardByProperty('id' , 65 , $game->getDeck('discard')) ;
+        
+        // Then create 4 legions in Rome, the rest of the legions and all the fleets are non-existent (Legions and Fleet objects should never be created during a game)
+        for($i=1;$i<=25;$i++) 
+        {
+            $legion = new \Entities\Legion($game,$i) ;
+            $game->getLegions()->add($legion) ;
+            if ($i<=4) 
+            {
+                $legion->setOtherLocation('Rome') ;
+            }
+            $fleet = new \Entities\Fleet($game,$i) ;
+            $game->getFleets()->add($fleet) ;
+        }
+        $game->log(_('Rome starts with 4 regular Legions.') ) ;
+        
+        // Give initial senators & cards to parties
+        foreach ($game->getParties() as $party)
+        {
+            
+            // Senators
+            $senatorsList = '' ;
+            for ($i=1 ; $i<=3 ; $i++)
+            {
+                $earlyRepublicDeck->shuffle() ;
+                $card = $earlyRepublicDeck->getFirstCardByProperty('preciseType' , 'Senator' , $party->getSenators()) ;
+                $senatorsList.=$card->getName() ;
+                switch($i) {
+                    case 1  : $senatorsList.= ' , '   ; break ;
+                    case 2  : $senatorsList.= ' and ' ; break ;
+                    default : $senatorsList.= '.'     ;
+                }
+            }
+            $game->log(_('[['.$party->getUser_id().']] {receive,receives} the following Senators : %1$s') , 'log' , array($senatorsList) ) ;
+            
+            //Cards
+            $cardsList = '' ;
+            $cardsLeftToDraw = 3 ;
+            while ($cardsLeftToDraw>0)
+            {
+                $earlyRepublicDeck->shuffle() ;
+                $card = $earlyRepublicDeck->drawFirstCard() ;
+                
+                switch ($card->getPreciseType())
+                {
+                    case 'Faction card' :
+                    case 'Statesman' :
+                    case 'Concession' :
+                        $party->getHand()->putCardOnTop($card);
+                        $cardsList.= $card->getName().' , ' ;
+                        $cardsLeftToDraw--;
+                        break ;
+                    default :
+                        $earlyRepublicDeck->putCardOnTop($card);
+                }
+            }
+            $game->log(_('[['.$party->getUser_id().']] receives three cards') , 'log' , NULL , $game->getAllPartiesButOne($party->getUser_id()) ) ;
+            $game->log(_('You receive the following cards in hand : %1$s') , 'log' , array($cardsList) , new ArrayCollection(array($party)) ) ;
+        }
+        // Temporary Rome Consul
+        try
+        {
+            $alignedSenators = $game->getAllSenators('alignedInRome') ;
+            $temporaryRomeConsul = $alignedSenators[rand(0 , count($alignedSenators)-1)] ;
+            $temporaryRomeConsul->appoint('Rome Consul') ;
+            $temporaryRomeConsul->setPriorConsul(TRUE) ;
+            $game->log(_('%1$s is appointed temporary Rome Consul') , 'log' , array($temporaryRomeConsul->getName())) ;
+            do
+            {
+                $game->getDeck('drawDeck')->putCardOnTop($game->getDeck('earlyRepublic')->drawFirstCard()) ;
+            }
+            while ($game->getDeck('earlyRepublic')->getNumberOfCards()>0) ;
+            $game->getDeck('drawDeck')->shuffle();
+        }
+        catch (Exception $e)
+        {
+            $game->log($e->getMessage() , 'error') ;
+        }
+        $game->setSubPhase('PickLeaders') ;
+    }
+    
+    /*
+     * Convenience function (could be inside doSetup)
+     * The event file should have 4 columns :
+     * Event number (should be VG card number) ; event name ; increased event name ; description ; increased event description ; maximum level of the event (0 if none)
+     * The event table file should have 3 columns :
+     * event number for Early Republic ; Middle Republic ; Late Republic 
+     * @param \Entities\Game\ $game
+     */
+    public function createEvents($game) {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/tables/events.csv', 'r');
+        if (!$filePointer) {
+            throw new Exception(_('Could not open the events file'));
+        }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
+            $game->setEvent(
+                $data[0] ,
+                array(
+                    'name' => $data[1] ,
+                    'increased_name' => $data[2] ,
+                    'description' => $data[3] ,
+                    'increased_description' => $data[4] ,
+                    'max_level' => $data[5] ,
+                    'level' => 0
+                )
+            ) ;
+        }
+        fclose($filePointer);
+        $filePointer2 = fopen(dirname(__FILE__).'/../../resources/tables/eventTable.csv', 'r');
+        if (!$filePointer2) {
+            throw new Exception(_('Could not open the event table file'));
+        }
+        $i=3;
+        while (($data = fgetcsv($filePointer2, 0, ";")) !== FALSE) {
+            $game->setEventTable($i++ , $data) ;
+        }
+        fclose($filePointer2);
+    }
+
+    /**
+     * Reads the appealTable csv file and creates an array appealTable : keys = roll , values = array ('votes' => +/- votes , 'special' => NULL|'killed'|'freed' )
+     * @param \Entities\Game $game
+     * @throws Exception
+     */
+    public function createAppealTable($game) {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/tables/appealTable.csv', 'r');
+        if (!$filePointer) {
+            throw new Exception(_('Could not open the Appeal table file'));
+        }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
+            $game->setAppealTable($data) ;
+        }
+        fclose($filePointer);
+    }
+
+    /**
+     * Reads the landBills csv file and creates the landBillsTable array
+     * @param \Entities\Game\ $game
+     * @throws Exception
+     */
+    public function createLandBillsTable($game) {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/tables/landBills.csv', 'r');
+        if (!$filePointer) {
+            throw new Exception(_('Could not open the Land Bills table file'));
+        }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
+            if (substr($data[0],0,1)!='#') {
+                $game->setLandBillsTable($data);
+            }
+        }
+        fclose($filePointer);
+    }
+
+    /**
+     * Reads the populationTable csv file and creates an array Unrest level => array of effects
+     * Effects are : +# increase unrest by # , -# decrease unrest by # , MS manpower shortage , NR no recruitment , Mob
+     * @param \Entities\Game\ $game
+     * @throws Exception
+     */
+    public function createPopulationTable($game) {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/tables/populationTable.csv', 'r');
+        if (!$filePointer) {
+            throw new Exception(_('Could not open the Population table file'));
+        }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
+            $game->populationTable[$data[0]] = array();
+            $effects = explode(',', $data[1]);
+            foreach($effects as $effect) {
+                array_push($game->populationTable[$data[0]] , $effect);
+            }
+        }
+        fclose($filePointer);
+    }
+
+    /**
+     * Looks for a file in resources/scenarios and creates a Deck based on it, by creating Cards as long as they have a valid type
+     * @param \Entities\Game $game
+     * @param string $fileName The file name for this scenario
+     * @param string $deckName The deck to populate (since cards exist for Provinces as well)
+     * @throws Exception When couldn't open file
+     */
+    public function populateDeckFromFile($game , $fileName , $deckName)
+    {
+        $filePointer = fopen(dirname(__FILE__).'/../../resources/scenarios/'.$fileName.'.csv', 'r');
+        if (!$filePointer)
+        {
+            throw new Exception(_('Could not open the file'));
+        }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE)
+        {
+            if ($data[0]!='')
+            {
+                $type = $data[2] ;
+                if (\Entities\Card::isValidType($type))
+                {
+                    $class = 'Entities\\'.$type ;
+                    $card = new $class ($data);
+                    $game->getDeck($deckName)->putCardOnTop($card) ;
+                }
+            }
+        }
+        fclose($filePointer);
+    }
+    
 
 }
