@@ -17,7 +17,7 @@
     ErrorHandler::register();
     ExceptionHandler::register();
     
-    $config_php = parse_ini_file(__DIR__.'/../src/silex-test.ini') ;
+    $config_php = parse_ini_file(__DIR__.'/../src/application.ini') ;
     
     $app['debug'] = true;
     $app['BASE_URL'] = $config_php['BASE_URL'] ;
@@ -40,7 +40,7 @@
             if (count($result)==1)
             {
                 $game = $result[0] ;
-                // Check if the phase in the route (route[1]) is the same as the phase in the game (game->getPahse()), replace if it's not
+                // Check if the phase in the route (route[1]) is the same as the phase in the game (game->getPhase()), replace if it's not
                 if ($game->getPhase() != $route[1])
                 {
                     return $app->redirect( str_replace( $route[1] , $game->getPhase() , $request->getRequestUri() ) ) ;

@@ -77,7 +77,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/MoveCard', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game\ $game */
+            /** @var \Entities\Game $game */
             $game = $app['getGame']((int)$game_id) ;
             if ($game!==FALSE)
             {
@@ -372,7 +372,7 @@ class ForumControllerProvider implements ControllerProviderInterface
     {
         foreach($game->getParties() as $party)
         {
-            /* @var \Entities\Party\ $party */
+            /* @var \Entities\Party $party */
             $party->setBid(FALSE) ;
             $party->setIsDone(FALSE) ;
         }

@@ -52,6 +52,10 @@ class SetupPhasePresenter
                 }
             }
         }
+        elseif ($this->game->getPhase()=='Setup' && $this->game->getSubPhase()=='Play cards')
+        {
+            $result['description'] = _('Play cards - TO DO.') ;
+        }
         return $result ;
     }
 }

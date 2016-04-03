@@ -4,7 +4,7 @@
 
     require_once "../../vendor/autoload.php";
 
-    $config_php = parse_ini_file(__DIR__.'/../silex-test.ini') ;
+    $config_php = parse_ini_file(__DIR__.'/../application.ini') ;
 
     // Create a simple "default" Doctrine ORM configuration for Annotations
     $isDevMode = true;

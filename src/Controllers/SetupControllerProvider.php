@@ -33,7 +33,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , (int)$game_id ));
                 return $app->redirect('/') ;
             }
-            elseif($game->getSubPhase() !='PickLeaders' && $game->getSubPhase()!='PlayCards')
+            elseif($game->getSubPhase() !='PickLeaders' && $game->getSubPhase()!='Play cards')
             {
                 $app['session']->getFlashBag()->add('error', _('Error - Sub phase not recognised.'));
                 return $app->redirect('/') ;

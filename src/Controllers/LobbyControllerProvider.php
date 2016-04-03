@@ -387,7 +387,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
 
     /**
      * Sets-up a game
-     * @param \Entities\Game\ $game
+     * @param \Entities\Game $game
      */
     public function doSetup($game)
     {
@@ -473,8 +473,8 @@ class LobbyControllerProvider implements ControllerProviderInterface
         // Temporary Rome Consul
         try
         {
-            $alignedSenators = $game->getAllSenators('alignedInRome') ;
-            $temporaryRomeConsul = $alignedSenators[rand(0 , count($alignedSenators)-1)] ;
+            $alignedSenators = $game->getAllSenators('alignedInRome')->toArray() ;
+            $temporaryRomeConsul = $alignedSenators[array_rand($alignedSenators)] ;
             $temporaryRomeConsul->appoint('Rome Consul') ;
             $temporaryRomeConsul->setPriorConsul(TRUE) ;
             $game->log(_('%1$s is appointed temporary Rome Consul') , 'log' , array($temporaryRomeConsul->getName())) ;
@@ -548,7 +548,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
 
     /**
      * Reads the landBills csv file and creates the landBillsTable array
-     * @param \Entities\Game\ $game
+     * @param \Entities\Game $game
      * @throws Exception
      */
     public function createLandBillsTable($game) {
@@ -567,7 +567,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
     /**
      * Reads the populationTable csv file and creates an array Unrest level => array of effects
      * Effects are : +# increase unrest by # , -# decrease unrest by # , MS manpower shortage , NR no recruitment , Mob
-     * @param \Entities\Game\ $game
+     * @param \Entities\Game $game
      * @throws Exception
      */
     public function createPopulationTable($game) {

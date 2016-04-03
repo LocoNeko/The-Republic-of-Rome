@@ -1308,7 +1308,7 @@ class Game
         $message = sprintf(
             _('Province %s is attacked by %s Barabarian raids. Military force is %d (written force) + %d (for %d legions) + %d (%s\'s MIL), a %d (white die %d, black die %d) is rolled for a total of %d%s ') ,
             $province->getName() ,
-            ($barbarianRaids==2 ? 'increased ' : '') ,
+            ($level==2 ? 'increased ' : '') ,
             $province->getLand() ,
             2*$garrisons ,
             $garrisons ,
