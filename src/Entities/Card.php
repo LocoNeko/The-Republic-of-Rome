@@ -280,9 +280,10 @@ abstract class Card
     {
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }
-    
+
     /**
      * Returns an array of possible cards actions based on the card's location, type, game phase & subphase
+     * @param bool $self
      * @return array
      */
     public function getAction($self=FALSE)

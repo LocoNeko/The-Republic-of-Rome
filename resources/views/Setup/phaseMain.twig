@@ -1,12 +1,8 @@
-{#
-    Header : Description
-#}
+{# Header : Description #}
 
 <h4>{{setupView['description']}}</h4>
 
-{#
-    Header : List (optional)
-#}
+{# Header : List (optional) #}
 
 {% if setupView['list']|length > 0 %}
     <ul>
@@ -16,18 +12,14 @@
     </ul>
 {% endif %}
 
-{#
-    Header : Action
-#}
+{# Header : Action (optional) #}
 
 {% if setupView['action']|length > 0 %}
     {% embed 'BoardElements/ActionToken.twig' with {'action': setupView['action']}%}
     {% endembed %}
 {% endif %}
 
-{#
-    Sub phase template
-#}
+{# Sub phase template #}
 
 {% if game.getSubPhase() == 'PickLeaders' %}
     {% embed 'Setup/PickLeaders.twig' %}

@@ -1,20 +1,3 @@
-{% if game.getParty(app.user.id).hasPlayableCards() and game.getParty(app.user.id).getIsDone() == FALSE %}
-    <strong>You have playable cards :</strong>
-    <ul>
-        <li>Drag and drop Concessions on Senators</li>
-        <li>Play Statesmen if they are playable</li>
-        <li>Click "done" when finished</li>
-    </ul>
-{% elseif game.getParty(app.user.id).getIsDone() %}
-    <strong>You are done playing cards</strong>
-{% else %}
-    <strong>You don't have any playable card</strong>
-{% endif %}
-{% if game.getParty(app.user.id).getIsDone() == FALSE %}
-    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='DonePlayingCards'>
-        <button type="submit" class="btn btn-warning">DONE</button>
-    </form>
-{% endif %}
 <script>
     /*
      * A (droppable) Senator card needs to have these attributes :
