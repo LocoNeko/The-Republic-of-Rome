@@ -1,0 +1,477 @@
+.sprite {
+    background-image: url(spritesheet.png);
+    background-repeat: no-repeat;
+    display: block;
+}
+
+.sprite-modal {
+    position: absolute;
+    z-index : 500 ;
+}
+
+/*
+    Cards (400x275 px)
+*/
+
+.sprite-Senator {
+    position: relative;
+    width: 400px;
+    height: 287px;
+    margin: 15px 15px 15px 15px;
+    background-position: -663px -5px;
+    text-align: center;
+}
+
+.sprite-Card {
+    position: relative;
+    width: 400px;
+    height: 287px;
+    margin: 15px 15px 15px 15px;
+    background-position: -5px -5px;
+    text-align: center;
+}
+
+.sprite-CardSlot {
+    position: relative;
+    width: 420px;
+    height: 287px;
+    margin: 15px 15px 15px 15px;
+    border: 5px solid #999;
+    -moz-border-radius: 15px;
+    border-radius: 15px;
+    box-shadow: 5px 5px 5px #888888;
+    text-align: center;
+}
+
+/*
+    Standard markers (52x52 px)
+*/
+
+.sprite-Marker_-1 {
+    width: 52px;
+    height: 52px;
+    background-position: -415px -5px;
+}
+
+.sprite-Marker_-2 {
+    width: 52px;
+    height: 52px;
+    background-position: -477px -5px;
+}
+
+.sprite-Marker_-3 {
+    width: 52px;
+    height: 52px;
+    background-position: -539px -5px;
+}
+
+.sprite-Marker_-4 {
+    width: 52px;
+    height: 52px;
+    background-position: -601px -5px;
+}
+
+.sprite-Marker_-5 {
+    width: 52px;
+    height: 52px;
+    background-position: -415px -67px;
+}
+
+.sprite-Marker_-6 {
+    width: 52px;
+    height: 52px;
+    background-position: -477px -67px;
+}
+
+.sprite-Marker_-7 {
+    width: 52px;
+    height: 52px;
+    background-position: -539px -67px;
+}
+
+.sprite-Marker_-8 {
+    width: 52px;
+    height: 52px;
+    background-position: -601px -67px;
+}
+
+.sprite-Marker_-9 {
+    width: 52px;
+    height: 52px;
+    background-position: -415px -129px;
+}
+
+.sprite-Marker_0 {
+    width: 52px;
+    height: 52px;
+    background-position: -477px -129px;
+}
+
+.sprite-Marker_1 {
+    width: 52px;
+    height: 52px;
+    background-position: -539px -129px;
+}
+
+.sprite-Marker_10knights {
+    width: 52px;
+    height: 52px;
+    background-position: -601px -129px;
+}
+
+.sprite-Marker_1knights {
+    width: 52px;
+    height: 52px;
+    background-position: -415px -191px;
+}
+
+.sprite-Marker_2 {
+    width: 52px;
+    height: 52px;
+    background-position: -477px -191px;
+}
+
+.sprite-Marker_2knights {
+    width: 52px;
+    height: 52px;
+    background-position: -539px -191px;
+}
+
+.sprite-Marker_3 {
+    width: 52px;
+    height: 52px;
+    background-position: -601px -191px;
+}
+
+.sprite-Marker_3knights {
+    width: 52px;
+    height: 52px;
+    background-position: -415px -253px;
+}
+
+.sprite-Marker_4 {
+    width: 52px;
+    height: 52px;
+    background-position: -477px -253px;
+}
+
+.sprite-Marker_4knights {
+    width: 52px;
+    height: 52px;
+    background-position: -539px -253px;
+}
+
+.sprite-Marker_5 {
+    width: 52px;
+    height: 52px;
+    background-position: -601px -253px;
+}
+
+.sprite-Marker_5knights {
+    width: 52px;
+    height: 52px;
+    background-position: -5px -315px;
+}
+
+.sprite-Marker_6 {
+    width: 52px;
+    height: 52px;
+    background-position: -67px -315px;
+}
+
+.sprite-Marker_6knights {
+    width: 52px;
+    height: 52px;
+    background-position: -129px -315px;
+}
+
+.sprite-Marker_7 {
+    width: 52px;
+    height: 52px;
+    background-position: -191px -315px;
+}
+
+.sprite-Marker_7knights {
+    width: 52px;
+    height: 52px;
+    background-position: -253px -315px;
+}
+
+.sprite-Marker_8 {
+    width: 52px;
+    height: 52px;
+    background-position: -315px -315px;
+}
+
+.sprite-Marker_8knights {
+    width: 52px;
+    height: 52px;
+    background-position: -377px -315px;
+}
+
+.sprite-Marker_9 {
+    width: 52px;
+    height: 52px;
+    background-position: -439px -315px;
+}
+
+.sprite-Marker_9knights {
+    width: 52px;
+    height: 52px;
+    background-position: -501px -315px;
+}
+
+.sprite-Marker_Corrupt {
+    width: 52px;
+    height: 52px;
+    background-position: -563px -315px;
+}
+
+.sprite-Marker_DisbandedFront {
+    width: 52px;
+    height: 52px;
+    background-position: -625px -315px;
+}
+
+.sprite-Marker_Major {
+    width: 52px;
+    height: 52px;
+    background-position: -5px -377px;
+}
+
+.sprite-Marker_PriestBack {
+    width: 52px;
+    height: 52px;
+    background-position: -67px -377px;
+}
+
+.sprite-Marker_PriestFront {
+    width: 52px;
+    height: 52px;
+    background-position: -129px -377px;
+}
+
+.sprite-Marker_PriorConsul {
+    width: 52px;
+    height: 52px;
+    background-position: -191px -377px;
+}
+
+.sprite-Marker_RansomBack {
+    width: 52px;
+    height: 52px;
+    background-position: -253px -377px;
+}
+
+.sprite-Marker_RansomFront {
+    width: 52px;
+    height: 52px;
+    background-position: -315px -377px;
+}
+
+/*
+    Office markers (96x96 px)
+*/
+
+.sprite-Office_Censor {
+    width: 96px;
+    height: 96px;
+    background-position: -377px -377px;
+}
+
+.sprite-Office_Dictator {
+    width: 96px;
+    height: 96px;
+    background-position: -483px -377px;
+}
+
+.sprite-Office_Field-Consul {
+    width: 96px;
+    height: 96px;
+    background-position: -5px -483px;
+}
+
+.sprite-Office_Master-of-Horse {
+    width: 96px;
+    height: 96px;
+    background-position: -111px -483px;
+}
+
+.sprite-Office_Pontifex-Maximus {
+    width: 96px;
+    height: 96px;
+    background-position: -217px -483px;
+}
+
+.sprite-Office_Proconsul {
+    width: 96px;
+    height: 96px;
+    background-position: -323px -483px;
+}
+
+.sprite-Office_Rome-Consul {
+    width: 96px;
+    height: 96px;
+    background-position: -429px -483px;
+}
+
+/*
+    Positions (Senator)
+*/
+
+.sprite-position-topleft {
+    position: absolute;
+    text-align: left ;
+    width: 400px;
+    margin-left: 0px;
+    top: 15px;
+}
+
+.sprite-position-topright {
+    position: absolute;
+    text-align: right ;
+    width: 370px;
+    margin-right: 15px;
+    top: 15px;
+}
+
+.sprite-position-name {
+    position: absolute;
+    width: 90%;
+    margin-left: 5%;
+    font-size: 150%;
+    text-shadow: 1px 1px #777777;
+    text-align: center ;
+    top: 15px;
+}
+
+.sprite-position-MIL {
+    position: absolute;
+    width: 50px;
+    font-size: 150%;
+    font-weight: bold;
+    text-shadow: 1px 1px #777777;
+    text-align: center;
+    right: 20px;
+    top: 60px;
+}
+
+.sprite-position-ORA {
+    position: absolute;
+    width: 50px;
+    font-size: 150%;
+    font-weight: bold;
+    text-shadow: 1px 1px #777777;
+    text-align: center;
+    right: 20px;
+    top: 95px;
+}
+
+.sprite-position-LOY {
+    position: absolute;
+    width: 50px;
+    font-size: 150%;
+    font-weight: bold;
+    text-shadow: 1px 1px #777777;
+    text-align: center;
+    right: 20px;
+    top: 130px;
+}
+
+.sprite-position-treasury {
+    position: absolute;
+    width: 50px;
+    font-size: 300%;
+    font-weight: bold;
+    text-shadow: 1px 1px #777777;
+    text-align: center;
+    left: 50px;
+    top: 105px;
+}
+
+.sprite-position-POP {
+    position: absolute;
+    left: 25px;
+    top: 197px;
+}
+
+.sprite-position-INF {
+    position: absolute;
+    left: 206px;
+    top: 197px;
+}
+
+.sprite-position-INF10 {
+    position: absolute;
+    left: 143px;
+    top: 197px;
+}
+
+.sprite-position-knights {
+    position: absolute;
+    left: 317px;
+    top: 197px;
+}
+
+.sprite-position-office {
+    position: absolute;
+    left: 105px;
+    top: 60px;
+}
+
+.sprite-position-corrupt {
+    position: absolute;
+    left: 250px;
+    top: 120px;
+}
+
+.sprite-position-PriorConsul {
+    position: absolute;
+    left: 250px;
+    top: 90px;
+}
+
+/*
+    Positions (Cards)
+*/
+
+.sprite-position-card-name {
+    font-size: 150%;
+    text-shadow: 1px 1px #777777;
+    text-align: center ;
+    margin-top: 30px;
+}
+
+.sprite-position-card-subname {
+    font-size: 100%;
+    text-shadow: 1px 1px #777777;
+    text-align: center ;
+    margin-top: 0px;
+}
+
+.sprite-position-card-text {
+    position: absolute;
+    font-weight: bold;
+    left: 40px;
+    top: 90px;
+    color: #224;
+    text-shadow: 1px 1px #AAA;
+    width: 170px;
+}
+
+.sprite-position-card-attacks {
+    position: absolute;
+    font-weight: bold;
+    left: 40px;
+    top: 230px;
+    color: #224;
+    text-shadow: 1px 1px #AAA;
+}
+
+.sprite-position-card-id {
+    position: absolute;
+    font-size: 100%;
+    text-shadow: 1px 1px #777777;
+    left: 275px;
+    top: 254px;
+}

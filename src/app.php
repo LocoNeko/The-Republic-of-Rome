@@ -14,6 +14,7 @@
     $app->register(new Provider\SwiftmailerServiceProvider());
     $app->register(new Provider\SecurityServiceProvider());
     $app->register(new Provider\DoctrineServiceProvider());
+    $app->register(new SilexAssetic\AsseticServiceProvider());
     ErrorHandler::register();
     ExceptionHandler::register();
     
@@ -22,6 +23,24 @@
     $app['debug'] = true;
     $app['BASE_URL'] = $config_php['BASE_URL'] ;
     $app['WS_CLIENT'] = $config_php['WS_CLIENT'] ;
+
+    // Assetic
+    $app['assetic.path_to_web'] = __DIR__ . '../web/resources/assetic';
+    $app['assetic.options'] = array(
+        'debug' => true,
+    );
+    $app->extend('assetic.asset_manager', function($am, $app)
+    {
+        $am->set('styles', new Assetic\Asset\AssetCache(
+            new Assetic\Asset\GlobAsset(
+                __DIR__ . '../web/resources/assetic/css'
+            ),
+            new Assetic\Cache\FilesystemCache(__DIR__ . '../web/resources/assetic/cache')
+        ));
+        $am->get('styles')->setTargetPath('css/styles');
+        return $am;
+    });
+
 
     // If the route starts with the name of a Valid Phase, but the game is in a different phase, replace the phase in the route and redirect
     $app->before(function (Request $request) use ($app)

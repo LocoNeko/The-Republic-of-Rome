@@ -12,7 +12,8 @@
         "jasongrimes/silex-simpleuser": "~2.0.1",
         "doctrine/orm": "2.4.*",
         "symfony/yaml": "2.*",
-        "dflydev/doctrine-orm-service-provider": "~1.0"
+        "dflydev/doctrine-orm-service-provider": "~1.0",
+        "mheap/Silex-Assetic": "1.*"
     },
     "autoload": {
         "psr-0": {
