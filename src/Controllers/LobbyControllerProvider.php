@@ -186,14 +186,16 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->post('/Create/Create', function(Request $request) use ($app)
         {
             $result= $this->CreateGame($request->request->all()) ;
-            if ( $result === TRUE)
+            if ( $result['error'] === FALSE)
             {
+                $app['session']->set('game_just_created' , TRUE);
+                $app['session']->set('game_id' , $result['gameId']);
                 $app['session']->getFlashBag()->add('success', 'Game created');
                 return $app->json( 'Game created' , 201);
             }
             else
             {
-                $app['session']->getFlashBag()->add('danger', $result);
+                $app['session']->getFlashBag()->add('danger', $result['message']);
                 return $app->json( $result , 201);
             }
         })
@@ -277,33 +279,41 @@ class LobbyControllerProvider implements ControllerProviderInterface
         }
     }
     
+    /**
+     * 
+     * @param type $data
+     * @return array 'error' , 'message' , 'gameId'
+     */
     private function CreateGame($data)
     {
+        $result = array() ;
+        $result['error'] = FALSE ;
         $data['gameName'] = strip_tags($data['gameName']) ;
         $query = $this->entityManager->createQuery('SELECT COUNT(g.id) FROM Entities\Game g WHERE g.name = ?1');
         $query->setParameter(1, $data['gameName']);
         if ($query->getSingleScalarResult() > 0)
         {
-            return _('ERROR - A game with the same name already exists.') ;
+            $result['error'] = TRUE ;
+            $result['message'] = _('ERROR - A game with the same name already exists.') ;
         }
-        
-        if (strlen($data['gameName']) <1 )
+        elseif (strlen($data['gameName']) <1 )
         {
-            return _('ERROR - Game name too short.') ;
+            $result['error'] = TRUE ;
+            $result['message'] = _('ERROR - Game name too short.') ;
         }
-        
-        if (!in_array($data['scenario'], \Entities\Game::$VALID_SCENARIOS) )
+        elseif (!in_array($data['scenario'], \Entities\Game::$VALID_SCENARIOS) )
         {
-            return sprintf(_('ERROR - %1$s is not a valid Scenario.') , $data['scenario']) ;
+            $result['error'] = TRUE ;
+            $result['message'] = sprintf(_('ERROR - %1$s is not a valid Scenario.') , $data['scenario']) ;
         }
-        
-        if (isset($data['variants']))
+        elseif (isset($data['variants']))
         {
             foreach((array)$data['variants'] as $variant)
             {
                 if (!in_array($variant , \Entities\Game::$VALID_VARIANTS))
                 {
-                    return sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
+                    $result['error'] = TRUE ;
+                    $result['message'] = sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
                 }
             }
         } else {
@@ -321,12 +331,16 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();
-            return TRUE ;
+            $result['error'] = FALSE ;
+            $result['gameId'] = $game->getId() ;
         }
         catch (Exception $e)
         {
-            return _('Error') . $e->getMessage() ;
+            $result['error'] = TRUE ;
+            $result['message'] = _('Error') . $e->getMessage() ;
+            
         }
+        return $result ;
     }
     
     /**

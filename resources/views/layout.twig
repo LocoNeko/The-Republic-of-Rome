@@ -71,20 +71,18 @@
         <!--
             - Flashbag messages
         -->
-        {% if game is defined %}
-            <div id="message" style="position: absolute; top: 52px; right: 100px; padding: 5px; z-index: 10;">
-            {% for type , messages in app.session.flashbag.all() %}
-                {%for message in messages %}
-                        <div style="float: right; clear: right; display: inline-block;">
-                            <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;" alert_number="{{loop.index}}">
-                                {{message}}
-                                <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            </div>
+        <div id="message" style="position: absolute; top: 52px; right: 100px; padding: 5px; z-index: 10;">
+        {% for type , messages in app.session.flashbag.all() %}
+            {%for message in messages %}
+                    <div style="float: right; clear: right; display: inline-block;">
+                        <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;" alert_number="{{loop.index}}">
+                            {{message}}
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
                         </div>
-                {% endfor %}
+                    </div>
             {% endfor %}
-            </div>
-        {% endif %}
+        {% endfor %}
+        </div>
 
         <!--
             - Main content

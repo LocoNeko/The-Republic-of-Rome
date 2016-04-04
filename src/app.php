@@ -72,6 +72,11 @@
     $app->before(function (Request $request) use ($app)
     {
         $request->getSession()->start();
+        /*
+         * If the header is JSON :
+         * - Put JSON data in the request
+         * - Don't get new messages as they should never be displayed for json requests, since they are never on screen
+         */
         if (0 === strpos($request->headers->get('Content-Type'), 'application/json'))
         {
             $data = json_decode($request->getContent() , TRUE);
@@ -79,10 +84,9 @@
         }
         else
         {
-            // Getting new messages should never be done for json requests, as they don't trigger display
             if ($app['user'] !== NULL)
             {   
-                $messages = getNewMessages($app['user']->getId() , $app['session']->get('game_id') , $app['orm.em'] ) ;
+                $messages = getNewMessages($app) ;
                 if ($messages!==FALSE && count($messages['messages'])>0)
                 {
                     foreach($messages['messages'] as $key=>$message)
@@ -94,6 +98,18 @@
                     }
                 }
             }
+        }
+    });
+    
+    /**
+     * If a game was just created, redirect the creator to Join it immediately
+     */
+    $app->before(function (Request $request) use ($app)
+    {
+        if ($app['session']->get('game_just_created')===TRUE)
+        {
+            $app['session']->set('game_just_created' , FALSE) ;
+            return $app->redirect($app['BASE_URL'].'/Lobby/Join/'.$app['session']->get('game_id'));
         }
     });
     
@@ -121,14 +137,21 @@
     $app->mount($app['BASE_URL'].'/Revenue'  , new Controllers\RevenueControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Forum'    , new Controllers\ForumControllerProvider($app) );
     
-    function getNewMessages($user_id , $game_id , $entityManager) {
-        $query = $entityManager->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-        $result = $query->getResult() ;
-        if (count($result)==1) {
-            $messages = $result[0]->getNewMessages($user_id) ;
-            $entityManager->persist($result[0]) ;
+    /**
+     * 
+     * @param type $app
+     * @return boolean
+     */
+    function getNewMessages($app) {
+        $user_id = $app['user']->getId() ;
+        $entityManager = $app['orm.em'] ;
+        $game = $app['getGame']((int)$app['session']->get('game_id')) ;
+        if ($game!==FALSE)
+        {
+            $messages = $game->getNewMessages($user_id) ;
+            $entityManager->persist($game) ;
             $entityManager->flush() ;
-            return array('messages' => $messages , 'parties_names' => $result[0]->getPartiesNames()) ;
+            return array('messages' => $messages , 'parties_names' => $game->getPartiesNames()) ;
         } else {
             return FALSE ;
         }
