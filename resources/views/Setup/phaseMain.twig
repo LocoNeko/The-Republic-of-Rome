@@ -1,3 +1,7 @@
+{#
+    SETUP PHASE
+#}
+
 {# Header : Description #}
 
 <h4>{{setupView['description']}}</h4>
@@ -16,17 +20,5 @@
 
 {% if setupView['action']|length > 0 %}
     {% embed 'BoardElements/ActionToken.twig' with {'action': setupView['action']}%}
-    {% endembed %}
-{% endif %}
-
-{# Sub phase template #}
-
-{% if game.getSubPhase() == 'PickLeaders' %}
-    {% embed 'Setup/PickLeaders.twig' %}
-    {% endembed %}
-{% elseif game.getSubPhase() == 'PlayCards' %}
-    <h2>Play cards</h2>
-    {% set verbForHand = 'PlayCards' %}
-    {% embed 'Setup/PlayCards.twig' %}
     {% endembed %}
 {% endif %}

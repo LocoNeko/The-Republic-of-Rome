@@ -35,11 +35,12 @@ class ForumControllerProvider implements ControllerProviderInterface
             else
             {
                 $gameView = new \Presenters\GamePresenter($game) ;
+                $forumView = new \Presenters\ForumPhasePresenter($game) ;
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
                     'game' => $game ,
                     'gameView' => $gameView ,
-                    'persuasion_state' => $this->getPersuasionState($game , (int)$app['user']->getId())
+                    'forumView' => $forumView->getHeader((int)$app['user']->getId())
                 ));
             }
         })
@@ -355,7 +356,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 }
             }
             $game->setSubPhase('Persuasion');
-            $game->resetPersuasion();
+            $this->resetPersuasion($game);
             $game->setCurrentBidder($game->getParty($user_id)) ;
         }
         else
@@ -378,60 +379,6 @@ class ForumControllerProvider implements ControllerProviderInterface
         }
         $game->setCurrentBidder(NULL) ;
         $game->setPersuasionTarget(NULL) ;
-    }
-
-    /**
-     * Returns the current state during Forum phase, Persuasion subPhase, for this $user_id
-     * @param \Entities\Game $game
-     * @param int $user_id
-     * @return string "NOT PERSUASION" | "PICK TARGET" | "WAIT TARGET"
-     */
-    public function getPersuasionState($game , $user_id)
-    {
-        $result = "PROUT";
-        if ($game->getPhase()!='Forum' || $game->getSubPhase()!='Persuasion')
-        {
-            $result = "NOT PERSUASION";
-        }
-        /*
-         *  We don't know who is the target yet.
-         */
-        if ($game->getPersuasionTarget()===NULL)
-        {
-            // Pick target - The player with $user_id has the initiative and must pick a persuasion target
-            if ($user_id==$game->whoseTurn()->getId())
-            {
-                $result = "PICK TARGET" ;
-            }
-            // Pick target - The player with $user_id doesn't have the initiative and must wait for a persuasion target to be picked
-            else
-            {
-                $result = "WAIT TARGET" ;
-            }
-        }
-        /* 
-         * We know the target, this is a bribe     
-         */
-        else
-        {
-            /* 
-             * Before the first round of bribes, all Parties have isDone = FALSE
-             * Once all parties have isDone = TRUE , the current bidder can either roll or bribe
-             * If he bribes, every party isDone must be set to FALSE
-             */
-            foreach ($game->getParties() as $party)
-            {
-                $result = "BRIBE OR ROLL" ;
-                if ($party->getIsDone()===FALSE)
-                {
-                    if ($user_id == $party->getId())
-                    {
-                        $result = "BRIBE" ;
-                    }
-                }
-            }
-        }
-        return $result ;
     }
 
 }

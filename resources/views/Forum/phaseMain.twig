@@ -1,27 +1,23 @@
-<h1>Forum</h1>
 {#
-    We are bidding for the initiative
+    FORUM PHASE
 #}
-{% if game.whoseTurn()==FALSE %}
-    Bidding for the initiative
-{#
-    We have someone with the initiative
-#}
-{% else%}
-    {{
-        (game.whoseTurn().getUser_Id() == app.user.id) ?
-        'You have the initiative' :
-        game.whoseTurn().getFullName() ~ 'has the initiative'
-    }}
-    {% if game.getSubPhase()=='RollEvent' %}
-        <h3>Roll events</h3>
-        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RollEvent'>
-            <button type="submit" class="btn btn-warning">ROLL</button>
-        </form>
-    {% elseif game.getSubPhase()=='Persuasion' %}
-        <h2>Persuasion</h2>
-        {% set verbForHand = 'PlayCards' %}
-        {% embed 'Forum/Persuasion.twig' %}
-        {% endembed %}
-    {% endif %}
+
+<h4>{{forumView['initiativeDescription']}} , {{forumView['description']}}</h4>
+
+{# Header : List (optional) #}
+
+{% if forumView['list']|length > 0 %}
+    <ul>
+        {% for item in forumView['list'] %}
+            <li>{{item}}</li>
+        {% endfor %}
+    </ul>
 {% endif %}
+
+{# Header : Action (optional) #}
+
+{% if forumView['action']|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': forumView['action']}%}
+    {% endembed %}
+{% endif %}
+

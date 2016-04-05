@@ -992,7 +992,7 @@ class Game
     }
 
     /**
-     * returns array of user_id from HRAO, clockwise in the same order as the array $this->party (order of joining game)
+     * returns array of Parties from HRAO, clockwise in the same order as the array $this->party (order of joining game)
      * @return array An array of Parties
      */
     public function getOrderOfPlay()
