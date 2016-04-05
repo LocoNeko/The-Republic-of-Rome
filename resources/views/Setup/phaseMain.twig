@@ -24,9 +24,9 @@
 {% if game.getSubPhase() == 'PickLeaders' %}
     {% embed 'Setup/PickLeaders.twig' %}
     {% endembed %}
-{% elseif game.getSubPhase() == 'Play cards' %}
+{% elseif game.getSubPhase() == 'PlayCards' %}
     <h2>Play cards</h2>
-    {% set verbForHand = 'Play cards' %}
+    {% set verbForHand = 'PlayCards' %}
     {% embed 'Setup/PlayCards.twig' %}
     {% endembed %}
 {% endif %}

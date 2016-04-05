@@ -39,10 +39,10 @@
                     <td><strong><a href="{{ path('SaveGame', {game_id: game.getId()}) }}">{{ game.getName() }}</a></strong></td>
                     <td>{{ game.getScenario() }}</td>
                     <td>
-                        <button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs">{{game.getNumberOfPlayers()}}</button>
+                        <button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs LobbyListNbPlayers">{{game.getNumberOfPlayers()}}</button>
                     </td>
                     <td>
-                        <button data-toggle="tooltip" data-html="true" href="#" title="{{game.getVariants()|join(',')}}" class="btn btn-success btn-xs">{{ game.getVariants()|length }}</button>
+                        <button data-toggle="tooltip" data-html="true" href="#" title="{{game.getVariants()|join(',')}}" class="btn btn-success btn-xs LobbyListVariants">{{ game.getVariants()|length }}</button>
                     </td>
                     <td>{{ game.getTurn() }}</td>
                     <td>{{ game.getPhase() }}</td>
@@ -96,19 +96,5 @@
             </tbody>
         </table>
     </div>
-    
-{% endblock %}
-
-{% block scripts %}
-            
-    <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
-    <script>
-        $(function () {
-            $('[data-toggle="tooltip"]').tooltip() ;
-        }) ;
-        $(document).ready(function(){
-            $('#listGames').dataTable();
-        });
-    </script>
     
 {% endblock %}

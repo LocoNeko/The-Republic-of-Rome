@@ -292,7 +292,7 @@ abstract class Card
         $game = $this->getGame() ;
         $phase = $game->getPhase() ;
         $subPhase = $game->getSubPhase() ;
-        if ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Statesman' && $location['type'] == 'hand' && $this->statesmanPlayable($location['value']->getUser_id())['flag'] )
+        if ($phase=='Setup' && $subPhase == 'PlayCards' && $this->getPreciseType()=='Statesman' && $location['type'] == 'hand' && $this->statesmanPlayable($location['value']->getUser_id())['flag'] )
         {
             return [ 'menu' => 'Play Statesman' ];
         }
@@ -300,7 +300,7 @@ abstract class Card
         {
             return [ 'menu' => 'Give to Rome' ];
         }
-        elseif ($phase=='Setup' && $subPhase == 'Play cards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
+        elseif ($phase=='Setup' && $subPhase == 'PlayCards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
         {
             // Prevent from playing land commissioner if there are no Land Bill
             if (($this->getSpecial()=='land bill') && ($game->getLandBillsTotalCost()['total']==0) ) {

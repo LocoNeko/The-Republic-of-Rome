@@ -89,7 +89,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 $game->getParty($user_id)->setIsDone(TRUE) ;
                 if ($game->isEveryoneDone())
                 {
-                    $game->setSubPhase('State expenses') ;
+                    $game->setSubPhase('StateExpenses') ;
                     $this->doStateExpenses($game) ;
                     $app['saveGame']($game) ;
                     $game->resetAllIsDone() ;

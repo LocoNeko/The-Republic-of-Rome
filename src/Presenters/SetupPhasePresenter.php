@@ -56,8 +56,8 @@ class SetupPhasePresenter
                 }
             }
         }
-        // Header for Play cards sub phase
-        elseif ($this->game->getPhase()=='Setup' && $this->game->getSubPhase()=='Play cards')
+        // Header for PlayCards sub phase
+        elseif ($this->game->getPhase()=='Setup' && $this->game->getSubPhase()=='PlayCards')
         {
             // Has cards and is not done yet
             if ( ($this->game->getParty($user_id)->hasPlayableCards()) && ($this->game->getParty($user_id)->getIsDone() == FALSE))

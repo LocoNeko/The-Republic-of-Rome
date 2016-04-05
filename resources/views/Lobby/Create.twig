@@ -53,16 +53,3 @@
         </form>
     
 {% endblock %}
-
-{% block scripts %}
-
-    <script>
-        $('#move_left').click(function() {
-            $('.variants').append($('.variants_not_played .list-group-item'));
-        });
-        $('#move_right').click(function() {
-            $('.variants_not_played').append($('.variants .list-group-item'));
-        });
-    </script>
-
-{% endblock %}

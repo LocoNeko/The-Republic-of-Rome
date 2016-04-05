@@ -17,10 +17,11 @@
             .ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
             .ui-resizable-n { cursor: n-resize; height: 7px; width: 100%; top: -5px; left: 0; }
         </style>
-        <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+        <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
+        <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
     </head>
     
     <body style="{{ game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%; overflow-y: hidden ;">
@@ -173,7 +174,17 @@
         </div>
         {% endif %}
         
+        {#
+            Javascript :
+            - The GeneralFunctions.js is always loaded
+            - If a game is defined, the file js/{{phase}}/{{subphase}}.js is loaded
+            - If no game is defined, the file js/Lobby.js is loaded
+        #}
         <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/GeneralFunctions.js"></script>
-        {% block scripts %}{% endblock %}
+        {% if game is defined %}
+            <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/{{game.getPhase()}}/{{game.getSubPhase()}}.js"></script>
+        {% else %}
+            <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/Lobby/Lobby.js"></script>
+        {% endif %}
     </body>
 </html>

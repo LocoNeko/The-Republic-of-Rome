@@ -1,15 +1,4 @@
-/*
-Scripts for :
-- JqueryUI : Sortable lists
-- SocketIO : reload window when 'Update' received
-- Jquery - on POST : submit FORM data as Json array
-- Jquery - on POST : include any sortable list data to the Json array
-- Jquery - on POST : Post to a URL with the 'verb' as the last part of the route
-- SocketIO - on POST : Emit 'Update'
-*/
-
-/*
-jquery code for jqueryUI to handle :
+/* jquery code for jqueryUI to handle :
  * - Sortable lists
  * - Resizable (like the footer)
  * - Draggable cards
@@ -161,4 +150,3 @@ $.ui.plugin.add("resizable", "alsoResizeReverse", {
         $(this).removeData("resizable-alsoresize-reverse");
     }
 });
-

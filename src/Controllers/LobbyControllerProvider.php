@@ -319,26 +319,26 @@ class LobbyControllerProvider implements ControllerProviderInterface
         } else {
             $data['variants']=array();
         }
-        
-        $game = new \Entities\Game();
-        try 
+        if ($result['error'] === FALSE )
         {
-            $game->setName($data['gameName']) ;
-            $game->setTreasury(100) ;
-            $game->setUnrest(0) ;
-            $game->setScenario($data['scenario']) ;
-            $game->setVariants($data['variants']) ;
-            $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            $result['error'] = FALSE ;
-            $result['gameId'] = $game->getId() ;
-        }
-        catch (Exception $e)
-        {
-            $result['error'] = TRUE ;
-            $result['message'] = _('Error') . $e->getMessage() ;
-            
+            try 
+            {
+                $game = new \Entities\Game();
+                $game->setName($data['gameName']) ;
+                $game->setTreasury(100) ;
+                $game->setUnrest(0) ;
+                $game->setScenario($data['scenario']) ;
+                $game->setVariants($data['variants']) ;
+                $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                $result['gameId'] = $game->getId() ;
+            }
+            catch (Exception $e)
+            {
+                $result['error'] = TRUE ;
+                $result['message'] = _('Error') . $e->getMessage() ;
+            }
         }
         return $result ;
     }
