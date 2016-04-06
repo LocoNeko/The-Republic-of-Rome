@@ -35,10 +35,13 @@ class RevenueControllerProvider implements ControllerProviderInterface
             else
             {
                 $gameView = new \Presenters\GamePresenter($game) ;
+                $revenueView = new \Presenters\RevenuePhasePresenter($game , (int)$app['user']->getId()) ;
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
                     'game' => $game,
-                    'gameView' => $gameView
+                    'gameView' => $gameView ,
+                    'header' => $revenueView->getHeader() ,
+                    'content' => $revenueView->getContent()
                 ));
             }
         })

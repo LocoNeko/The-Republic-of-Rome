@@ -2,19 +2,23 @@
     MORTALITY PHASE
 #}
 
-<h1>Mortality</h1>
-{% if game.getParty(app.user.id).getIsDone() == FALSE %}
-    Click "READY" when you are ready for the death bingo.
-    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MortalityReady'>
-        <button type="submit" class="btn btn-warning">READY</button>
-    </form>
-{% else %}
-    You are ready and are currently waiting for :
+{# Header : Description #}
+
+<h4>{{mortalityView['description']}}</h4>
+
+{# Header : List (optional) #}
+
+{% if mortalityView['list']|length > 0 %}
     <ul>
-        {% for party in game.getAllPartiesButOne(app.user.id) %}
-            {% if not party.getIsDone() %}
-                <li>{{party.getFullName()}}</li>
-            {% endif %}
+        {% for item in mortalityView['list'] %}
+            <li>{{item}}</li>
         {% endfor %}
     </ul>
+{% endif %}
+
+{# Header : Action (optional) #}
+
+{% if mortalityView['action']|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': mortalityView['action']}%}
+    {% endembed %}
 {% endif %}
