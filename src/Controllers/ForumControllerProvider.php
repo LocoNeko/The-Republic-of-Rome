@@ -35,12 +35,12 @@ class ForumControllerProvider implements ControllerProviderInterface
             else
             {
                 $gameView = new \Presenters\GamePresenter($game) ;
-                $forumView = new \Presenters\ForumPhasePresenter($game) ;
+                $forumView = new \Presenters\ForumPhasePresenter($game , (int)$app['user']->getId()) ;
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'layout.twig' ,
                     'game' => $game ,
                     'gameView' => $gameView ,
-                    'forumView' => $forumView->getHeader((int)$app['user']->getId())
+                    'header' => $forumView->getHeader()
                 ));
             }
         })

@@ -2,13 +2,13 @@
     FORUM PHASE
 #}
 
-<h4>{{forumView['initiativeDescription']}} , {{forumView['description']}}</h4>
+<h4>{{header['initiativeDescription']}} - {{header['description']}}</h4>
 
 {# Header : List (optional) #}
 
-{% if forumView['list']|length > 0 %}
+{% if header['list']|length > 0 %}
     <ul>
-        {% for item in forumView['list'] %}
+        {% for item in header['list'] %}
             <li>{{item}}</li>
         {% endfor %}
     </ul>
@@ -16,8 +16,8 @@
 
 {# Header : Action (optional) #}
 
-{% if forumView['action']|length > 0 %}
-    {% embed 'BoardElements/ActionToken.twig' with {'action': forumView['action']}%}
+{% if header['action']|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': header['action']}%}
     {% endembed %}
 {% endif %}
 
