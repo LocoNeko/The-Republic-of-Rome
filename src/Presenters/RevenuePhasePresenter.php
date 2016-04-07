@@ -185,6 +185,5 @@ class RevenuePhasePresenter
 
         }
         return $result ;
-
     }
 }
