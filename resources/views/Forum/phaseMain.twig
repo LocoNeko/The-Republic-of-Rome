@@ -21,3 +21,41 @@
     {% endembed %}
 {% endif %}
 
+{#
+    CONTENT
+
+    Persuasion > PickTarget
+#}
+
+{% if gameView.subPhase == 'Persuasion' and content['interface']=='pickTarget' %}
+    <br>
+        <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
+            <tbody>
+                <tr>
+                    <td class="success" style="text-shadow: 1px 1px #888888;">Target</td>
+                    <td>{% embed 'BoardElements/ActionToken.twig' with {'action': content['targetList']}%}{% endembed %}</td>
+                </tr>
+                <tr>
+                    <td class="success" style="text-shadow: 1px 1px #888888;">Persuader</td>
+                    <td>{% embed 'BoardElements/ActionToken.twig' with {'action': content['persuaderList']}%}{% endembed %}</td>
+                <tr>
+                    <td class="success" style="text-shadow: 1px 1px #888888;">Spend</td>
+                    <td>{% embed 'BoardElements/ActionToken.twig' with {'action': content['bribe']}%}{% endembed %}</td>
+                </tr>
+                <tr>
+                    <td class="success" style="text-shadow: 1px 1px #888888;">Play card</td>
+                    <td>{% embed 'BoardElements/ActionToken.twig' with {'action': content['card']}%}{% endembed %}</td>
+                </tr>
+                <tr>
+                    <td class="success" style="text-shadow: 1px 1px #888888;">Current Odds</td>
+                    <td>{% embed 'BoardElements/ActionToken.twig' with {'action': {'type' : 'disabledInput' , 'class' : 'persuasionOdds'}}%}{% endembed %}</td>
+                </tr>
+                <tr>
+                    <td style="text-shadow: 1px 1px #888888; text-align: center;" colspan="2">
+                        {% embed 'BoardElements/ActionToken.twig' with {'action': content['action']}%}{% endembed %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+{% endif %}

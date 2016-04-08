@@ -40,7 +40,8 @@ class ForumControllerProvider implements ControllerProviderInterface
                     'layout_template' => 'layout.twig' ,
                     'game' => $game ,
                     'gameView' => $gameView ,
-                    'header' => $forumView->getHeader()
+                    'header' => $forumView->getHeader() ,
+                    'content' => $forumView->getContent()
                 ));
             }
         })

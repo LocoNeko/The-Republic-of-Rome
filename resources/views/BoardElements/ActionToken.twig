@@ -1,6 +1,6 @@
 {#
     Creates an action token from the action array
-    The type of token is determined by action['type'] which can be 'icon' or 'button'
+    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'select'
 #}
 
 {% if action['type']=='icon' %}
@@ -19,8 +19,28 @@
         - verb : the action verb used when the form is submitted by the click of the button
         - text : The text on the button
         - user_id : The user_id of the user clicking the button
+        - (optional) disabled : disabled by default or not
     #}
     <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
-        <button type="submit" class="btn btn-warning">{{action['text']}}</button>
+        <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}}">{{action['text']}}</button>
     </form>
+{% elseif action['type']=='select' %}
+    {#
+        A select has :
+        - a class (to plugin JavaScript functions)
+        - items : An array of items with 'attribute name' => 'attribute value'
+    #}
+    <div class="form-group">
+        <select class="form-control {{action['class']|default('')}}">
+            {% for item in action['items'] %}
+                <option 
+                    {% for key, value in item %}
+                        {{key}} = "{{value}}"
+                    {% endfor %}
+                    >{{item['description']|escape('html')}}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% elseif action['type']=='disabledInput' %}
+    <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">
 {% endif %}

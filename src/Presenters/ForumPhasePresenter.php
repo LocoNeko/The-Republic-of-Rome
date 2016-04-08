@@ -9,6 +9,9 @@ class ForumPhasePresenter
     private $initiative ;
     private $partyWithInitiative ;
     private $persuasionTarget ;
+    private $targetList ;
+    private $persuaderList ;
+    private $persuasionCards ;
 
     /**
      * 
@@ -38,6 +41,9 @@ class ForumPhasePresenter
             }
         }
         $this->setPersuasionTarget($game->getPersuasionTarget()) ;
+        $this->setTargetList($game) ;
+        $this->setPersuaderList($game) ;
+        $this->setPersuasionCards($game) ;
     }
     
     public function setUser_id($user_id) { $this->user_id = $user_id; }
@@ -53,6 +59,9 @@ class ForumPhasePresenter
     public function getInitiative() { return $this->initiative; }
     public function getPartyWithInitiative() { return $this->partyWithInitiative; }
     public function getPersuasionTarget() { return $this->persuasionTarget; }
+    public function getTargetList() { return $this->targetList; }
+    public function getPersuaderList() { return $this->persuaderList; }
+    public function getPersuasionCards() { return $this->persuasionCards; }
 
     public function getHeader()
     {
@@ -123,7 +132,7 @@ class ForumPhasePresenter
                     // Ain't got the initative - waits
                     else
                     {
-                        $result['description'] = _('Waiting for persuasion.') ;
+                        $result['description'] = _('Waiting for persuasion') ;
                     }
                 }
             }
@@ -138,7 +147,9 @@ class ForumPhasePresenter
 
     public function getContent()
     {
-        $result= array() ;
+        $result = array() ;
+        // By default, the interface should not be shown (could replace this by count(content)===0)
+        $result['interface'] = FALSE ;
         /*
          * - Phase : Forum
          * - SubPhase : Persuasion
@@ -149,7 +160,36 @@ class ForumPhasePresenter
          */
         if ($this->getPartyWithInitiative()->getUser_id() == $this->getUser_id() && $this->getPhase()=='Forum' && $this->getSubPhase()=='Persuasion' && $this->getPersuasionTarget()===NULL)
         {
-            
+            $result['interface'] = 'pickTarget' ;
+            $result['targetList'] = array (
+                'type' => 'select' ,
+                'class' => 'persuasionTargetList' ,
+                'items' => $this->getTargetList()
+            ) ;
+            $result['persuaderList'] = array (
+                'type' => 'select' ,
+                'class' => 'persuasionPersuaderList' ,
+                'items' => $this->getPersuaderList()
+            ) ;
+            $result['bribe'] = array (
+                'type' => 'select' ,
+                'class' => 'persuasionBribe' ,
+                'items' => array(
+                    array('value'=>0 , 'description' => '0')
+                )
+            ) ;
+            $result['card'] = array (
+                'type' => 'select' ,
+                'class' => 'persuasionCard' ,
+                'items' => $this->getPersuasionCards()
+            ) ;
+            $result['action'] = array (
+                'type' => 'button' ,
+                'verb' => 'doPersuasion' ,
+                'text' => 'PERSUADE' ,
+                'user_id' => $this->getUser_id() ,
+                'disabled' => TRUE
+            ) ;
         }
         return $result ;
     }
@@ -171,4 +211,99 @@ class ForumPhasePresenter
             return _(' belongs to ').(($user_id==$partyWithInitiative->getUser_id()) ? _('you') : $partyWithInitiative->getFullName());
         }
     }
+    
+    /**
+     * Initialises $this->targetList[] array<br>
+     * Each element is an array : 'senatorID' , 'user_id' , 'LOY' , 'treasury' , 'description'
+     * @param \Entities\Game $game
+     */
+    public function setTargetList($game)
+    {
+        $this->targetList = array() ;
+        $this->targetList[] = array ( 'value' => NULL , 'user_id' => NULL , 'LOY' => NULL , 'treasury' => NULL , 'description' => 'NONE') ;
+
+        // Put all Senators from another party, not leader, in Rome
+        foreach ($game->getParties() as $party)
+        {
+            if ($party->getUser_id() != $this->getUser_id())
+            {
+                foreach ($party->getSenators()->getCards() as $senator)
+                {
+                    if ($senator->inRome() && !$senator->isLeader())
+                    {
+                        $this->targetList[] = array (
+                            'value' => $senator->getSenatorID() ,
+                            'user_id' => $party->getUser_id() ,
+                            'LOY' => $senator->getActualLOY($game) ,
+                            'treasury' => $senator->getTreasury() ,
+                            'description' => $senator->getName().' in '.$party->getFullName().' - Loyalty: '.$senator->getActualLOY($game)
+                        ) ;
+                    }
+                }
+            }
+        }
+        // Put all Senators in the Forum
+        foreach ($game->getDeck('forum')->getCards() as $card)
+        {
+            if ($card->getIsSenatorOrStatesman())
+            {
+                $this->targetList[] = array (
+                    'value' => $senator->getSenatorID() ,
+                    'user_id' => NULL ,
+                    'LOY' => $senator->getActualLOY($game) ,
+                    'treasury' => $senator->getTreasury() ,
+                    'description' => $senator->getName().' in the Forum - Loyalty: '.$senator->getActualLOY($game)
+                ) ;
+            }
+        }
+    }
+
+    /**
+     * Initialises $this->persuaderList[] array<br>
+     * Each element is an array : 'senatorID' , 'ORA' , 'INF' , 'treasury' , 'description'
+     * @param \Entities\Game $game
+     */
+    public function setPersuaderList($game)
+    {
+        $this->persuaderList = array() ;
+        $this->persuaderList [] = array ( 'value' => NULL , 'ORA' => NULL , 'INF' => NULL , 'treasury' => NULL , 'description' => 'NONE') ;
+
+        foreach($game->getParty($this->getUser_id())->getSenators()->getCards() as $senator)
+        {
+            if ($senator->inRome())
+            {
+                $ORA = $senator->getORA() ;
+                $INF = $senator->getINF() ;
+                $treasury = $senator->getTreasury() ;
+                $this->persuaderList[] = array (
+                    'value' => $senator->getSenatorID() ,
+                    'ORA' => $ORA ,
+                    'INF' => $INF ,
+                    'treasury' => $treasury ,
+                    'description' => $senator->getName().' - ORA('.$ORA.') + INF('.$INF.') = '.($ORA+$INF).' ('.($ORA+$INF+$treasury).' with treasury)'
+                ) ;
+            }
+        }
+    }
+
+    /**
+     * Initialises $this->persuasionCards
+     * @param \Entities\Game $game
+     */
+    public function setPersuasionCards($game)
+    {
+        $this->persuasionCards = array() ;
+        $this->persuasionCards [] = array ( 'value' => NULL , 'description' => 'NONE') ;
+
+        foreach ($game->getParty($this->getUser_id())->getHand()->getCards() as $card)
+        {
+            if (($card->getName()=='SEDUCTION') || ($card->getName()=='BLACKMAIL')) {
+                $this->persuasionCards[] = array (
+                    'value' => $card->getId() ,
+                    'description' => $card->getName()
+                );
+            }
+        }
+    }
+
 }

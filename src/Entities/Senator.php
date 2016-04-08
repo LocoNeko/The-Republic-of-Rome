@@ -421,4 +421,57 @@ class Senator extends Card
         }
     }
     
+    /**
+     * Returns the actual Loyalty of a Senator as follows :
+     * +7 for being in a Party
+     * +/- the special LOY effects of being in the same party as an enemy, or a different party than a brother
+     * @param \Entities\Game $game
+     * @return int
+     */
+    public function getActualLOY($game)
+    {
+        $result = $this->getLOY() ;
+        $location = $this->getLocation() ;
+        // +7 LOY for paty affiliation
+        $result += ($location['type']=='party' ? 7 : 0) ;
+        if ( ($this->getPreciseType()=='Statesman') && ($this->getSpecialLOY()!=NULL) )
+        {
+            $list = explode(',', $this->getSpecialLOY()) ;
+            foreach ($list as $friendOrFoe) {
+                // $effect is + or -
+                $effect = substr($friendOrFoe, 0, 1) ;
+                $friendOrFoeID = substr($friendOrFoe, 1) ;
+                $friendOrFoe = $game->getFilteredCards(array('senatorID'=>$friendOrFoeID))->first() ;
+                if ($friendOrFoe!==FALSE && $friendOrFoe->getIsSenatorOrStatesman())
+                {
+                    $friendOrFoeLocation = $friendOrFoe->getLocation() ;
+                    /**
+                     * - Effect : Negative
+                     * - Both Senator and Foe are in a party
+                     * - Senator and Foe are in the same party
+                     */
+                    if ($effect=='-' && $friendOrFoeLocation['type']=='party' && $location['type']=='party' && $friendOrFoeLocation['value']->getUser_id()===$location['value']->getUser_id())
+                    {
+                        $result-=$this->getLOY();
+                        break;
+                    }
+                    /**
+                     * - Effect : Positive (means Senators must in the same party otherwise LOY is 0)
+                     * Either :
+                     *    - One of them is not in a party
+                     * OR - They are both in a party, but not the same one
+                     */
+                    if ($effect=='+')
+                    {
+                        if ($friendOrFoeLocation['type']!=='party' || $location['type']=='party' || $friendOrFoeLocation['value']->getUser_id()!==$location['value']->getUser_id())
+                        {
+                            $result-=$this->getLOY();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return $result ;
+    }
 }
