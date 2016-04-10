@@ -67,12 +67,12 @@ function persuasionUpdateOdds()
         
         // Update odds text & enable PERSUADE button
         $('.persuasionOdds').val(valueFor + " - " + valueAgainst + " = " + valueTotal + " (" + parseInt(10000*oddsPercentage)/100 + "%)") ;
-        $("[verb='persuasionPickTarget']").find('button').removeClass('disabled');
+        $("[verb='persuasionPickTarget']").find("[verb='persuasionPickTarget']").removeClass('disabled');
     }
     // If we lack either a target or a persuader, update Odds to 'N/A' and disable PERSUADE button
     else
     {
         $('.persuasionOdds').val('N/A');
-        $("[verb='persuasionPickTarget']").find('button').addClass('disabled');
+        $("[verb='persuasionPickTarget']").find("[verb='persuasionPickTarget']").addClass('disabled');
     }
 }

@@ -55,8 +55,8 @@
                 <tr>
                     <td style="text-shadow: 1px 1px #888888; text-align: center;" colspan="2">
                         <div class="row">
-                            <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': content['action']}%}{% endembed %}</div>
-                            <div class="col-sm-6"><button type="submit" class="btn btn-warning form-inline">PERSUADE</button></div>
+                            <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': content['noPersuasion']}%}{% endembed %}</div>
+                            <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': content['persuade']}%}{% endembed %}</div>
                         </div>
                     </td>
                 </tr>

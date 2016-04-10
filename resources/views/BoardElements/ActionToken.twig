@@ -33,7 +33,7 @@
         - (optionql) style : Can be btn-default , btn-primary , btn-success , btn-info , btn-warning (default), btn-danger , btn-link
         - (optional) disabled : disabled by default or not
     #}
-    <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb='{{action['verb']}}'>{{action['text']}}</button>
+    <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb" verb='{{action['verb']}}'>{{action['text']}}</button>
 {% elseif action['type']=='select' %}
     {#
         A select has :

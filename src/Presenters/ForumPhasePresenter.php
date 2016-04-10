@@ -231,7 +231,14 @@ class ForumPhasePresenter
                 'type' => 'submitWithVerb' ,
                 'verb' => 'noPersuasion' ,
                 'text' => 'NO PERSUASION' ,
-                'style' => 'btn-danger' ,
+                'style' => 'danger' ,
+                'user_id' => $this->getUser_id()
+            );
+            $result['persuade'] = array (
+                'type' => 'submitWithVerb' ,
+                'verb' => 'persuasionPickTarget' ,
+                'text' => 'PERSUADE' ,
+                'disabled' => TRUE ,
                 'user_id' => $this->getUser_id()
             );
             $result['hideOdds'] = $this->getVariantHideOdds() ;
