@@ -103,6 +103,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/SaveGame/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
+            /* @var \Entities\Game|boolean $game*/
             $game = $app['getGame']((int)$game_id) ;
             if ($game===FALSE)
             {

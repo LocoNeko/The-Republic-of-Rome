@@ -32,9 +32,8 @@ $(function() {
 function persuasionUpdateBribeList()
 {
     $('.persuasionBribe').find('option').remove() ;
-    var maximum = $('.persuasionPersuaderList option:selected').attr('treasury') ;
-    // TESTING : REMOVE +15 ONCE HAPPY
-    for ( i = 0; i <= maximum+15; i++ )
+    var maximum = parseInt($('.persuasionPersuaderList option:selected').attr('treasury') , 10) ;
+    for ( i = 0; i <= maximum; i++ )
     {
         $('.persuasionBribe').append('<option value="'+i+'">'+i+'</option>');
     }
@@ -68,12 +67,12 @@ function persuasionUpdateOdds()
         
         // Update odds text & enable PERSUADE button
         $('.persuasionOdds').val(valueFor + " - " + valueAgainst + " = " + valueTotal + " (" + parseInt(10000*oddsPercentage)/100 + "%)") ;
-        $("[verb='doPersuasion']").find('button').removeClass('disabled');
+        $("[verb='persuasionPickTarget']").find('button').removeClass('disabled');
     }
     // If we lack either a target or a persuader, update Odds to 'N/A' and disable PERSUADE button
     else
     {
         $('.persuasionOdds').val('N/A');
-        $("[verb='doPersuasion']").find('button').addClass('disabled');
+        $("[verb='persuasionPickTarget']").find('button').addClass('disabled');
     }
 }

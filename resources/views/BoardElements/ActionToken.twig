@@ -1,6 +1,6 @@
 {#
     Creates an action token from the action array
-    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'select'
+    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'select' , 'disabled input'
 #}
 
 {% if action['type']=='icon' %}
@@ -15,29 +15,42 @@
     </div>
 {% elseif action['type']=='button' %}
     {#
-        A button has :
+        A button is contained in its own <form> and has :
         - verb : the action verb used when the form is submitted by the click of the button
         - text : The text on the button
         - user_id : The user_id of the user clicking the button
         - (optional) disabled : disabled by default or not
+        TO DO : Replace all those by submitWithVerb
     #}
     <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
         <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}}">{{action['text']}}</button>
     </form>
+{% elseif action['type']=='submitWithVerb' %}
+    {#
+        A submitWithVerb creates a button with :
+        - verb : the action verb. When the button is clicked, a JS function updates the parent's form verb and submits the form
+        - text : The text on the button
+        - (optionql) style : Can be btn-default , btn-primary , btn-success , btn-info , btn-warning (default), btn-danger , btn-link
+        - (optional) disabled : disabled by default or not
+    #}
+    <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb='{{action['verb']}}'>{{action['text']}}</button>
 {% elseif action['type']=='select' %}
     {#
         A select has :
         - a class (to plugin JavaScript functions)
         - items : An array of items with 'attribute name' => 'attribute value'
+        - One of those must be 'description' => 'XXXX'
     #}
     <div class="form-group">
-        <select class="form-control {{action['class']|default('')}}">
+        <select class="form-control {{action['class']|default('')}}" name="{{action['class']}}">
             {% for item in action['items'] %}
-                <option 
+                <option
                     {% for key, value in item %}
                         {{key}} = "{{value}}"
                     {% endfor %}
-                    >{{item['description']|escape('html')}}</option>
+                >
+                    {{item['description']|escape('html')}}
+                </option>
             {% endfor %}
         </select>
     </div>

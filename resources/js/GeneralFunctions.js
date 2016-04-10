@@ -64,7 +64,7 @@ socket.on('Update', function(realm){
 
 // any submit of a form with the 'json-submit' property will result is submitting data in json to the current route + '/verb'
 // The json data will also include the data of <li> elements from any sortable list (class "sortable-list")
-$(function(){
+$(function() {
     $('.json-submit').submit(function(e){
         //prevent Default functionality
         e.preventDefault();
@@ -75,6 +75,8 @@ $(function(){
         $.each(data, function() {
             json[this.name] = this.value || '';
         });
+        // All forms should include a user_id, pass it in the json as well
+        json['user_id'] = $(this).attr('user_id');
 
         // Add sortable lists data to the json variable in the format [list name] => json array
         // For each sortable list with an id
@@ -103,6 +105,12 @@ $(function(){
             "json"
         );
     });
+
+    // An element with the submitWithVerb class sets its parent form's verb to its own verb
+    $('.submitWithVerb').click(function(e){
+        $(this).closest('form').attr('verb' , $(this).attr('verb')) ;
+    });
+
 });
 
 // Add a AlsoResize reverse function

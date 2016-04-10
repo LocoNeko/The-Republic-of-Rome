@@ -123,8 +123,11 @@ abstract class Card
                 {
                     $data[$name] = (is_null($item) ? NULL : $item->saveData() ) ;
                 }
-                // No need to save the Deck, as it can be populated from the deck entity when re-created
-                elseif ($name!='deck')
+                /*
+                 *  - No need to save the Deck, as it can be populated from the deck entity when re-created
+                 *  - Never save Senator->biddingFor, as it would be circular
+                 */
+                elseif ($name!='deck' && $name!='biddingFor')
                 {
                     $data[$name] = $item ;
                 }

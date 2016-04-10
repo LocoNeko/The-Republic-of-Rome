@@ -10,7 +10,7 @@ class Game
 {
     public static $VALID_PHASES = array('Setup','Mortality','Revenue','Forum','Population','Senate','Combat','Revolution','Rome falls') ;
     public static $VALID_SCENARIOS = array('EarlyRepublic') ;
-    public static $VALID_VARIANTS = array('Pontifex Maximus' , 'Provincial Wars' , 'Rebel governors' , 'Legionary disbandment' , 'Advocates' , 'Passing Laws') ;
+    public static $VALID_VARIANTS = array('Pontifex Maximus' , 'Provincial Wars' , 'Rebel governors' , 'Legionary disbandment' , 'Advocates' , 'Passing Laws' , 'Hide odds') ;
     public static $VALID_DECKS = array('drawDeck' , 'earlyRepublic' , 'middleRepublic' , 'lateRepublic' , 'discard' , 'unplayedProvinces' , 'inactiveWars' , 'activeWars' , 'imminentWars' , 'unprosecutedWars' , 'forum' , 'curia') ;
     public static $MIN_PLAYERS = 3 ;
     public static $MAX_PLAYERS = 6 ;
@@ -215,6 +215,7 @@ class Game
     public function getMessages() { return $this->messages; }
     public function getTimezone() { return $this->timezone ; }
     public function getCurrentBidder() { return $this->currentBidder; }
+    /** @return \Entities\Senator | null */
     public function getPersuasionTarget() { return $this->persuasionTarget; }
     public function getEventTable() { return $this->eventTable; }
     public function getEvents() { return $this->events; }
@@ -388,7 +389,17 @@ class Game
     {
         return count($this->parties) ;
     }
-    
+
+    /**
+     * Checks whether a variant is in play
+     * @param string $variant
+     * @return boolean
+     */
+    public function getVariantFlag($variant)
+    {
+        return (in_array($variant,$this->getVariants())) ;
+    }
+
     /**
      * @param string $deckName
      * @return \Entities\Deck|boolean
@@ -668,7 +679,7 @@ class Game
     
     /**
      * Goes through all decks in the game and returns an ArrayCollection of Senator Entitites satisfying an optional criteria (or all of them if no criteria)
-     * @param string $criteria
+     * @param string|boolean $criteria
      * @return ArrayCollection
      * @throws Exception 'Error retrieving senators'
      */
@@ -993,7 +1004,7 @@ class Game
 
     /**
      * returns array of Parties from HRAO, clockwise in the same order as the array $this->party (order of joining game)
-     * @return array An array of Parties
+     * @return \Entities\Party[] An array of Parties
      */
     public function getOrderOfPlay()
     {

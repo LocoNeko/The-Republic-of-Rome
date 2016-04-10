@@ -7,15 +7,20 @@ class ForumPhasePresenter
     private $phase ;
     private $subPhase ;
     private $initiative ;
+    /** @var \Entities\Party */
     private $partyWithInitiative ;
     private $persuasionTarget ;
     private $targetList ;
     private $persuaderList ;
     private $persuasionCards ;
+    private $variantHideOdds ;
+    private $firstIsNotDoneUserId ;
+    private $persuasionDescription ;
 
     /**
      * 
      * @param \Entities\Game $game
+     * @param int $user_id
      */
     public function __construct($game , $user_id) {
         $this->setUser_id($user_id) ;
@@ -44,6 +49,9 @@ class ForumPhasePresenter
         $this->setTargetList($game) ;
         $this->setPersuaderList($game) ;
         $this->setPersuasionCards($game) ;
+        $this->setVariantHideOdds($game->getVariantFlag('Hide odds'));
+        $this->setFirstIsNotDoneUserId($game);
+        $this->setPersuasionDescription($game) ;
     }
     
     public function setUser_id($user_id) { $this->user_id = $user_id; }
@@ -52,16 +60,21 @@ class ForumPhasePresenter
     public function setInitiative($initiative) { $this->initiative = $initiative; }
     public function setPartyWithInitiative($partyWithInitiative) { $this->partyWithInitiative = $partyWithInitiative; } 
     public function setPersuasionTarget($persuasionTarget) { $this->persuasionTarget = $persuasionTarget; }
+    public function setVariantHideOdds($variantHideOdds) { $this->variantHideOdds = $variantHideOdds; }
 
     public function getUser_id() { return $this->user_id; }
     public function getPhase() { return $this->phase; }
     public function getSubPhase() { return $this->subPhase; }
     public function getInitiative() { return $this->initiative; }
+    
     public function getPartyWithInitiative() { return $this->partyWithInitiative; }
     public function getPersuasionTarget() { return $this->persuasionTarget; }
     public function getTargetList() { return $this->targetList; }
     public function getPersuaderList() { return $this->persuaderList; }
     public function getPersuasionCards() { return $this->persuasionCards; }
+    public function getVariantHideOdds() { return $this->variantHideOdds; }
+    public function getFirstIsNotDoneUserId() { return $this->firstIsNotDoneUserId; }
+    public function getPersuasionDescription() { return $this->persuasionDescription; }
 
     public function getHeader()
     {
@@ -99,7 +112,7 @@ class ForumPhasePresenter
                         'user_id' => $this->getUser_id()
                     );
                 }
-                // Ain't got the initative - waits
+                // Ain't got the initiative - waits
                 else
                 {
                     $result['description'] = _('Waiting for event roll.') ;
@@ -117,25 +130,56 @@ class ForumPhasePresenter
                  *   - If the next available player is not done : Give a chance for the next available player to counter-bribe
                  *   - If all available players are done : The player with the initiative can roll or bribe more
                  */
+                /*
+                 * There is no target
+                 */
                 if ($this->getPersuasionTarget()===NULL)
                 {
-                    // Has the initative - Can persuade
+                    // Has the initiative - Can persuade
                     if ($this->getPartyWithInitiative()->getUser_id() == $this->getUser_id())
                     {
-                        $result['action'] = array (
-                            'type' => 'button' ,
-                            'verb' => 'NoPersuasion' ,
-                            'text' => 'NO PERSUASION' ,
-                            'user_id' => $this->getUser_id()
-                        );
                     }
-                    // Ain't got the initative - waits
+                    // Doesn't have the initiative - waits
                     else
                     {
                         $result['description'] = _('Waiting for persuasion') ;
                     }
                 }
+                /*
+                 * There is a target
+                 */
+                else
+                {
+                    // The list will describe the current Persuasion attempt
+                    $result['list'][]=$this->getPersuasionDescription();
+                    /*
+                     * This user is playing
+                     */
+                    if ($this->getFirstIsNotDoneUserId()==$this->getUser_id())
+                    {
+                        // Has the initiative - Can roll or bribe more
+                        if ($this->getPartyWithInitiative()->getUser_id() == $this->getUser_id())
+                        {
+
+                        }
+                        // Doesn't have the initiative - Can counter-bribe
+                        else
+                        {
+                            $result['description'] = _('Counter bribe') ;
+                        }
+                    }
+                    /*
+                     * This user is waiting
+                     */
+                    else
+                    {
+                        $result['description'] = _('Waiting for Counter bribe') ;
+                    }
+                }
             }
+            /*
+             * Knight
+             */
             else
             {
                 $result['description'] = _('Phase : TO DO...') ;
@@ -183,13 +227,60 @@ class ForumPhasePresenter
                 'class' => 'persuasionCard' ,
                 'items' => $this->getPersuasionCards()
             ) ;
-            $result['action'] = array (
-                'type' => 'button' ,
-                'verb' => 'doPersuasion' ,
-                'text' => 'PERSUADE' ,
-                'user_id' => $this->getUser_id() ,
-                'disabled' => TRUE
+            $result['noPersuasion'] = array (
+                'type' => 'submitWithVerb' ,
+                'verb' => 'noPersuasion' ,
+                'text' => 'NO PERSUASION' ,
+                'style' => 'btn-danger' ,
+                'user_id' => $this->getUser_id()
+            );
+            $result['hideOdds'] = $this->getVariantHideOdds() ;
+
+        }
+        /*
+         * - Phase : Forum
+         * - SubPhase : Persuasion
+         * - Persuasion target : NOT NULL
+         * - Has initiative
+         * There is a persuasion target & the player can roll or bribe more
+         */
+        elseif ($this->getPhase()=='Forum' && $this->getSubPhase()=='Persuasion' && $this->getPersuasionTarget()!==NULL && $this->getPartyWithInitiative()->getUser_id() == $this->getUser_id())
+        {
+            $result['interface'] = 'bribeOrRoll' ;
+            // TO DO
+        }
+        /*
+         * - Phase : Forum
+         * - SubPhase : Persuasion
+         * - Persuasion target : NOT NULL
+         * - Is first player who is not done
+         * There is a persuasion target & the player can counter-bribe
+         */
+        elseif ($this->getPhase()=='Forum' && $this->getSubPhase()=='Persuasion' && $this->getPersuasionTarget()!==NULL && $this->getFirstIsNotDoneUserId() == $this->getUser_id())
+        {
+            $result['interface'] = 'counterBribe' ;
+            $result['counterBribe'] = array (
+                'type' => 'select' ,
+                'class' => 'persuasionCounterBribe' ,
+                'items' => array(
+                    array('value'=>0 , 'description' => '0')
+                )
             ) ;
+            $result['noCounterBribe'] = array (
+                'type' => 'submitWithVerb' ,
+                'verb' => 'persuasionNoCounterBribe' ,
+                'text' => 'NO COUNTER BRIBE' ,
+                'style' => 'danger' ,
+                'user_id' => $this->getUser_id()
+            );
+            $result['persuasionCounterBribe'] = array (
+                'type' => 'submitWithVerb' ,
+                'verb' => 'persuasionCounterBribe' ,
+                'text' => 'COUNTER BRIBE' ,
+                'style' => 'success' ,
+                'disabled' => TRUE ,
+                'user_id' => $this->getUser_id()
+            );
         }
         return $result ;
     }
@@ -248,11 +339,11 @@ class ForumPhasePresenter
             if ($card->getIsSenatorOrStatesman())
             {
                 $this->targetList[] = array (
-                    'value' => $senator->getSenatorID() ,
+                    'value' => $card->getSenatorID() ,
                     'user_id' => NULL ,
-                    'LOY' => $senator->getActualLOY($game) ,
-                    'treasury' => $senator->getTreasury() ,
-                    'description' => $senator->getName().' in the Forum - Loyalty: '.$senator->getActualLOY($game)
+                    'LOY' => $card->getActualLOY($game) ,
+                    'treasury' => $card->getTreasury() ,
+                    'description' => $card->getName().' in the Forum - Loyalty: '.$card->getActualLOY($game)
                 ) ;
             }
         }
@@ -306,4 +397,57 @@ class ForumPhasePresenter
         }
     }
 
+    /**
+     * @param \Entities\Game $game
+     */
+    public function setFirstIsNotDoneUserId($game)
+    {
+        foreach ($game->getOrderOfPlay() as $party)
+        {
+            if (!$party->getIsDone())
+            {
+                $this->firstIsNotDoneUserId = $party->getUser_id() ;
+                break ;
+            }
+        }
+    }
+
+    /**
+     * @param \Entities\Game $game
+     */
+    public function setPersuasionDescription($game)
+    {
+        $persuaderParty = $this->getPartyWithInitiative() ;
+        $target = $game->getPersuasionTarget() ;
+        // Validation
+        if ($persuaderParty === FALSE) { return _('') ;}
+        if ($target === NULL) { return _('') ;}
+        $persuader = $persuaderParty->getBidWith() ;
+        if ($persuader === NULL) { return _('') ;}
+        $bribes = $persuaderParty->getBid() ;
+
+        // Counter bribes
+        $counterBribesDescription = _('') ;
+        $counterBribes = 0 ;
+        foreach ($game->getParties() as $party)
+        {
+            if ( ($party->getUser_id() != $this->getPartyWithInitiative()->getUser_id()) && $party->getBid()>0)
+            {
+                $counterBribesDescription.=sprintf(_('%1$s with %2$dT, ') , $party->getFullName() , $party->getBid()) ;
+                $counterBribes+=$party->getBid() ;
+            }
+        }
+        if (strlen($counterBribesDescription)>0)
+        {
+            $counterBribesDescription=_(' Counter bribes : ').substr($counterBribesDescription,0,-2).'.';
+        }
+
+        // Odds for : INF + ORA + bribes
+        // Odds against : LOY + treasury + counter bribes
+        $for = $persuader->getINF() + $persuader->getORA() + $bribes ;
+        $against = $target->getActualLOY($game) + $target->getTreasury() + $counterBribes ;
+
+        // Description
+        $this->persuasionDescription = sprintf( _('%1$s is persuading %2$s, spending %3$d in bribes.%4$s Totals are %5$d for and %6$d against.') , $persuader->getName() , $target->getName() , $bribes , $counterBribesDescription , $for , $against ) ;
+    }
 }

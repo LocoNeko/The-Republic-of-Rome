@@ -23,12 +23,12 @@
 
 {#
     CONTENT
-
     Persuasion > PickTarget
 #}
 
 {% if gameView.subPhase == 'Persuasion' and content['interface']=='pickTarget' %}
     <br>
+    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='persuasionPickTarget' gameId='{{gameView.realm}}'>
         <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
             <tbody>
                 <tr>
@@ -46,16 +46,53 @@
                     <td class="success" style="text-shadow: 1px 1px #888888;">Play card</td>
                     <td>{% embed 'BoardElements/ActionToken.twig' with {'action': content['card']}%}{% endembed %}</td>
                 </tr>
+                {% if not content['hideOdds'] %}
                 <tr>
                     <td class="success" style="text-shadow: 1px 1px #888888;">Current Odds</td>
                     <td>{% embed 'BoardElements/ActionToken.twig' with {'action': {'type' : 'disabledInput' , 'class' : 'persuasionOdds'}}%}{% endembed %}</td>
                 </tr>
+                {% endif %}
                 <tr>
                     <td style="text-shadow: 1px 1px #888888; text-align: center;" colspan="2">
-                        {% embed 'BoardElements/ActionToken.twig' with {'action': content['action']}%}{% endembed %}
+                        <div class="row">
+                            <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': content['action']}%}{% endembed %}</div>
+                            <div class="col-sm-6"><button type="submit" class="btn btn-warning form-inline">PERSUADE</button></div>
+                        </div>
                     </td>
                 </tr>
             </tbody>
         </table>
+    </form>
+
+{#
+    Persuasion > Bribe or Roll
+#}
+
+{% elseif gameView.subPhase == 'Persuasion' and content['interface']=='bribeOrRoll' %}
+Bribe or roll
+{#
+    Persuasion > Counter bribe
+#}
+
+{% elseif gameView.subPhase == 'Persuasion' and content['interface']=='counterBribe' %}
+    <br>
+        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='persuasionCounterBribe' gameId='{{gameView.realm}}'>
+            <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
+                <tbody>
+                    <tr>
+                        <td class="success" style="text-shadow: 1px 1px #888888;">Counter bribe</td>
+                        <td>{% embed 'BoardElements/ActionToken.twig' with {'action': content['counterBribe']}%}{% endembed %}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-shadow: 1px 1px #888888; text-align: center;" colspan="2">
+                            <div class="row">
+                                <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': content['noCounterBribe']}%}{% endembed %}</div>
+                                <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': content['persuasionCounterBribe']}%}{% endembed %}</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
 
 {% endif %}

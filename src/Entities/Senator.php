@@ -64,6 +64,8 @@ class Senator extends Card
     //protected $conflict ; // the card ID of the conflict this Senator is fighting or FALSE
     /** @OneToOne(targetEntity="Party" , inversedBy="leader") **/
     private $leaderOf ;
+    /** @OneToOne(targetEntity="Party" , inversedBy="bidWith") **/
+    private $biddingFor ;
     // A Senator can have any number of loyal legions
     /** @OneToMany(targetEntity="Legion", mappedBy="loyalTo") **/
     private $loyalLegions ;
@@ -101,6 +103,7 @@ class Senator extends Card
     public function setFreeTribune ($freeTribune) { $this->freeTribune = $freeTribune ; }
     public function setReturningGovernor ($returningGovernor) { $this->returningGovernor = $returningGovernor ; }      
     public function setLeaderOf($leaderOf) { $this->leaderOf = $leaderOf; }
+    public function setBiddingFor($biddingFor) { $this->biddingFor = $biddingFor; }
     public function setSteppedDown($steppedDown) { $this->steppedDown = $steppedDown; }
 
     public function getSenatorID() { return $this->senatorID ; }      
@@ -128,6 +131,7 @@ class Senator extends Card
     public function getReturningGovernor () { return $this->returningGovernor ; }      
     public function getLeaderOf() { return $this->leaderOf; }
     public function getSteppedDown() { return $this->steppedDown; }
+    public function getBiddingFor() { return $this->biddingFor; }
 
     /**
      * ----------------------------------------------------

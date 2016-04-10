@@ -58,6 +58,9 @@ class Party
     /** @Column(type="integer") @var int */
     protected $bid = 0 ;
 
+    /** @OneToOne(targetEntity="Senator" , mappedBy="biddingFor" , cascade={"persist"}) **/
+    private $bidWith = NULL ;
+
     /**
      * ----------------------------------------------------
      * Getters & Setters
@@ -85,6 +88,10 @@ class Party
     public function setIsDone($isDone) { $this->isDone = $isDone; }
     public function setInitiativeWon($initiativeWon) { $this->initiativeWon = $initiativeWon; }
     public function setBid($bid) { $this->bid = $bid; }
+    public function setBidWith($bidWith) {
+        $this->bidWith = $bidWith ;
+        $bidWith->setBiddingFor($this) ;
+    }
 
     public function getId() { return $this->id; }
     public function getGame() { return $this->game ; }
@@ -105,6 +112,7 @@ class Party
     public function getIsDone() { return $this->isDone; }
     public function getInitiativeWon() { return $this->initiativeWon; }
     public function getBid() { return $this->bid; }
+    public function getBidWith() { return $this->bidWith; }
 
      public function __construct($user_id , $userName , $name) {
          // Prevent creation of a party with a name that is less than 3 letters long
@@ -142,7 +150,7 @@ class Party
                     $data[$name] = $item->saveData() ;
                 }
                 // Many-to-one (game) and one-to-one (leader) relations : just save the id
-                elseif ($name=='game' || $name=='leader')
+                elseif ($name=='game' || $name=='leader' || $name=='bidWith')
                 {
                     $data[$name] = (is_null($item) ? NULL : $item->getId() ) ;
                 }

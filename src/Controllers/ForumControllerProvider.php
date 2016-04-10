@@ -56,6 +56,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             /** @var \Entities\Game $game */
             $game = $app['getGame']((int)$game_id) ;
+            // TO DO : user id should be passed in JSON
             $user_id = (int)$app['user']->getId() ;
             if ($game!==FALSE)
             {
@@ -74,7 +75,96 @@ class ForumControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
-        * Verb : MoveCard
+        * Verb : noPersuasion
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/noPersuasion', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            // TO DO : user id should be passed in JSON
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
+                //$game->setSubPhase('knights') ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_noPersuasion');
+
+        /*
+        * POST target
+        * Verb : persuasionPickTarget
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/persuasionPickTarget', function($game_id , Request $request) use ($app)
+        {
+            $game = $app['getGame']((int)$game_id) ;
+            // TO DO : user id should be passed in JSON
+            $user_id = (int)$app['user']->getId() ;
+            if ($game!==FALSE)
+            {
+                $outcome = $this->persuasionPickTarget($game , $user_id , $request->request->all()) ;
+                $app['session']->getFlashBag()->add('danger' , $outcome) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_persuasionPickTarget');
+
+        /*
+        * POST target
+        * Verb : persuasionNoCounterBribe
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/persuasionNoCounterBribe', function($game_id , Request $request) use ($app)
+        {
+            /** @var \Entities\Game $game */
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game!==FALSE)
+            {
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                // User_id mismatch
+                if ( $user_id!=(int)$app['user']->getId() )
+                {
+                    $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
+                    return $app->json( _('Error - User ID mismatch.') , 201);
+                }
+                else
+                {
+                    $game->getParty($user_id)->setIsDone(TRUE) ;
+                    $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} counter-bribe') , 'log');
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                    return $app->json( 'SUCCESS' , 201);
+                }
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_persuasionNoCounterBribe');
+
+        /*
+        * ===== DEBUG =====
+        * POST target
+        * Verb : MoveCard (debug function)
         * JSON data : user_id
         */
         $controllers->post('/{game_id}/MoveCard', function($game_id , Request $request) use ($app)
@@ -382,4 +472,55 @@ class ForumControllerProvider implements ControllerProviderInterface
         $game->setPersuasionTarget(NULL) ;
     }
 
+    /**
+     *
+     * @param \Entities\Game $game
+     * @param int $user_id
+     * @param array $data
+     * @return boolean
+     */
+     public function persuasionPickTarget($game , $user_id , $data)
+    {
+        $target = $game->getFilteredCards(array('senatorID'=>$data['persuasionTargetList'])) ;
+        $persuader= $game->getFilteredCards(array('senatorID'=>$data['persuasionPersuaderList'])) ;
+        $bribe = (int)$data['persuasionBribe'] ;
+        $persuasionCard = $game->getFilteredCards(array('id'=>$data['persuasionCard'])) ;
+        // validation
+        if (count($target)!=1)
+        {
+            return _('Wrong target') ;
+        }
+        if ($target->first()->getLocation()['type']!='party' && $target->first()->getLocation()['name']!='forum')
+        {
+            return _('Target not in a party or the forum') ;
+        }
+        if (count($persuader)!=1)
+        {
+            return _('Wrong persuader') ;
+        }
+        if ($persuader->first()->getLocation()['type']!='party' || $persuader->first()->getLocation()['value']->getUser_id()!=$user_id)
+        {
+            return _('Persuader in wrong party') ;
+        }
+        if ($bribe<0 || $bribe>$persuader->first()->getTreasury())
+        {
+            return _('Invalid bribe value') ;
+        }
+        if (count($persuasionCard)>0 && ( count($persuasionCard->first())!=1 || $persuasionCard->first()->getLocation()['type']!='hand' || $persuasionCard->first()->getLocation()['value']->getUser_id()!=$user_id))
+        {
+            return _('Persuasion card comes from the wrong place') ;
+        }
+        /*
+         * Validation done. Set persuader as $party->bidWith , bribe as $party->bid and target as $game->persuasiontarget
+         */
+        $game->getParty($user_id)->setBidWith($persuader->first()) ;
+        $game->setPersuasionTarget($target->first()) ;
+        $game->getParty($user_id)->setBid($bribe) ;
+        $game->getParty($user_id)->setIsDone(TRUE);
+        // A persuasion card was played
+        if (count($persuasionCard->first())==1)
+        {
+        }
+        return _('All is OK : '.print_r($data,TRUE)) ;
+    }
 }
