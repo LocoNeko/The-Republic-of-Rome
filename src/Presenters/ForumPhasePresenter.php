@@ -15,7 +15,10 @@ class ForumPhasePresenter
     private $persuasionCards ;
     private $variantHideOdds ;
     private $firstIsNotDoneUserId ;
+    private $everyoneIsDone ;
     private $persuasionDescription ;
+    private $persuaderAvailableTreasury ;
+    private $nonPersuaderAvailableTreasury ;
 
     /**
      * 
@@ -50,8 +53,9 @@ class ForumPhasePresenter
         $this->setPersuaderList($game) ;
         $this->setPersuasionCards($game) ;
         $this->setVariantHideOdds($game->getVariantFlag('Hide odds'));
+        $this->everyoneIsDone = FALSE ;
         $this->setFirstIsNotDoneUserId($game);
-        $this->setPersuasionDescription($game) ;
+        $this->setPersuasionInformation($game) ;
     }
     
     public function setUser_id($user_id) { $this->user_id = $user_id; }
@@ -61,7 +65,9 @@ class ForumPhasePresenter
     public function setPartyWithInitiative($partyWithInitiative) { $this->partyWithInitiative = $partyWithInitiative; } 
     public function setPersuasionTarget($persuasionTarget) { $this->persuasionTarget = $persuasionTarget; }
     public function setVariantHideOdds($variantHideOdds) { $this->variantHideOdds = $variantHideOdds; }
-
+    public function setPersuaderAvailableTreasury($persuaderAvailableTreasury) { $this->persuaderAvailableTreasury = $persuaderAvailableTreasury; }
+    public function setNonPersuaderAvailableTreasury($nonPersuaderAvailableTreasury) { $this->nonPersuaderAvailableTreasury = $nonPersuaderAvailableTreasury; }
+ 
     public function getUser_id() { return $this->user_id; }
     public function getPhase() { return $this->phase; }
     public function getSubPhase() { return $this->subPhase; }
@@ -75,6 +81,8 @@ class ForumPhasePresenter
     public function getVariantHideOdds() { return $this->variantHideOdds; }
     public function getFirstIsNotDoneUserId() { return $this->firstIsNotDoneUserId; }
     public function getPersuasionDescription() { return $this->persuasionDescription; }
+    public function getPersuaderAvailableTreasury() { return $this->persuaderAvailableTreasury; }
+    public function getNonPersuaderAvailableTreasury() { return $this->nonPersuaderAvailableTreasury; }
 
     public function getHeader()
     {
@@ -151,16 +159,16 @@ class ForumPhasePresenter
                 else
                 {
                     // The list will describe the current Persuasion attempt
-                    $result['list'][]=$this->getPersuasionDescription();
+                    $result['list'][]=$this->getPersuasionDescription()['text'];
                     /*
                      * This user is playing
                      */
-                    if ($this->getFirstIsNotDoneUserId()==$this->getUser_id())
+                    if ($this->getFirstIsNotDoneUserId()==$this->getUser_id() || ($this->getPartyWithInitiative()->getUser_id() == $this->getUser_id() && $this->everyoneIsDone))
                     {
                         // Has the initiative - Can roll or bribe more
                         if ($this->getPartyWithInitiative()->getUser_id() == $this->getUser_id())
                         {
-
+                            $result['description'] = _('Bribe or roll') ;
                         }
                         // Doesn't have the initiative - Can counter-bribe
                         else
@@ -171,9 +179,13 @@ class ForumPhasePresenter
                     /*
                      * This user is waiting
                      */
-                    else
+                    elseif (!$this->everyoneIsDone)
                     {
                         $result['description'] = _('Waiting for Counter bribe') ;
+                    }
+                    else
+                    {
+                        $result['description'] = _('Waiting for persuader to roll or bribe more') ;
                     }
                 }
             }
@@ -251,10 +263,33 @@ class ForumPhasePresenter
          * - Has initiative
          * There is a persuasion target & the player can roll or bribe more
          */
-        elseif ($this->getPhase()=='Forum' && $this->getSubPhase()=='Persuasion' && $this->getPersuasionTarget()!==NULL && $this->getPartyWithInitiative()->getUser_id() == $this->getUser_id())
+        elseif ($this->getPhase()=='Forum' && $this->getSubPhase()=='Persuasion' && $this->getPersuasionTarget()!==NULL && $this->getPartyWithInitiative()->getUser_id() == $this->getUser_id() && $this->everyoneIsDone)
         {
             $result['interface'] = 'bribeOrRoll' ;
-            // TO DO
+            $items = array() ;
+            for ($i=0 ; $i<=$this->getPersuaderAvailableTreasury() ; $i++)
+            {
+                $items[] = array('value'=>$i , 'description' => $i) ;
+            }
+            $result['persuasionAddedBribe'] = array (
+                'type' => 'select' ,
+                'class' => 'persuasionAddedBribe' ,
+                'items' => $items
+            ) ;
+            $result['bribeMore'] = array (
+                'type' => 'submitWithVerb' ,
+                'verb' => 'bribeMore' ,
+                'text' => 'BRIBE MORE' ,
+                'disabled' => TRUE ,
+                'user_id' => $this->getUser_id()
+            );
+            $result['persuasionRoll'] = array (
+                'type' => 'submitWithVerb' ,
+                'verb' => 'persuasionRoll' ,
+                'text' => 'ROLL' ,
+                'style' => 'danger' ,
+                'user_id' => $this->getUser_id()
+            );
         }
         /*
          * - Phase : Forum
@@ -266,12 +301,15 @@ class ForumPhasePresenter
         elseif ($this->getPhase()=='Forum' && $this->getSubPhase()=='Persuasion' && $this->getPersuasionTarget()!==NULL && $this->getFirstIsNotDoneUserId() == $this->getUser_id())
         {
             $result['interface'] = 'counterBribe' ;
+            $items = array() ;
+            for ($i=0 ; $i<=$this->getNonPersuaderAvailableTreasury()[$this->getUser_id()] ; $i++)
+            {
+                $items[] = array('value'=>$i , 'description' => $i) ;
+            }
             $result['counterBribe'] = array (
                 'type' => 'select' ,
                 'class' => 'persuasionCounterBribe' ,
-                'items' => array(
-                    array('value'=>0 , 'description' => '0')
-                )
+                'items' => $items
             ) ;
             $result['noCounterBribe'] = array (
                 'type' => 'submitWithVerb' ,
@@ -414,34 +452,42 @@ class ForumPhasePresenter
             if (!$party->getIsDone())
             {
                 $this->firstIsNotDoneUserId = $party->getUser_id() ;
-                break ;
+                return ;
             }
         }
+        $this->everyoneIsDone = TRUE ;
     }
 
     /**
      * @param \Entities\Game $game
      */
-    public function setPersuasionDescription($game)
+    public function setPersuasionInformation($game)
     {
         $persuaderParty = $this->getPartyWithInitiative() ;
         $target = $game->getPersuasionTarget() ;
         // Validation
-        if ($persuaderParty === FALSE) { return _('') ;}
-        if ($target === NULL) { return _('') ;}
+        if ($persuaderParty === FALSE) { return ;}
+        if ($target === NULL) { return ;}
         $persuader = $persuaderParty->getBidWith() ;
-        if ($persuader === NULL) { return _('') ;}
+        if ($persuader === NULL) { return ;}
         $bribes = $persuaderParty->getBid() ;
 
         // Counter bribes
         $counterBribesDescription = _('') ;
         $counterBribes = 0 ;
+        $nonPersuaderAvailableTreasury = array() ;
         foreach ($game->getParties() as $party)
         {
-            if ( ($party->getUser_id() != $this->getPartyWithInitiative()->getUser_id()) && $party->getBid()>0)
+            if ( ($party->getUser_id() != $this->getPartyWithInitiative()->getUser_id()))
             {
-                $counterBribesDescription.=sprintf(_('%1$s with %2$dT, ') , $party->getFullName() , $party->getBid()) ;
-                $counterBribes+=$party->getBid() ;
+                // Set non-persuader available treasuries 
+                $nonPersuaderAvailableTreasury[$party->getUser_id()] = $party->getTreasury() - $party->getBid() ;
+                // Counter bribes totals
+                if ($party->getBid()>0)
+                {
+                    $counterBribesDescription.=sprintf(_('%1$s with %2$dT, ') , $party->getFullName() , $party->getBid()) ;
+                    $counterBribes+=$party->getBid() ;
+                }
             }
         }
         if (strlen($counterBribesDescription)>0)
@@ -449,12 +495,22 @@ class ForumPhasePresenter
             $counterBribesDescription=_(' Counter bribes : ').substr($counterBribesDescription,0,-2).'.';
         }
 
+        $this->persuasionDescription = array() ;
         // Odds for : INF + ORA + bribes
         // Odds against : LOY + treasury + counter bribes
-        $for = $persuader->getINF() + $persuader->getORA() + $bribes ;
+        
+        $for= $persuader->getINF() + $persuader->getORA() + $bribes ;
         $against = $target->getActualLOY($game) + $target->getTreasury() + $counterBribes ;
+        $this->persuasionDescription['for'] = $for ;
+        $this->persuasionDescription['against'] = $against;
 
         // Description
-        $this->persuasionDescription = sprintf( _('%1$s is persuading %2$s, spending %3$d in bribes.%4$s Totals are %5$d for and %6$d against.') , $persuader->getName() , $target->getName() , $bribes , $counterBribesDescription , $for , $against ) ;
+        $this->persuasionDescription['text'] = sprintf( _('%1$s is persuading %2$s, spending %3$d in bribes.%4$s Totals are %5$d for and %6$d against.') , $persuader->getName() , $target->getName() , $bribes , $counterBribesDescription , $for , $against ) ;
+        
+        // Persuader's available treasury
+        $this->setPersuaderAvailableTreasury($persuader->getTreasury()-$bribes);
+        
+        // Non-persuader available treasuries
+        $this->setNonPersuaderAvailableTreasury($nonPersuaderAvailableTreasury) ;
     }
 }

@@ -391,10 +391,6 @@ class RevenueControllerProvider implements ControllerProviderInterface
             //TO DO
         }
         
-        if (count($data)>0)
-        {
-            $game->log(_('ERROR - Some revenue decisions have not been processed') , 'error') ;
-        }
         $party->setIsDone(TRUE) ;
     }
     

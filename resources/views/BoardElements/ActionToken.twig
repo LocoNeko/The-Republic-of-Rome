@@ -42,13 +42,9 @@
         - One of those must be 'description' => 'XXXX'
     #}
     <div class="form-group">
-        <select class="form-control {{action['class']|default('')}}" name="{{action['class']}}">
+        <select class="form-control {{action['class']|default('')}}" name="{{action['class']|default('')}}">
             {% for item in action['items'] %}
-                <option
-                    {% for key, value in item %}
-                        {{key}} = "{{value}}"
-                    {% endfor %}
-                >
+                <option {% for key, value in item %} {{key}}="{{value}}"{% endfor %} >
                     {{item['description']|escape('html')}}
                 </option>
             {% endfor %}

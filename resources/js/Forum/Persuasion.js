@@ -8,6 +8,7 @@
 $(function() {
     persuasionUpdateBribeList() ;
     persuasionUpdateOdds() ;
+    persuasionUpdateAddedBribe() ;
 
     $('.persuasionPersuaderList').on('change', function() {
         persuasionUpdateBribeList() ;
@@ -20,6 +21,10 @@ $(function() {
   
     $('.persuasionBribe').on('change', function() {
         persuasionUpdateOdds() ;
+    });
+    
+    $('.persuasionAddedBribe').on('change', function() {
+        persuasionUpdateAddedBribe() ;
     });
   
 });
@@ -74,5 +79,22 @@ function persuasionUpdateOdds()
     {
         $('.persuasionOdds').val('N/A');
         $("[verb='persuasionPickTarget']").find("[verb='persuasionPickTarget']").addClass('disabled');
+    }
+}
+
+/*
+ * Enables and disables the "bribe more" button depending on the value of the persuasionAddedBribe select
+ */
+
+function persuasionUpdateAddedBribe()
+{
+    var addedBribe = parseInt($('.persuasionAddedBribe option:selected').val() , 10 ) ;
+    if (addedBribe>0)
+    {
+        $("[verb='bribeMore']").removeClass('disabled');
+    }
+    else
+    {
+        $("[verb='bribeMore']").addClass('disabled');
     }
 }

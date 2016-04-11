@@ -101,7 +101,7 @@ class Party
     public function getReadyToStart() { return $this->readyToStart ; }
     /** @return \Entities\Deck */
     public function getHand() { return $this->hand ; }
-    /** @return \Entities\Senator[] */
+    /** @return \Entities\Deck */
     public function getSenators() { return $this->senators ; }
     public function getMessages() { return $this->messages ; }
     public function getLastUpdate() { return $this->lastUpdate ; }
@@ -112,6 +112,7 @@ class Party
     public function getIsDone() { return $this->isDone; }
     public function getInitiativeWon() { return $this->initiativeWon; }
     public function getBid() { return $this->bid; }
+    /** @return \Entities\Senator | boolean */
     public function getBidWith() { return $this->bidWith; }
 
      public function __construct($user_id , $userName , $name) {
@@ -242,6 +243,11 @@ class Party
         $this->treasury+=(int)$amount ;
     }
         
+    public function changeBid($amount)
+    {
+        $this->bid += (int)$amount ;
+    }
+    
     public function setLastUpdateToNow()
     {
         $this->setLastUpdate(new \DateTime('NOW') ) ;

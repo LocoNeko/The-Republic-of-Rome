@@ -217,7 +217,7 @@ abstract class Card
     /**
      * Returns an array giving the type & name of its location and the location itself when it's a card or a party
      * This is entirely based on the Deck the card belongs to
-     * @return array ('type' => 'game|card|party|hand' , 'name' , 'value' => NULL|(card)|(party)|(party) )
+     * @return array ('type' => 'game|card|party|hand' , 'deck' , 'name' , 'value' => NULL|(deck)|(card)|(party)|(party) )
      */
     public function getLocation()
     {
@@ -227,30 +227,60 @@ abstract class Card
             // Deck
             if (method_exists($deck, 'getGame') && $deck->getGame() != NULL)
             {
-                $result = array ('type' => 'game' , 'value' => $deck , 'name' => $deck->getName() ) ;
+                $result = array (
+                    'type' => 'game' ,
+                    'deck' => $deck ,
+                    'value' => $deck ,
+                    'name' => $deck->getName() 
+                ) ;
             }
             // Card
             elseif (method_exists($deck, 'getControlled_by') && $deck->getControlled_by() != NULL)
             {
-                $result = array ('type' => 'card' , 'value' => $deck->getControlled_by() , 'name' => $deck->getControlled_by()->getName()) ;
+                $result = array (
+                    'type' => 'card' ,
+                    'deck' => $deck ,
+                    'value' => $deck->getControlled_by() ,
+                    'name' => $deck->getControlled_by()->getName()
+                ) ;
             }
             // Party
             elseif (method_exists($deck, 'getInParty') && $deck->getInParty() != NULL)
             {
-                $result = array ('type' => 'party' , 'value' => $deck->getInParty() , 'name' => $deck->getInParty()->getName()) ;
+                $result = array (
+                    'type' => 'party' ,
+                    'deck' => $deck ,
+                    'value' => $deck->getInParty() ,
+                    'name' => $deck->getInParty()->getName()
+                ) ;
             }
             elseif (method_exists($deck, 'getInHand') && $deck->getInHand() != NULL)
             {
-                $result = array ('type' => 'hand' , 'value' => $deck->getInHand() , 'name' => $deck->getInHand()->getName()) ;
+                $result = array (
+                    'type' => 'hand' ,
+                    'deck' => $deck ,
+                    'value' => $deck->getInHand() ,
+                    'name' => $deck->getInHand()->getName()
+                ) ;
             }
             else
             {
-                $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'Unknown location') ;
+                $result = array (
+                    'type' => 'game' ,
+                    'deck' => NULL ,
+                    'value' => NULL ,
+                    'name' => 'Unknown location'
+                ) ;
             }
         }
         else
         {
-           $result = array ('type' => 'game' , 'value' => NULL , 'name' => 'no getDeck method') ;
+           $result = array (
+               'type' => 'game' ,
+               'deck' => NULL ,
+               'value' => NULL ,
+               'name' => 'no getDeck method'
+            ) ;
         }
         return $result ;
     }

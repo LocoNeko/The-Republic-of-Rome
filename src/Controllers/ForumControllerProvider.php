@@ -112,10 +112,23 @@ class ForumControllerProvider implements ControllerProviderInterface
             if ($game!==FALSE)
             {
                 $outcome = $this->persuasionPickTarget($game , $user_id , $request->request->all()) ;
-                $app['session']->getFlashBag()->add('danger' , $outcome) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
+                /**
+                 * SUCCESS - No error while picking the target
+                 */
+                if ($outcome===TRUE)
+                {
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                    return $app->json( 'SUCCESS' , 201);
+                }
+                /*
+                 * ERROR - Error while picking the target
+                 */
+                else
+                {
+                    $app['session']->getFlashBag()->add('danger' , $outcome) ;
+                    return $app->json( $outcome , 201);
+                }
             }
             else
             {
@@ -161,8 +174,91 @@ class ForumControllerProvider implements ControllerProviderInterface
         })
         ->bind('verb_persuasionNoCounterBribe');
 
+        /**
+        * POST target
+        * Verb : bribeMore
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/bribeMore', function($game_id , Request $request) use ($app)
+        {
+            /** @var \Entities\Game */
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game!==FALSE)
+            {
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                // User_id mismatch
+                if ( $user_id!=(int)$app['user']->getId() )
+                {
+                    $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
+                    return $app->json( _('Error - User ID mismatch.') , 201);
+                }
+                else
+                {
+                    // Increase the bribe
+                    $game->getParty($user_id)->changeBid($json_data['persuasionAddedBribe']);
+                    // Set all parties to isDone = FALSE
+                    foreach ($game->getParties() as $party)
+                    {
+                        $party->setIsDone(FALSE) ;
+                    }
+                    $game->getParty($user_id)->setIsDone(TRUE) ;
+                    $game->log(_('[['.$user_id.']] {increase,increases} bribes by %d') , 'log' , array($json_data['persuasionAddedBribe'])) ;
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                    return $app->json( 'SUCCESS' , 201);
+                }
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_bribeMore');
+        
+        /**
+        * POST target
+        * Verb : persuasionRoll
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/persuasionRoll', function($game_id , Request $request) use ($app)
+        {
+            /** @var \Entities\Game */
+            $game = $app['getGame']((int)$game_id) ;
+            if ($game!==FALSE)
+            {
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                // User_id mismatch
+                if ( $user_id!=(int)$app['user']->getId() )
+                {
+                    $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
+                    return $app->json( _('Error - User ID mismatch.') , 201);
+                }
+                else
+                {
+                    $this->persuasionRoll($game, $user_id, $json_data) ;
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                    return $app->json( 'SUCCESS' , 201);
+                }
+            }
+            else
+            {
+                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+            }
+        })
+        ->bind('verb_persuasionRoll');
+        
         /*
-        * ===== DEBUG =====
+         * 
+         * =============== DEBUG ===============
+         * 
+        */
+        
+        /*
         * POST target
         * Verb : MoveCard (debug function)
         * JSON data : user_id
@@ -477,9 +573,9 @@ class ForumControllerProvider implements ControllerProviderInterface
      * @param \Entities\Game $game
      * @param int $user_id
      * @param array $data
-     * @return boolean
+     * @return string | boolean TRUE if successful, an erro message otherwise
      */
-     public function persuasionPickTarget($game , $user_id , $data)
+    public function persuasionPickTarget($game , $user_id , $data)
     {
         $target = $game->getFilteredCards(array('senatorID'=>$data['persuasionTargetList'])) ;
         $persuader= $game->getFilteredCards(array('senatorID'=>$data['persuasionPersuaderList'])) ;
@@ -520,7 +616,111 @@ class ForumControllerProvider implements ControllerProviderInterface
         // A persuasion card was played
         if (count($persuasionCard->first())==1)
         {
+            // TO DO
         }
-        return _('All is OK : '.print_r($data,TRUE)) ;
+        return TRUE ;
+    }
+    
+    /**
+     * 
+     * @param \Entities\Game $game
+     * @param int $user_id
+     * @param array $data
+     */
+    public function persuasionRoll($game , $user_id , $data)
+    {
+        // TO DO : Persuasion Card
+        /*
+         * Validation
+         */
+        $forumView = new \Presenters\ForumPhasePresenter($game , $user_id) ;
+        $error = FALSE ;
+        if ($forumView->getPartyWithInitiative()===FALSE || $forumView->getPartyWithInitiative()->getUser_id()!=$user_id )
+        {
+            $error = _('ERROR - Wrong party') ;
+        }
+        elseif ($forumView->getPersuasionTarget()===NULL)
+        {
+            $error = _('ERROR - No target') ;
+        }
+        elseif ($forumView->getPartyWithInitiative()->getBid() > $forumView->getPartyWithInitiative()->getBidWith()->getTreasury())
+        {
+            $error = _('ERROR - Wrong bid amount') ;
+        }
+        /*
+         * Validation complete - proceed
+         */
+        if ($error===FALSE)
+        {
+            $persuasionDescription = $forumView->getPersuasionDescription() ;
+            $roll = $game->rollDice(2, 1) ;
+            $for = $persuasionDescription['for'] ;
+            $against = $persuasionDescription['against'] ;
+            $targetValue = $for-$against ;
+            $message = _('ERROR - impossible value. ');
+            $success = FALSE ;
+            /*
+             * CHeck outcome : failure on 10+ . failure if roll greater than target , success otherwise
+             */
+            if ($roll['total']>=10)
+            {
+                $message = sprintf(_('FAILURE - %1$s He rolls an unmodified %2$d%3$s, which is greater than 9 and an automatic failure. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1)) ;
+            }
+            elseif ($roll['total']>$targetValue)
+            {
+                $message = sprintf(_('FAILURE - %1$s He rolls %2$d%3$s, which is greater than the target number of %4$d. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
+            }
+            else
+            {
+                $success = TRUE ;
+                $message = sprintf(_('SUCCESS - %1$s He rolls %2$d%3$s, which is less than the target number of %4$d. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
+                $forumView->getPersuasionTarget()->getLocation()['deck']->getFirstCardByProperty('senatorID' , $forumView->getPersuasionTarget()->getSenatorID() , $game->getParty($user_id)->getSenators());
+            }
+            
+            /**
+             * Describe what the target does (stay or go)
+             */
+            $message.= $forumView->getPersuasionTarget()->getName().
+            (   $success ?
+                _(' joins ').$forumView->getPartyWithInitiative()->getName().'.' : 
+                _(' stays in ').$forumView->getPersuasionTarget()->getLocation()['name'].'.'
+            );
+            
+            /**
+             * Bribes received
+             */
+            $totalBribesReceived = 0 ;
+            foreach ($game->getParties() as $party)
+            {
+                $totalBribesReceived+=$party->getBid() ;
+                $forumView->getPersuasionTarget()->changeTreasury($party->getBid()) ;
+                // Take bribes from party treasury for every party but the party with the initiative, for which bribes come from the persuader's treasury
+                if ($forumView->getPartyWithInitiative()->getUser_id()==$party->getUser_id())
+                {
+                    $party->getBidWith()->changeTreasury(-$party->getBid()) ;
+                }
+                else
+                {
+                    $party->changeTreasury(-$party->getBid()) ;
+                }
+            }
+            if ($totalBribesReceived>0)
+            {
+                $message.=sprintf(_(' He takes a total of %1$dT in bribes.') , $totalBribesReceived);
+            }
+            
+            $game->log($message, 'log');
+        }
+        /*
+         * There was an error
+         */
+        else
+        {
+            $game->log($error , 'error');
+        }
+        /*
+         * Reset persuasion
+         */
+        //$this->resetPersuasion($game) ;
     }
 }
