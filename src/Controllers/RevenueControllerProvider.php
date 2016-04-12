@@ -21,29 +21,25 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', (int)$game_id);
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , (int)$game_id ));
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect('/') ;
             }
-            elseif(!$game->gameStarted())
-            {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , (int)$game_id ));
-                return $app->redirect('/') ;
-            }
-            else
-            {
-                $gameView = new \Presenters\GamePresenter($game) ;
-                $revenueView = new \Presenters\RevenuePhasePresenter($game , (int)$app['user']->getId()) ;
-                return $app['twig']->render('BoardElements/Main.twig', array(
-                    'layout_template' => 'layout.twig' ,
-                    'game' => $game,
-                    'gameView' => $gameView ,
-                    'header' => $revenueView->getHeader() ,
-                    'content' => $revenueView->getContent()
-                ));
-            }
+            $gameView = new \Presenters\GamePresenter($game) ;
+            $revenueView = new \Presenters\RevenuePhasePresenter($game , (int)$app['user']->getId()) ;
+            return $app['twig']->render('BoardElements/Main.twig', array(
+                'layout_template' => 'layout.twig' ,
+                'game' => $game,
+                'gameView' => $gameView ,
+                'header' => $revenueView->getHeader() ,
+                'content' => $revenueView->getContent()
+            ));
         })
         ->bind('Revenue');
         
@@ -54,26 +50,27 @@ class RevenueControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/RevenueDone', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201);
+            }
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
+            $this->doRevenue($game , $user_id , $request->request->all()) ;
+            if ($game->isEveryoneDone())
             {
-                $this->doRevenue($game , $user_id , $request->request->all()) ;
-                if ($game->isEveryoneDone())
-                {
-                    $app['saveGame']($game) ;
-                    $game->setSubPhase('Redistribution') ;
-                    $game->resetAllIsDone() ;
-                }
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
+                $app['saveGame']($game) ;
+                $game->setSubPhase('Redistribution') ;
+                $game->resetAllIsDone() ;
             }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_RevenueDone');
 
@@ -84,55 +81,55 @@ class RevenueControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/ContributionsDone', function($game_id , Request $request) use ($app)
         {
-            /* @var \Entities\Game $game  */
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201);
+            }
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
+            $game->getParty($user_id)->setIsDone(TRUE) ;
+            if ($game->isEveryoneDone())
             {
-                $game->getParty($user_id)->setIsDone(TRUE) ;
-                if ($game->isEveryoneDone())
-                {
-                    $game->setSubPhase('StateExpenses') ;
-                    $this->doStateExpenses($game) ;
-                    $app['saveGame']($game) ;
-                    $game->resetAllIsDone() ;
-                    $game->setPhase('Forum') ;
-                    // Remove events that expire at the beginning of the forum phase
-                    foreach ($game->getEvents() as $number => $event) {
-                        if ($event['level']>0) {
-                            if ( ($number != 174) && ($number != 175) && ($number != 176) ) {
-                                $game->setEventLevel ('number' , $number , 0) ;
-                                $game->log(_('Event %s is removed.') , 'log' , array($event['name'])) ;
-                            }
+                $game->setSubPhase('StateExpenses') ;
+                $this->doStateExpenses($game) ;
+                $app['saveGame']($game) ;
+                $game->resetAllIsDone() ;
+                $game->setPhase('Forum') ;
+                // Remove events that expire at the beginning of the forum phase
+                foreach ($game->getEvents() as $number => $event) {
+                    if ($event['level']>0) {
+                        if ( ($number != 174) && ($number != 175) && ($number != 176) ) {
+                            $game->setEventLevel ('number' , $number , 0) ;
+                            $game->log(_('Event %s is removed.') , 'log' , array($event['name'])) ;
                         }
                     }
-                    // Barbarians kill captives
-                    /* @var \Entities\Party $party */
-                    foreach ($game->getParties() as $party) {
-                        $captiveList = $party->getListOfCaptives() ;
-                        if ($captiveList!==FALSE) {
-                            foreach ($captiveList as $captive) {
-                                if ($captive['captiveOf'] == 'barbarians') {
-                                    $game->log(_('The barbarians slaughter %1$s, whose ransom was not paid by [['.$party->getUser_id().']]') , 'log' , array($captive['senatorID'])) ;
-                                    $killMessage = $game->killSenator($captive['senatorID'] , TRUE ) ;
-                                    $game->log($killMessage[0] , $killMessage[1]) ;
-                                }
-                            }
-                        }
-                    }
-                    $game->setSubPhase('RollEvent') ;
-                    $game->setInitiative(1) ;
-                    $game->log('Initiative #1' , 'alert' ) ;
                 }
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
+                // Barbarians kill captives
+                /* @var \Entities\Party $party */
+                foreach ($game->getParties() as $party) {
+                    $captiveList = $party->getListOfCaptives() ;
+                    if ($captiveList!==FALSE) {
+                        foreach ($captiveList as $captive) {
+                            if ($captive['captiveOf'] == 'barbarians') {
+                                $game->log(_('The barbarians slaughter %1$s, whose ransom was not paid by [['.$party->getUser_id().']]') , 'log' , array($captive['senatorID'])) ;
+                                $killMessage = $game->killSenator($captive['senatorID'] , TRUE ) ;
+                                $game->log($killMessage[0] , $killMessage[1]) ;
+                            }
+                        }
+                    }
+                }
+                $game->setSubPhase('RollEvent') ;
+                $game->setInitiative(1) ;
+                $game->log('Initiative #1' , 'alert' ) ;
             }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_ContributionsDone');
 
@@ -143,20 +140,21 @@ class RevenueControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/Redistribute', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201);
+            }
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
-            {
-                $this->doTransfer($game , $user_id , $request->request->all()) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->doTransfer($game , $user_id , $request->request->all()) ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_Redistribute');
         
@@ -167,20 +165,21 @@ class RevenueControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/Contribute', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201);
+            }
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
-            {
-                $this->doContribution($game , $user_id , $request->request->all()) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->doContribution($game , $user_id , $request->request->all()) ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_Contribute');
 
@@ -191,29 +190,30 @@ class RevenueControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/RedistributionDone', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201);
+            }
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
+            // TO DO : Offer an interface to the HRAO for disbanding legions that were released by rebels
+            // The HRAO cannot setDone to TRUE as long as there is released legions
+            $game->getParty($user_id)->setIsDone(TRUE) ;
+            if ($game->isEveryoneDone())
             {
-                // TO DO : Offer an interface to the HRAO for disbanding legions that were released by rebels
-                // The HRAO cannot setDone to TRUE as long as there is released legions
-                $game->getParty($user_id)->setIsDone(TRUE) ;
-                if ($game->isEveryoneDone())
-                {
-                    $app['saveGame']($game) ;
-                    $this->doRomeRevenue($game) ;
-                    $game->setSubPhase('Contributions') ;
-                    $game->resetAllIsDone() ;
-                }
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
+                $app['saveGame']($game) ;
+                $this->doRomeRevenue($game) ;
+                $game->setSubPhase('Contributions') ;
+                $game->resetAllIsDone() ;
             }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_RedistributionDone');
 

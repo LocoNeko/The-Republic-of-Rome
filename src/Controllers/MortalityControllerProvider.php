@@ -20,28 +20,24 @@ class MortalityControllerProvider implements ControllerProviderInterface
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', (int)$game_id);
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , (int)$game_id ));
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect('/') ;
             }
-            elseif(!$game->gameStarted())
-            {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , (int)$game_id ));
-                return $app->redirect('/') ;
-            }
-            else
-            {
-                $gameView = new \Presenters\GamePresenter($game) ;
-                $mortalityView = new \Presenters\MortalityPhasePresenter($game) ;
-                return $app['twig']->render('BoardElements/Main.twig', array(
-                    'layout_template' => 'layout.twig' ,
-                    'game' => $game,
-                    'gameView' => $gameView ,
-                    'mortalityView' => $mortalityView->getHeader((int)$app['user']->getId())
-                ));
-            }
+            $gameView = new \Presenters\GamePresenter($game) ;
+            $mortalityView = new \Presenters\MortalityPhasePresenter($game) ;
+            return $app['twig']->render('BoardElements/Main.twig', array(
+                'layout_template' => 'layout.twig' ,
+                'game' => $game,
+                'gameView' => $gameView ,
+                'mortalityView' => $mortalityView->getHeader((int)$app['user']->getId())
+            ));
         })
         ->bind('Mortality');
         
@@ -52,29 +48,30 @@ class MortalityControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/MortalityReady', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201);
+            }
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
+            $game->getParty($user_id)->setIsDone(TRUE) ;
+            if ($game->isEveryoneDone())
             {
-                $game->getParty($user_id)->setIsDone(TRUE) ;
-                if ($game->isEveryoneDone())
-                {
-                    $this->doMortality($game) ;
-                    $game->setPhase('Revenue') ;
-                    $game->setSubPhase('Base') ;
-                    $app['saveGame']($game) ;
-                    $game->resetAllIsDone() ;
-                    $game->revenue_init() ;
-                }
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
+                $this->doMortality($game) ;
+                $game->setPhase('Revenue') ;
+                $game->setSubPhase('Base') ;
+                $app['saveGame']($game) ;
+                $game->resetAllIsDone() ;
+                $game->revenue_init() ;
             }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_MortalityReady');
     

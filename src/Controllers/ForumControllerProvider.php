@@ -21,29 +21,24 @@ class ForumControllerProvider implements ControllerProviderInterface
         $controllers->get('/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', (int)$game_id);
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not found.') , (int)$game_id ));
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->redirect('/') ;
             }
-            elseif(!$game->gameStarted())
-            {
-                $app['session']->getFlashBag()->add('alert', sprintf(_('Error - Game %1$s not started.') , (int)$game_id ));
-                return $app->redirect('/') ;
-            }
-            else
-            {
-                $gameView = new \Presenters\GamePresenter($game) ;
-                $forumView = new \Presenters\ForumPhasePresenter($game , (int)$app['user']->getId()) ;
-                return $app['twig']->render('BoardElements/Main.twig', array(
-                    'layout_template' => 'layout.twig' ,
-                    'game' => $game ,
-                    'gameView' => $gameView ,
-                    'header' => $forumView->getHeader() ,
-                    'content' => $forumView->getContent()
-                ));
-            }
+            $gameView = new \Presenters\GamePresenter($game) ;
+            $forumView = new \Presenters\ForumPhasePresenter($game , (int)$app['user']->getId()) ;
+            return $app['twig']->render('BoardElements/Main.twig', array(
+                'layout_template' => 'layout.twig' ,
+                'game' => $game ,
+                'gameView' => $gameView ,
+                'header' => $forumView->getHeader() ,
+                'content' => $forumView->getContent()
+            ));
         })
         ->bind('Forum');
         
@@ -54,22 +49,22 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/RollEvent', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game $game */
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
             // TO DO : user id should be passed in JSON
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
-            {
-                $this->doRollEvent($user_id , $game) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $this->doRollEvent($user_id , $game) ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_RollEvent');
 
@@ -80,22 +75,23 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/noPersuasion', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
             // TO DO : user id should be passed in JSON
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
-            {
-                $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
-                //$game->setSubPhase('knights') ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
-            }
+            $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
+            //$game->setSubPhase('knights') ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_noPersuasion');
 
@@ -106,34 +102,35 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/persuasionPickTarget', function($game_id , Request $request) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
             // TO DO : user id should be passed in JSON
             $user_id = (int)$app['user']->getId() ;
-            if ($game!==FALSE)
+            $outcome = $this->persuasionPickTarget($game , $user_id , $request->request->all()) ;
+            /**
+             * SUCCESS - No error while picking the target
+             */
+            if ($outcome===TRUE)
             {
-                $outcome = $this->persuasionPickTarget($game , $user_id , $request->request->all()) ;
-                /**
-                 * SUCCESS - No error while picking the target
-                 */
-                if ($outcome===TRUE)
-                {
-                    $this->entityManager->persist($game);
-                    $this->entityManager->flush();
-                    return $app->json( 'SUCCESS' , 201);
-                }
-                /*
-                 * ERROR - Error while picking the target
-                 */
-                else
-                {
-                    $app['session']->getFlashBag()->add('danger' , $outcome) ;
-                    return $app->json( $outcome , 201);
-                }
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
+            /*
+             * ERROR - Error while picking the target
+             */
             else
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+                $app['session']->getFlashBag()->add('danger' , $outcome) ;
+                return $app->json( $outcome , 201);
             }
         })
         ->bind('verb_persuasionPickTarget');
@@ -145,31 +142,31 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/persuasionNoCounterBribe', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game $game */
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game!==FALSE)
+            try 
             {
-                $json_data = $request->request->all() ;
-                $user_id = (int)$json_data['user_id'] ;
-                // User_id mismatch
-                if ( $user_id!=(int)$app['user']->getId() )
-                {
-                    $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
-                    return $app->json( _('Error - User ID mismatch.') , 201);
-                }
-                else
-                {
-                    $game->getParty($user_id)->setIsDone(TRUE) ;
-                    $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} counter-bribe') , 'log');
-                    $this->entityManager->persist($game);
-                    $this->entityManager->flush();
-                    return $app->json( 'SUCCESS' , 201);
-                }
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $json_data = $request->request->all() ;
+            $user_id = (int)$json_data['user_id'] ;
+            // User_id mismatch
+            if ( $user_id!=(int)$app['user']->getId() )
+            {
+                $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
+                return $app->json( _('Error - User ID mismatch.') , 201);
             }
             else
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} counter-bribe') , 'log');
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
         })
         ->bind('verb_persuasionNoCounterBribe');
@@ -181,38 +178,38 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/bribeMore', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game */
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game!==FALSE)
+            try 
             {
-                $json_data = $request->request->all() ;
-                $user_id = (int)$json_data['user_id'] ;
-                // User_id mismatch
-                if ( $user_id!=(int)$app['user']->getId() )
-                {
-                    $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
-                    return $app->json( _('Error - User ID mismatch.') , 201);
-                }
-                else
-                {
-                    // Increase the bribe
-                    $game->getParty($user_id)->changeBid($json_data['persuasionAddedBribe']);
-                    // Set all parties to isDone = FALSE
-                    foreach ($game->getParties() as $party)
-                    {
-                        $party->setIsDone(FALSE) ;
-                    }
-                    $game->getParty($user_id)->setIsDone(TRUE) ;
-                    $game->log(_('[['.$user_id.']] {increase,increases} bribes by %d') , 'log' , array($json_data['persuasionAddedBribe'])) ;
-                    $this->entityManager->persist($game);
-                    $this->entityManager->flush();
-                    return $app->json( 'SUCCESS' , 201);
-                }
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $json_data = $request->request->all() ;
+            $user_id = (int)$json_data['user_id'] ;
+            // User_id mismatch
+            if ( $user_id!=(int)$app['user']->getId() )
+            {
+                $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
+                return $app->json( _('Error - User ID mismatch.') , 201);
             }
             else
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+                // Increase the bribe
+                $game->getParty($user_id)->changeBid($json_data['persuasionAddedBribe']);
+                // Set all parties to isDone = FALSE
+                foreach ($game->getParties() as $party)
+                {
+                    $party->setIsDone(FALSE) ;
+                }
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                $game->log(_('[['.$user_id.']] {increase,increases} bribes by %d') , 'log' , array($json_data['persuasionAddedBribe'])) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
         })
         ->bind('verb_bribeMore');
@@ -224,30 +221,30 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/persuasionRoll', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game */
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game!==FALSE)
+            try 
             {
-                $json_data = $request->request->all() ;
-                $user_id = (int)$json_data['user_id'] ;
-                // User_id mismatch
-                if ( $user_id!=(int)$app['user']->getId() )
-                {
-                    $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
-                    return $app->json( _('Error - User ID mismatch.') , 201);
-                }
-                else
-                {
-                    $this->persuasionRoll($game, $user_id, $json_data) ;
-                    $this->entityManager->persist($game);
-                    $this->entityManager->flush();
-                    return $app->json( 'SUCCESS' , 201);
-                }
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $json_data = $request->request->all() ;
+            $user_id = (int)$json_data['user_id'] ;
+            // User_id mismatch
+            if ( $user_id!=(int)$app['user']->getId() )
+            {
+                $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
+                return $app->json( _('Error - User ID mismatch.') , 201);
             }
             else
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+                $this->persuasionRoll($game, $user_id, $json_data) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
         })
         ->bind('verb_persuasionRoll');
@@ -265,26 +262,25 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/MoveCard', function($game_id , Request $request) use ($app)
         {
-            /** @var \Entities\Game $game */
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game!==FALSE)
+            try 
             {
-                // TO DO : Move card
-                $data = $request->request->all();
-                $fromCard = $game->getFilteredCards(array('id' => $data['FromCard'])) ;
-                $fromLocation = $fromCard->first()->getDeck();
-                $toDeck = $game->getFilteredDecks(array('id' => $data['ToDeck'])) ;
-                $fromLocation->getFirstCardByProperty('id' , $fromCard->first()->getId() , $toDeck->first()) ;
-                $game->log('DEBUG - Moving card '.$fromCard->first()->getName().' from '.$fromLocation->getName().' to '.$toDeck->first()->getName() , 'alert');
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
             }
-            else
+            catch (Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
-                return $app->json( sprintf(_('Error - Game %1$s not found.') , $game_id ) , 201);
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
             }
+            $data = $request->request->all();
+            $fromCard = $game->getFilteredCards(array('id' => $data['FromCard'])) ;
+            $fromLocation = $fromCard->first()->getDeck();
+            $toDeck = $game->getFilteredDecks(array('id' => $data['ToDeck'])) ;
+            $fromLocation->getFirstCardByProperty('id' , $fromCard->first()->getId() , $toDeck->first()) ;
+            $game->log('DEBUG - Moving card '.$fromCard->first()->getName().' from '.$fromLocation->getName().' to '.$toDeck->first()->getName() , 'alert');
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_MoveCard');
 
@@ -616,7 +612,9 @@ class ForumControllerProvider implements ControllerProviderInterface
         // A persuasion card was played
         if (count($persuasionCard->first())==1)
         {
-            // TO DO
+            // TO DO : Validate card
+            // TO DO : If the card bypasses the proces entirely, we can jump to persuasionRoll :
+            //$this->persuasionRoll($game, $user_id, $data) ;
         }
         return TRUE ;
     }

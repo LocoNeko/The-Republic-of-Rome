@@ -124,6 +124,12 @@ class RevenuePhasePresenter
                 $result['list'][] = _('A contribution of 50T or more will increase his Influence by 7') ;
                 $result['list'][] = _('A contribution of 25T or more will increase his Influence by 3') ;
                 $result['list'][] = _('A contribution of 10T or more will increase his Influence by 1') ;
+                $result['action'] = array (
+                    'type' => 'button' ,
+                    'verb' => 'ContributionsDone' ,
+                    'text' => 'DONE' ,
+                    'user_id' => $this->getUser_id()
+                );
             }
             else
             {
@@ -136,12 +142,6 @@ class RevenuePhasePresenter
                     }
                 }
             }
-            $result['action'] = array (
-                'type' => 'button' ,
-                'verb' => 'ContributionsDone' ,
-                'text' => 'DONE' ,
-                'user_id' => $this->getUser_id()
-            );
         }
         return $result ;
     }

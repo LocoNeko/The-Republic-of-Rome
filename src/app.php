@@ -126,27 +126,47 @@
     function getNewMessages($app) {
         $user_id = $app['user']->getId() ;
         $entityManager = $app['orm.em'] ;
-        $game = $app['getGame']((int)$app['session']->get('game_id')) ;
-        if ($game!==FALSE)
+        try 
         {
-            $messages = $game->getNewMessages($user_id) ;
-            $entityManager->persist($game) ;
-            $entityManager->flush() ;
-            return array('messages' => $messages , 'parties_names' => $game->getPartiesNames()) ;
-        } else {
+            /** @var \Entities\Game $game */
+            $game = $app['getGame']((int)$app['session']->get('game_id')) ;
+        }
+        catch (Exception $exception)
+        {
             return FALSE ;
         }
+        $messages = $game->getNewMessages($user_id) ;
+        $entityManager->persist($game) ;
+        $entityManager->flush() ;
+        return array('messages' => $messages , 'parties_names' => $game->getPartiesNames()) ;
     }
 
     /**
-     * A Service that returns a Game entity corresponding to this $game_id, or FALSE if not found
+     * A Service that returns a Game entity corresponding to this $game_id
      * @param int $game_id
+     * @param boolean $checkStarted Check whther or not the game has started
+     * @param array $checkSubPhases Fail if the game's subPhase is not in this array, 
      * @return \Entities\Game|boolean
+     * @throws Exception not found , not started , wrong sub phase
      */
-    $app['getGame'] = $app->protect(function ($game_id) use ($app) {
+    $app['getGame'] = $app->protect(function ($game_id , $checkStarted = TRUE , $checkSubPhases = NULL) use ($app) {
         $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
+        /** @var \Entities\Game[] $result */
         $result = $query->getResult() ;
-        return ( (count($result)==1) ? $result[0] : FALSE ) ;
+        if (count($result)!==1)
+        {
+            throw new Exception(sprintf(_('ERROR - No game with unique id %1$d') , (int)$game_id)) ;
+        }
+        elseif($checkStarted && !$result[0]->gameStarted())
+        {
+            throw new Exception(sprintf(_('ERROR - Game %1$s not started.') , (int)$game_id )) ;
+        }
+        elseif ( ($checkSubPhases != NULL) && !in_array($result[0]->getSubPhase(), $checkSubPhases))
+        {
+            throw new Exception(sprintf(_('ERROR - Sub phase not recognised.') , (int)$game_id )) ;
+        }
+        $app['session']->set('game_id', (int)$game_id);
+        return $result[0];
     });
 
     $app['saveGame'] = $app->protect(function ($game) use ($app) {
@@ -158,13 +178,17 @@
     // Persist & Flush the Game entity, as it might have been updated during rendering (e.g. when updating the LastUpdate of each Party)
     $app->after(function (Request $request) use ($app)
     {
-        $game_id = $app['session']->get('game_id') ;
-        $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
-        $result = $query->getResult() ;
-        if (count($result)==1) {
-            $app['orm.em']->persist($result[0]) ;
-            $app['orm.em']->flush() ;
+        try 
+        {
+            /** @var \Entities\Game $game */
+            $game = $app['getGame']((int)$app['session']->get('game_id')) ;
         }
+        catch (Exception $exception)
+        {
+            return FALSE ;
+        }
+        $app['orm.em']->persist($game) ;
+        $app['orm.em']->flush() ;
     });
     
     /*

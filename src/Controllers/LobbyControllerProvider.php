@@ -54,13 +54,17 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/Join/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id , FALSE) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
-            elseif ($game->gameStarted())
+            if ($game->gameStarted())
             {
                 return $app->redirect($app['BASE_URL'].'/Setup/'.$game_id) ;
             }
@@ -80,13 +84,17 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/Play/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id , FALSE) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
-            elseif ($game->gameStarted())
+            if ($game->gameStarted())
             {
                 return $app->redirect($app['BASE_URL'].'/'.$game->getPhase().'/'.$game_id) ;
             }
@@ -103,20 +111,20 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/SaveGame/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
-            /* @var \Entities\Game|boolean $game*/
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
-            else
-            {
-                return $app['twig']->render('Lobby/GameData.twig', array(
-                   'layout_template' => 'layout.twig' ,
-                   'gameData' => $game->saveData() ,
-                ));
-            }
+            return $app['twig']->render('Lobby/GameData.twig', array(
+               'layout_template' => 'layout.twig' ,
+               'gameData' => $game->saveData() ,
+            ));
         })
         ->bind('SaveGame');
 
@@ -150,31 +158,32 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/Join/{game_id}/Ready', function($game_id) use ($app)
         {
-            $game = $app['getGame']((int)$game_id) ;
-            if ($game===FALSE)
+            try 
             {
-                $app['session']->getFlashBag()->add('danger', sprintf(_('Error - Game %1$s not found.') , $game_id ));
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id , FALSE) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
+            }
+            if ($this->setPartyToReady($game, $app['user']->getId()) )
+            {
+                // If the game was started, save it
+                if ($game->gameStarted())
+                {
+                    $app['saveGame']($game) ;
+                }
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                $app['session']->getFlashBag()->add('success', _('You are ready to start'));
+                return $app->json( _('You are ready to start') , 201);
             }
             else
             {
-                if ($this->setPartyToReady($game, $app['user']->getId()) )
-                {
-                    // If the game was started, save it
-                    if ($game->gameStarted())
-                    {
-                        $app['saveGame']($game) ;
-                    }
-                    $this->entityManager->persist($game);
-                    $this->entityManager->flush();
-                    $app['session']->getFlashBag()->add('success', _('You are ready to start'));
-                    return $app->json( _('You are ready to start') , 201);
-                }
-                else
-                {
-                    $app['session']->getFlashBag()->add('danger', _('Error - Invalid user.') );
-                    return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-                }
+                $app['session']->getFlashBag()->add('danger', _('Error - Invalid user.') );
+                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
             }
         })
         ->bind('verb_Ready');
