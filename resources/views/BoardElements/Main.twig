@@ -10,31 +10,8 @@
 
     {# HEADER : CURRENT HRAO, ORDER OF PLAY , CURRENT PHASE & SUBPHASE #}
 
-    <table class="table table-condensed table-responsive" style="display: block;">
-        <tr>
-            <td class="text-right"><h4>Phase</h4></td>
-            <td><strong><h4>{{gameView.phase}}</h4></strong></td>
-        </tr>
-        <tr>
-            <td class="text-right">Sub Phase</td>
-            <td><strong>{{gameView.subPhase}}</strong></td>
-        </tr>
-        <tr>
-            <td class="text-right">HRAO</td>
-            <td><strong>{{gameView.getNameOfHRAO(app.user.id)}}</strong></td>
-        </tr>
-        <tr>
-            <td class="text-right">Order of play</td>
-            <td>
-                {% for position in gameView.getOrderOfPlay(app.user.id) %}
-                    <span style="{{ (position['user_id'] == gameView.whoseTurn.getUser_id()) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
-                        <a href="#Party_{{position['user_id']}}" class="silent-link">{{ position['name']}}</a>
-                    </span>
-                    {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
-                {% endfor %}
-            </td>
-        </tr>
-    </table>
+    {% embed 'BoardElements/Header.twig' %}
+    {% endembed %}
     
     {# THE CURRENT PHASE'S TEMPLATE #}
     

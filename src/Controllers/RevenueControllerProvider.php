@@ -160,10 +160,10 @@ class RevenueControllerProvider implements ControllerProviderInterface
         
         /*
         * POST target
-        * Verb : Contribute
+        * Verb : revenueGiveToRome
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/Contribute', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/revenueGiveToRome', function($game_id , Request $request) use ($app)
         {
             try 
             {
@@ -181,7 +181,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $this->entityManager->flush();
             return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('verb_Contribute');
+        ->bind('verb_revenueGiveToRome');
 
         /*
         * POST target

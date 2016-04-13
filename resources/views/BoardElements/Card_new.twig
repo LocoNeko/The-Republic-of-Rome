@@ -1,0 +1,72 @@
+{#
+    This template gets a card :
+    - card.classes = An array of classes like 'sprite-Senator' , 'droppable'
+    - card.attributes = An array of attributes, with each elements in the form attribute_name => 'attribute_value'
+    - card.elements = An array of elements
+    - card.menu = An array of menuItems
+    - card.controlledCards = an Array of cards controlled by this one
+    
+    Elements create internal divs. They have the following parameters
+    - element['classes'] =  An array of classes like 'sprite' , 'sprite-position-PriorConsul'
+    - element['attributes] = An array of attributes, with each elements in the form attribute_name => 'attribute_value'
+    - element['text'] = The text on the element if any
+
+    MenuItems create button on cards and are represented by an array :
+    - verb : The button's verb
+    - text : The button's text
+    - style <optional> : 'warning'<default> , 'danger' , etc...
+    - disabled <optional> : whether or not the item is disabled by default<FALSE by default>
+#}
+<div class="span3 sprite col-md-1{% for class in card.classes|default([]) %} {{class}}{% endfor %}" {% for key , attribute in card.attributes|default([]) %} key="{{attribute}}"{% endfor %}>
+    
+    {#
+        Elements generate internal divs 
+    #}
+    {% for element in card.elements %}
+        <div class="{% for class in element['classes']|default([]) %} {{class}}{% endfor %}" {% for key , attribute in element['attributes']|default([]) %} key="{{attribute}}"{% endfor %}>
+            {{element['text']|default('')}}
+        </div>
+    {% endfor %}
+    
+    {#
+        Optional : Card drop down action menu
+    #}
+    
+    {% if (card.menu|default([])|length > 0) and (card.attributes['card_id'] is defined) %}
+        
+        <div class="sprite-position-topright dropdown" style="z-index:50; opacity: 0.9;">
+            <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.attributes['card_id']}}" data-toggle="dropdown" aria-expanded="true">
+                <span class="glyphicon glyphicon-collapse-down" aria-hidden="true" style="font-size: 1.5em;"></span>
+            </button>
+            <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.attributes['card_id']}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
+                {% for menuItem in card.menu %}
+                    <li role="presentation">
+                        <button type="submit" tabindex="-1" class="btn btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb" verb='{{menuItem['verb']}}'>{{menuItem['text']}}</button>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+                
+    {% endif %}
+    
+    {#
+        Optional : Card has controlled cards
+    #}
+    
+    {% if (card.controlledCards|default([])|length > 0) and (card.attributes['card_id'] is defined) %}
+        
+        <div class="sprite-position-topleft">
+            <a href="#CardsControlledBy_{{card.attributes['card_id']}}" class="btn btn-default" data-toggle="collapse">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            </a>
+            <div id="CardsControlledBy_{{card.attributes['card_id']}}" class="row collapse sprite-modal">
+                {% for controlledCard in card.controlledCards %}
+                    {% embed "BoardElements/Card_new.twig" with { 'card': controlledCard } %}
+                    {% endembed %}
+                {% endfor %}
+            </div>
+        </div>
+
+    {% endif %}
+
+</div>

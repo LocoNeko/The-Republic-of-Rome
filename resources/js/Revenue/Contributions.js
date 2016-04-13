@@ -3,7 +3,7 @@
  *  Get all needed information (card_id , treasury) from the Senator card
 */
 $(document).ready(function(){
-    $("form[verb='Give to Rome']").submit(function(e){
+    $("form[verb='giveToRome']").submit(function(e){
         //prevent Default functionality
         e.preventDefault();
         // Get the card_id from the FORM object
@@ -34,7 +34,7 @@ $(document).ready(function(){
         socket.emit('Update', $("title").attr('realm'));
 
         $.post(
-            window.location.pathname + '/Contribute',
+            window.location.pathname + '/revenueGiveToRome',
             json ,
             function( data ) {
                 window.location.reload(true) ;

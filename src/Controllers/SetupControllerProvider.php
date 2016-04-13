@@ -117,10 +117,10 @@ class SetupControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
-        * Verb : Play Statesman
+        * Verb : setupPlayStatesman
         * JSON data : card_id
         */
-        $controllers->post('/{game_id}/Play Statesman', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/setupPlayStatesman', function($game_id , Request $request) use ($app)
         {
             try 
             {
@@ -143,14 +143,14 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('verb_PlayStatesman');
+        ->bind('verb_setupPlayStatesman');
 
         /*
         * POST target
         * Verb : Play Concession
         * JSON data : dragFrom => card_id , dropOn => card_id
         */
-        $controllers->post('/{game_id}/Play Concession', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/setupPlayConcession', function($game_id , Request $request) use ($app)
         {
             try 
             {
@@ -189,7 +189,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                 return $app->json( _('ERROR - Senator not found') , 201);
             }
         })
-        ->bind('verb_PlayConcession');
+        ->bind('verb_setupPlayConcession');
 
         /*
         * POST target

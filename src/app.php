@@ -182,13 +182,12 @@
         {
             /** @var \Entities\Game $game */
             $game = $app['getGame']((int)$app['session']->get('game_id')) ;
+            $app['orm.em']->persist($game) ;
+            $app['orm.em']->flush() ;
         }
         catch (Exception $exception)
         {
-            return FALSE ;
         }
-        $app['orm.em']->persist($game) ;
-        $app['orm.em']->flush() ;
     });
     
     /*

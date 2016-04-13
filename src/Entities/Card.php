@@ -327,11 +327,11 @@ abstract class Card
         $subPhase = $game->getSubPhase() ;
         if ($phase=='Setup' && $subPhase == 'PlayCards' && $this->getPreciseType()=='Statesman' && $location['type'] == 'hand' && $this->statesmanPlayable($location['value']->getUser_id())['flag'] )
         {
-            return [ 'menu' => 'Play Statesman' ];
+            return [ 'menu' => 'setupPlayStatesman' ];
         }
-        if ($phase=='Revenue' && $subPhase == 'Contributions' && $location['type'] == 'party' && $this->getTreasury() > 0 && $self)
+        elseif ($phase=='Revenue' && $subPhase == 'Contributions' && $location['type'] == 'party' && $this->getTreasury() > 0 && $self)
         {
-            return [ 'menu' => 'Give to Rome' ];
+            return [ 'menu' => 'revenueGiveToRome' ];
         }
         elseif ($phase=='Setup' && $subPhase == 'PlayCards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
         {
@@ -339,8 +339,13 @@ abstract class Card
             if (($this->getSpecial()=='land bill') && ($game->getLandBillsTotalCost()['total']==0) ) {
                 return array() ;
             }
-            return [ 'drag' => 'Play Concession' ] ;
-        } else {
+            return [ 'drag' => 'setupPlayConcession' ] ;
+        }
+        elseif($phase=='Forum' && $subPhase=='knights' && $location['type'] == 'party')
+        {
+            return [ 'menu' => 'attractKnight' ];
+        }
+        else {
             return array();
         }
     }

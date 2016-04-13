@@ -271,8 +271,8 @@ class Party
                 /* @var \Entities\Card $card */
                 $cardAction = $card->getAction(TRUE) ;
                 if (
-                    ( key_exists('menu', $cardAction) && ($cardAction['menu'] == 'Play Statesman' ) ) ||
-                    ( key_exists('drag', $cardAction) && ($cardAction['drag'] == 'Play Concession') )
+                    ( key_exists('menu', $cardAction) && ($cardAction['menu'] == 'playStatesman' ) ) ||
+                    ( key_exists('drag', $cardAction) && ($cardAction['drag'] == 'playConcession') )
                 )
                 {
                     return TRUE ;

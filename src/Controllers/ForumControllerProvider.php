@@ -23,6 +23,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             $app['session']->set('game_id', (int)$game_id);
             try 
             {
+                /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
             }
             catch (Exception $exception)
@@ -30,8 +31,10 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->redirect('/') ;
             }
+
             $gameView = new \Presenters\GamePresenter($game) ;
             $forumView = new \Presenters\ForumPhasePresenter($game , (int)$app['user']->getId()) ;
+            
             return $app['twig']->render('BoardElements/Main.twig', array(
                 'layout_template' => 'layout.twig' ,
                 'game' => $game ,
@@ -88,7 +91,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             // TO DO : user id should be passed in JSON
             $user_id = (int)$app['user']->getId() ;
             $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
-            //$game->setSubPhase('knights') ;
+            $game->setSubPhase('knights') ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();
             return $app->json( 'SUCCESS' , 201);
@@ -242,6 +245,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             else
             {
                 $this->persuasionRoll($game, $user_id, $json_data) ;
+                $game->setSubPhase('knights') ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -678,7 +682,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             /**
              * Describe what the target does (stay or go)
              */
-            $message.= $forumView->getPersuasionTarget()->getName().
+            $message2 = $forumView->getPersuasionTarget()->getName().
             (   $success ?
                 _(' joins ').$forumView->getPartyWithInitiative()->getName().'.' : 
                 _(' stays in ').$forumView->getPersuasionTarget()->getLocation()['name'].'.'
@@ -704,10 +708,11 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             if ($totalBribesReceived>0)
             {
-                $message.=sprintf(_(' He takes a total of %1$dT in bribes.') , $totalBribesReceived);
+                $message2.=sprintf(_(' He takes a total of %1$dT in bribes.') , $totalBribesReceived);
             }
             
             $game->log($message, 'log');
+            $game->log($message2, 'log');
         }
         /*
          * There was an error
@@ -719,6 +724,6 @@ class ForumControllerProvider implements ControllerProviderInterface
         /*
          * Reset persuasion
          */
-        //$this->resetPersuasion($game) ;
+        $this->resetPersuasion($game) ;
     }
 }

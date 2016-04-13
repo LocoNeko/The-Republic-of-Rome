@@ -19,6 +19,7 @@ class ForumPhasePresenter
     private $persuasionDescription ;
     private $persuaderAvailableTreasury ;
     private $nonPersuaderAvailableTreasury ;
+    private $listKnights ;
 
     /**
      * 
