@@ -107,6 +107,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             $user_id = (int)$app['user']->getId() ;
             $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
             $game->setSubPhase('knights') ;
+            $this->knightsInitialise($game, $user_id) ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();
             return $app->json( 'SUCCESS' , 201);
@@ -290,12 +291,40 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 $this->persuasionRoll($game, $user_id, $json_data) ;
                 $game->setSubPhase('knights') ;
+                $this->knightsInitialise($game, $user_id) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
         })
         ->bind('verb_persuasionRoll');
+
+        /*
+        * POST target
+        * Verb : noKnights
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/noKnights', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $user_id = (int)$app['user']->getId() ;
+            $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} is finished with Knights.') , 'log' ) ;
+            $game->setSubPhase('games') ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
+        })
+        ->bind('verb_noKnights');
+
         
         /*
          * 
@@ -769,5 +798,22 @@ class ForumControllerProvider implements ControllerProviderInterface
          * Reset persuasion
          */
         $this->resetPersuasion($game) ;
+    }
+    /**
+     * Initialises isDone to FALSE
+     * isDone is used to know whether a party has decided to pressure knights
+     * @param \Entities\Game $game
+     * @param int $user_id
+     */
+    public function knightsInitialise($game , $user_id)
+    {
+        try
+        {
+            $game->getParty($user_id)->setIsDone(FALSE) ;
+        }
+        catch (Exception $e)
+        {
+            return FALSE ;
+        }
     }
 }

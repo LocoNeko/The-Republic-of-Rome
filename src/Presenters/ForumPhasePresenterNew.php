@@ -119,6 +119,7 @@ class ForumPhasePresenterNew
         elseif ($game->getSubPhase()=='knights' && $this->hasInitiative)
         {
             $this->header['description'] .= _('Attracting or pressuring Knights') ;
+            $this->setKnightsInitiative($game) ;
         }
         elseif ($game->getSubPhase()=='knights' && !$this->hasInitiative)
         {
@@ -311,6 +312,56 @@ class ForumPhasePresenterNew
             'user_id' => $this->user_id
         );
     }
+
+    /**
+     * - Knights
+     * - Set interface on cards :
+     * - If the user has already pressured knights, only set 'pressure'
+     * - If the user has not yet pressured knights, set both 'pressure' and 'attract' 
+     * @param \Entities\Game $game
+     */
+    public function setKnightsInitiative($game)
+    {
+        $this->header['list'][] = _('You can attract knights by rolling 6 on one die, adding 1 for every talent spent');
+        $this->header['list'][] = _('You can pressure existing knights to gain 1d talent per knight pressured');
+        $this->header['action'] = array (
+            'type' => 'button' ,
+            'verb' => 'noKnights' ,
+            'text' => 'DONE' ,
+            'user_id' => $this->user_id
+        );
+        foreach ($this->yourParty->senators as $senatorID=>$senator)
+        {
+            /**
+             * Can't attract knights if some have already been pressured
+             */
+            if ($game->getParty($this->user_id)->getIsDone()) {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'primary' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'knightsAttract' ,
+                        'text' => _('Attract a knight')
+                    )
+                );
+            }
+            /**
+             * Can't pressure knights if there isn't any
+             */
+            if ($game->getFilteredCards(array('SenatorID' => $senatorID))->first()->getKnights() > 0)
+            {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'danger' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'knightsPressure' ,
+                        'text' => _('Pressure Knights')
+                    )
+                );
+            }
+        }
+    }
+    
     /**
      * ===========================================================================
      * =========================      SUB-FUNCTIONS      =========================

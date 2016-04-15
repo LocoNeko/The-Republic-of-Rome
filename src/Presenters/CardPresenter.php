@@ -178,32 +178,6 @@ class CardPresenter
         }
         
         /**
-         * Menu
-         */
-        
-        // TO DO : This is ugly. It would be better to pass $menu as a parameter to the card, or to have setting methods in controllers
-        // OR EVEN BETTER !!!! Actually do the abstract class, and put a ->setMenu() function in it !
-        // CODE-GASM !!!
-        
-        if ($menu!=NULL)
-        {
-            foreach ($menu as $menuItem)
-            {
-                switch($menuItem)
-                {
-                    case 'setupPlayStatesman' :
-                        $this->menu[] = array (
-                            'style' => 'primary' ,
-                            'disabled' => FALSE ,
-                            'verb' => 'setupPlayStatesman' ,
-                            'text' => _('Play Statesman')
-                        ) ;
-                        break ;
-                }
-            }
-        }
-
-        /**
          * Cards controlled
          */
         
@@ -215,6 +189,16 @@ class CardPresenter
                 $this->controlledCards[] = $subCardPresenter ;
             }
         }
+    }
+    
+    /**
+     * Adds a menu item to the menu for this card
+     * Menu items behave like a 'submitWithVerb' element
+     * @param array $item
+     */
+    public function addMenuItem($item)
+    {
+        $this->menu[] = $item ;
     }
 }
 

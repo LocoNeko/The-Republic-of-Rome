@@ -11,6 +11,10 @@ class PartyPresenter
     public $totalVotes ;
     public $nbOfCardsInHand ;
     public $hand ;
+    /** 
+     * An array of CardPresenter for the Senators of this party, the key of each element is the SenatorID
+     * @var \Presenters\CardPresenter[] $senators 
+     */
     public $senators = [] ;
     
     /**
@@ -29,7 +33,8 @@ class PartyPresenter
         $this->hand = new \Presenters\DeckPresenter($party->getHand() , $user_id) ;
         foreach ($party->getSenators()->getCards() as $senator)
         {
-            $this->senators[] = new \Presenters\CardPresenter($senator, $user_id) ;
+            /** @var \Entities\Senator $senator */
+            $this->senators[$senator->getSenatorID()] = new \Presenters\CardPresenter($senator, $user_id) ;
         }
         
     }

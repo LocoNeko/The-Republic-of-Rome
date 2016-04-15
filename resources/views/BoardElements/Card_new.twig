@@ -43,7 +43,14 @@
             <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.attributes['card_id']}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
                 {% for menuItem in card.menu %}
                     <li role="presentation">
-                        <button type="submit" tabindex="-1" class="btn btn-lg btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb" verb='{{menuItem['verb']}}'>{{menuItem['text']}}</button>
+                       <button
+                           type="submit"
+                           tabindex="-1"
+                           class="btn btn-lg btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb"
+                           verb="{{menuItem['verb']}}"
+                       >
+                           {{menuItem['text']}}
+                       </button>
                     </li>
                 {% endfor %}
             </ul>
