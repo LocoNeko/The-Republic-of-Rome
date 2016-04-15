@@ -17,14 +17,16 @@
     - style <optional> : 'warning'<default> , 'danger' , etc...
     - disabled <optional> : whether or not the item is disabled by default<FALSE by default>
 #}
-<div class="span3 sprite col-md-1{% for class in card.classes|default([]) %} {{class}}{% endfor %}" {% for key , attribute in card.attributes|default([]) %} key="{{attribute}}"{% endfor %}>
+<div class="span3 sprite col-md-1{% for class in card.classes|default([]) %} {{class}}{% endfor %}" {% for key , attribute in card.attributes|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
     
     {#
         Elements generate internal divs 
     #}
     {% for element in card.elements %}
-        <div class="{% for class in element['classes']|default([]) %} {{class}}{% endfor %}" {% for key , attribute in element['attributes']|default([]) %} key="{{attribute}}"{% endfor %}>
-            {{element['text']|default('')}}
+        <div class="{% for class in element['classes']|default([]) %} {{class}}{% endfor %}" {% for key , attribute in element['attributes']|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
+            {% autoescape false %}
+                {{element['text']|default('')}}
+            {% endautoescape %}
         </div>
     {% endfor %}
     
@@ -41,7 +43,7 @@
             <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.attributes['card_id']}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
                 {% for menuItem in card.menu %}
                     <li role="presentation">
-                        <button type="submit" tabindex="-1" class="btn btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb" verb='{{menuItem['verb']}}'>{{menuItem['text']}}</button>
+                        <button type="submit" tabindex="-1" class="btn btn-lg btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb" verb='{{menuItem['verb']}}'>{{menuItem['text']}}</button>
                     </li>
                 {% endfor %}
             </ul>

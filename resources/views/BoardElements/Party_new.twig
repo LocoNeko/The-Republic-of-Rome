@@ -1,0 +1,30 @@
+<a name="{{party.name_attribute}}"></a>
+{# PARTY NAME #}
+<b>{{party.name}}</b>
+
+{# PARTY LEADER #}
+| LEADER: <b>{{party.leaderName}}</b>
+
+{# TREASURY #}
+{% if party.self %}
+    | Treasury: <b>{{ party.treasury}} T</b>
+{% else %}
+    | Treasury is {{ (party.treasury) ? 'not ' : '' }}empty </b>
+{% endif %}
+
+{# VOTES #}
+| Current vote total : <b>{{party.totalVotes}}</b>
+
+{# CARDS IN HAND FOR NON-SELF #}
+{% if not party.self %}
+| Player has <b>{{party.nbOfCardsInHand}} card{{party.nbOfCardsInHand!=1 ? 's' : ''}}</b> in hand
+{% endif %}
+
+{# SENATORS LIST #}
+<br>
+<div class="row">
+{% for senator in party.senators %}
+    {% embed "BoardElements/Card_new.twig" with { 'card': senator } %}
+    {% endembed %}
+{% endfor %}
+</div>

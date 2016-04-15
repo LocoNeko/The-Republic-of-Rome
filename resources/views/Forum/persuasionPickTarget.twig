@@ -1,0 +1,35 @@
+<form class='form-inline json-submit' user_id='{{app.user.id}}' verb='persuasionPickTarget' gameId='{{view.game.game_id}}'>
+    <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success">Target</td>
+                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['targetList']}%}{% endembed %}</td>
+            </tr>
+            <tr>
+                <td class="success">Persuader</td>
+                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['persuaderList']}%}{% endembed %}</td>
+            <tr>
+                <td class="success">Spend</td>
+                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['bribe']}%}{% endembed %}</td>
+            </tr>
+            <tr>
+                <td class="success">Play card</td>
+                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['card']}%}{% endembed %}</td>
+            </tr>
+            {% if not view.interface['hideOdds'] %}
+            <tr>
+                <td class="success">Current Odds</td>
+                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': {'type' : 'disabledInput' , 'class' : 'persuasionOdds'}}%}{% endembed %}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td colspan="2">
+                    <div class="row">
+                        <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['noPersuasion']}%}{% endembed %}</div>
+                        <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['persuade']}%}{% endembed %}</div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</form>

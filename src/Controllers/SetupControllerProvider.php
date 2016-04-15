@@ -31,6 +31,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect('/') ;
             }
+            
             $gameView = new \Presenters\GamePresenter($game) ;
             $setupView = new \Presenters\SetupPhasePresenter($game) ;
             return $app['twig']->render('BoardElements/Main.twig', array(

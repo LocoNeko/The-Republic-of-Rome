@@ -26,6 +26,10 @@ $(function() {
     $('.persuasionAddedBribe').on('change', function() {
         persuasionUpdateAddedBribe() ;
     });
+
+    $('.persuasionCounterBribeAmount').on('change', function() {
+        persuasionUpdateCounterBribe() ;
+    });
   
 });
 
@@ -91,10 +95,27 @@ function persuasionUpdateAddedBribe()
     var addedBribe = parseInt($('.persuasionAddedBribe option:selected').val() , 10 ) ;
     if (addedBribe>0)
     {
-        $("[verb='bribeMore']").removeClass('disabled');
+        $("[verb='persuasionBribeMore']").removeClass('disabled');
     }
     else
     {
-        $("[verb='bribeMore']").addClass('disabled');
+        $("[verb='persuasionBribeMore']").addClass('disabled');
+    }
+}
+
+/*
+ * Enables and disables the "counter bribe" button depending on the value of the persuasionCounterBribe select
+ */
+
+function persuasionUpdateCounterBribe()
+{
+    var counterBribe = parseInt($('.persuasionCounterBribeAmount option:selected').val() , 10 ) ;
+    if (counterBribe>0)
+    {
+        $("[verb='persuasionCounterBribe']").removeClass('disabled');
+    }
+    else
+    {
+        $("[verb='persuasionCounterBribe']").addClass('disabled');
     }
 }

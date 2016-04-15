@@ -1,7 +1,60 @@
-.silent-link:visited {
+.main-area
+{
+    top:52px;
+    height:100%;
+    width:100%;
+    border-top:52px solid transparent;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-left: 80px;
+    padding-right: 80px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+.silent-link:visited
+{
     color: black ;
 }
 
-.leader {
+.leader 
+{
     color: red ;
+}
+
+.sortable-list-placeholder
+{
+    background-color: #bbb ;
+    border: 1px dashed #666 ;
+    margin-bottom: -1px ;
+    padding: 10px 15px ;
+}
+
+.ui-resizable 
+{
+    position: relative;
+}
+
+.ui-resizable-handle 
+{
+    position: absolute ;
+    font-size: 0.1px ;
+    display: block ;
+}
+
+.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle 
+{
+    display: none ;
+}
+
+.ui-resizable-n 
+{
+    cursor: n-resize ;
+    height: 7px ;
+    width: 100% ;
+    top: -5px ;
+    left: 0 ;
 }

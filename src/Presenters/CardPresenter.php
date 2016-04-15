@@ -19,25 +19,31 @@ class CardPresenter
      * @param \Entities\Card $card
      * @param int $user_id
      */
-    public function __construct($card , $user_id)
+    public function __construct($card , $user_id , $menu=NULL)
     {
         $this->user_id = $user_id ;
+        
         /*
          * What we need to display the card :
          */
+        
         $this->classes = array() ;
         $this->attributes = array() ;
         $this->elements = array() ;
         $this->menu = array() ;
         $this->controlledCards = array() ;
+        
         /**
          * All cards have :
          * - Attribute card_id
          */
+        
         $this->attributes['card_id'] = $card->getId() ; 
+        
         /**
          * Senator or Statesman
          */
+        
         if ($card->getIsSenatorOrStatesman())
         {
             $this->classes[] = 'sprite-Senator' ;
@@ -53,7 +59,7 @@ class CardPresenter
                    'data-trigger' => 'hover' ,
                    'data-placement' => 'bottom'
                 ) ,
-                'text' => $card->getName().' '.($card->getHasStatesman() ? '['.$card->getSenatorID().']' : $card->getSenatorID())
+                'text' => $card->getName().'<br>'.($card->getHasStatesman() ? '['.$card->getSenatorID().']' : $card->getSenatorID())
             ) ;
             /**
              * Basic text : MIL , ORA , LOY , treasury
@@ -127,9 +133,11 @@ class CardPresenter
                 ) ;
             }
         }
+        
         /**
          * Concessions
          */
+        
         elseif($card->getPreciseType()=='Concession')
         {
             $this->classes[] = 'sprite-Card' ;
@@ -155,9 +163,11 @@ class CardPresenter
                 );
             }
         }
+        
         /**
          * Others
          */
+        
         else
         {
             $this->classes[] = 'sprite-Card' ;
@@ -166,9 +176,37 @@ class CardPresenter
                 'text' => $card->getName()
             );
         }
+        
+        /**
+         * Menu
+         */
+        
+        // TO DO : This is ugly. It would be better to pass $menu as a parameter to the card, or to have setting methods in controllers
+        // OR EVEN BETTER !!!! Actually do the abstract class, and put a ->setMenu() function in it !
+        // CODE-GASM !!!
+        
+        if ($menu!=NULL)
+        {
+            foreach ($menu as $menuItem)
+            {
+                switch($menuItem)
+                {
+                    case 'setupPlayStatesman' :
+                        $this->menu[] = array (
+                            'style' => 'primary' ,
+                            'disabled' => FALSE ,
+                            'verb' => 'setupPlayStatesman' ,
+                            'text' => _('Play Statesman')
+                        ) ;
+                        break ;
+                }
+            }
+        }
+
         /**
          * Cards controlled
          */
+        
         if ($card->hasControlledCards())
         {
             foreach ($card->getCardsControlled()->getCards() as $subCard)

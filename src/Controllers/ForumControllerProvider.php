@@ -31,7 +31,8 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->redirect('/') ;
             }
-
+            
+            /*
             $gameView = new \Presenters\GamePresenter($game) ;
             $forumView = new \Presenters\ForumPhasePresenter($game , (int)$app['user']->getId()) ;
             
@@ -41,6 +42,20 @@ class ForumControllerProvider implements ControllerProviderInterface
                 'gameView' => $gameView ,
                 'header' => $forumView->getHeader() ,
                 'content' => $forumView->getContent()
+            ));
+            */
+            
+            $user_id = (int)$app['user']->getId() ;
+
+            //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
+            // TO DO : See how to handle this update better (service ?)
+            $game->getParty($user_id)->setLastUpdateToNow() ;
+            
+            $view = new \Presenters\ForumPhasePresenterNew($game , $user_id) ;
+
+            return $app['twig']->render('BoardElements/Main_new.twig', array(
+                    'layout_template' => 'InGameLayout.twig' ,
+                    'view' => $view
             ));
         })
         ->bind('Forum');
@@ -140,6 +155,35 @@ class ForumControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
+        * Verb : persuasionCounterBribe
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/persuasionCounterBribe', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $json_data = $request->request->all() ;
+            $user_id = (int)$json_data['user_id'] ;
+            $game->getParty($user_id)->setIsDone(TRUE) ;
+            $game->getParty($user_id)->changeBid($json_data['persuasionCounterBribeAmount']);
+            $game->log(_('[['.$user_id.']] {increase,increases} bribes by %d') , 'log' , array($json_data['persuasionCounterBribeAmount'])) ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
+        })
+        ->bind('verb_persuasionCounterBribe');
+
+        /*
+        }
+        * POST target
         * Verb : persuasionNoCounterBribe
         * JSON data : user_id
         */
@@ -179,7 +223,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         * Verb : bribeMore
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/bribeMore', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/persuasionBribeMore', function($game_id , Request $request) use ($app)
         {
             try 
             {
@@ -215,7 +259,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( 'SUCCESS' , 201);
             }
         })
-        ->bind('verb_bribeMore');
+        ->bind('verb_persuasionBribeMore');
         
         /**
         * POST target

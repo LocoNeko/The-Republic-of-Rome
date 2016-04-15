@@ -1,0 +1,58 @@
+<table class="table table-condensed table-responsive" style="display: block;">
+    <tr>
+        <td class="text-right"><h4>Phase</h4></td>
+        <td><strong><h4>{{view.game.phase}}</h4></strong></td>
+    </tr>
+    <tr>
+        <td class="text-right">Sub Phase</td>
+        <td><strong>{{view.game.subPhase}}</strong></td>
+    </tr>
+    <tr>
+        <td class="text-right">HRAO</td>
+        <td><strong>{{view.game.HRAO_name}}</strong></td>
+    </tr>
+    <tr>
+        <td class="text-right">Order of play</td>
+        <td>
+            {% for position in view.game.orderOfPlay %}
+                <span style="{{ (position['playingNow']) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
+                    <a href="#Party_{{position['user_id']}}" class="silent-link">{{ position['name']}}</a>
+                </span>
+                {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
+            {% endfor %}
+        </td>
+    </tr>
+</table>
+            
+{#
+    PHASE HEADER
+#}
+
+<h4>{{view.header['description']}}</h4>
+
+{# Header : Details (optional) #}
+
+{% if view.header['details']|default('')|length > 0 %}
+    <h5>
+        {% autoescape false %}
+            {{view.header['details']}}
+        {% endautoescape %}
+    </h5>
+{% endif %}
+
+{# Header : List (optional) #}
+
+{% if view.header['list']|default([])|length > 0 %}
+    <ul>
+        {% for item in view.header['list'] %}
+            <li>{{item}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{# Header : Action (optional) #}
+
+{% if view.header['action']|default([])|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': view.header['action']}%}
+    {% endembed %}
+{% endif %}
