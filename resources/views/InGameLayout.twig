@@ -21,6 +21,10 @@
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
         <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
         <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+        {#
+            JS - RepublicOfRome.js file with all the app-specific functions
+        #}
+        <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/RepublicOfRome.js"></script>
     </head>
     
     <body style="padding-bottom: 150px; height: 100%; overflow-y: hidden ;">
@@ -69,18 +73,5 @@
         {% embed 'Log_new.twig' %}
         {% endembed %}
         
-        {#
-            TO DO : Move this to one minified file
-            Javascript :
-            - The GeneralFunctions.js is always loaded
-            - If a game is defined, the file js/{{phase}}/{{subphase}}.js is loaded
-            - If no game is defined, the file js/Lobby.js is loaded
-        #}
-        <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/GeneralFunctions.js"></script>
-        {% if view.game is defined %}
-            <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/{{view.game.phase}}/{{view.game.subPhase}}.js"></script>
-        {% else %}
-            <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/Lobby/Lobby.js"></script>
-        {% endif %}
     </body>
 </html>

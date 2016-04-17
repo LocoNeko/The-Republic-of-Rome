@@ -10,7 +10,8 @@ class ForumPhasePresenterNew
     public $otherParties = [] ;
     public $header = [] ;
     public $interface = [] ;
-    
+    public $sliders = [] ;
+
     // Specific to Forum
     public $initiative ;
     public $idWithInitiative ;
@@ -330,32 +331,61 @@ class ForumPhasePresenterNew
             'text' => 'DONE' ,
             'user_id' => $this->user_id
         );
+        $this->sliders[] = array (
+            'ID' => 'KnightsAttractModal' ,
+            'title' => _('Attract knights'),
+            'verb' => 'forumKnightsAttract',
+            'text' => 'ATTRACT KNIGHT'
+        ) ;
+        $this->sliders[] = array (
+            'ID' => 'KnightsPressureModal' ,
+            'title' => _('Pressure knights'),
+            'verb' => 'forumKnightsPressure',
+            'text' => 'PRESSURE KNIGHTS'
+        ) ;
         foreach ($this->yourParty->senators as $senatorID=>$senator)
         {
             /**
+             * Get the corresponding Senator Model (entity)
+             * @var \Entities\Senator $senatorModel
+             */
+            $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
+            /**
+             * Add treasury & knights attributes to the Senators
+             * Those attributes are needed for the modal slider
+             */
+            $senator->addAttribute('treasury' , $senatorModel->getTreasury()) ;
+            $senator->addAttribute('knights' , $senatorModel->getKnights()) ;
+            /**
              * Can't attract knights if some have already been pressured
              */
-            if ($game->getParty($this->user_id)->getIsDone()) {
+            if (!$game->getParty($this->user_id)->getIsDone()) {
                 $senator->addMenuItem(
                     array (
                         'style' => 'primary' ,
                         'disabled' => FALSE ,
-                        'verb' => 'knightsAttract' ,
-                        'text' => _('Attract a knight')
+                        'verb' => 'forumKnightsAttract' ,
+                        'text' => _('Attract a knight') ,
+                        'classes' => array (
+                            'forumKnightsAttract'
+                        )
                     )
                 );
             }
             /**
              * Can't pressure knights if there isn't any
              */
-            if ($game->getFilteredCards(array('SenatorID' => $senatorID))->first()->getKnights() > 0)
+            if ($senatorModel->getKnights() > 0)
             {
                 $senator->addMenuItem(
                     array (
                         'style' => 'danger' ,
                         'disabled' => FALSE ,
-                        'verb' => 'knightsPressure' ,
-                        'text' => _('Pressure Knights')
+                        'verb' => 'forumKnightsPressure' ,
+                        'text' => _('Pressure Knights') ,
+                        'classes' => array (
+                            'forumKnightsPressure'
+                        )
                     )
                 );
             }
@@ -374,6 +404,7 @@ class ForumPhasePresenterNew
      * - Get a list of persuasion targets
      * Each element is an array : 'senatorID' , 'user_id' , 'LOY' , 'treasury' , 'description'
      * @param \Entities\Game $game
+     * @return array
      */
     public function getTargetList($game)
     {
@@ -423,6 +454,7 @@ class ForumPhasePresenterNew
      * - Gets a list of potential persuaders
      * Each element is an array : 'senatorID' , 'ORA' , 'INF' , 'treasury' , 'description'
      * @param \Entities\Game $game
+     * @return array
      */
     public function getPersuaderList($game)
     {

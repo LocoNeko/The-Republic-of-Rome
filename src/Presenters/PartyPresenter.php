@@ -30,11 +30,11 @@ class PartyPresenter
         $this->treasury = $party->getTreasury() ;
         $this->totalVotes = $party->getTotalVotes() ;
         $this->nbOfCardsInHand = $party->getHand()->getNumberOfCards() ;
-        $this->hand = new \Presenters\DeckPresenter($party->getHand() , $user_id) ;
+        $this->hand = new DeckPresenter($party->getHand() , $user_id) ;
         foreach ($party->getSenators()->getCards() as $senator)
         {
             /** @var \Entities\Senator $senator */
-            $this->senators[$senator->getSenatorID()] = new \Presenters\CardPresenter($senator, $user_id) ;
+            $this->senators[$senator->getSenatorID()] = new CardPresenter($senator, $user_id) ;
         }
         
     }

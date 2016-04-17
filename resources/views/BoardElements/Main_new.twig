@@ -6,7 +6,16 @@
     </title>
 {% endblock %}
 
+
 {% block content %}
+
+    {# Call the global JS function getReady(phase , subPhase) (zhich is in RepublicOfRome.js) that readies any needed function for this phase #}
+
+    <script>
+        $(function() {
+            getReady('{{view.game.phase}}' , '{{view.game.subPhase}}');
+        });
+    </script>
 
     {# HEADER : CURRENT HRAO, ORDER OF PLAY , CURRENT PHASE & SUBPHASE #}
 
@@ -56,7 +65,34 @@
         {% embed 'BoardElements/Deck_new.twig' with {'deck' : view.game.deck[warName] } %}
         {% endembed %}
     {% endfor %}
-       
+
+    {#
+        Modal sliders
+    #}
+
+    {% for slider in view.sliders %}
+
+        <div class="modal fade" id="{{slider['ID']}}" tabindex="-1" role="dialog" aria-labelledby="{{slider['ID']}}_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="{{slider['ID']}}_label">{{slider['title']}}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="{{slider['ID']}}_storedData">
+                        <input type="text" id="{{slider['ID']}}_value" style="border:0; font-weight:bold; font-size: 2em; background: white;">
+                        <div id="{{slider['ID']}}_slider"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary slider-submit" verb="{{slider['verb']}}">{{slider['text']}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% endfor %}
+
     {# DEBUG - : show all cards & decks, and allow moving a card to a deck #}
 {#
     <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MoveCard' gameId='{{game.getId()}}'>

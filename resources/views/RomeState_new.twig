@@ -1,7 +1,7 @@
 <div style="position: absolute; right:15px; top:52px; margin-top:5px;">
-    <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="hover">ROME</a>
-    <div id='RomeCurrentState_content' style="display: none">
-        <div id="VariousInfo">
+    <a class="btn btn-success globalRomeCurrentState" data-placement='left' title="Rome current state" href='#' data-trigger="hover">ROME</a>
+    <div class="globalRomeCurrentState_content" style="display: none">
+        <div>
             <table class="table table-bordered" style="width:auto; font-weight: bold; ">
                 <tbody>
                     <tr>
@@ -19,7 +19,7 @@
                 </tbody>
             </table>
         </div>
-        <div id="Forces">
+        <div>
             <h3>Legions</h3>
             <h4>In Rome</h4>
             <ul class="list-unstyled">{{view.game.legionsDescription['Rome']}}</ul>

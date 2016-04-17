@@ -46,8 +46,10 @@ class CardPresenter
         
         if ($card->getIsSenatorOrStatesman())
         {
+            /** @var \Entities\Senator $card */
             $this->classes[] = 'sprite-Senator' ;
-            $this->attributes['treasury'] = $card->getTreasury() ;
+            $this->attributes['name'] = $card->getName() ;
+            $this->attributes['senatorID'] = $card->getSenatorID() ;
             $this->elements[] = array (
                 'classes' => array(
                     'sprite-position-name' ,
@@ -190,7 +192,12 @@ class CardPresenter
             }
         }
     }
-    
+
+    public function addAttribute($name , $value)
+    {
+        $this->attributes[$name] = $value ;
+    }
+
     /**
      * Adds a menu item to the menu for this card
      * Menu items behave like a 'submitWithVerb' element

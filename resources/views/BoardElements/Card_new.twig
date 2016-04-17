@@ -46,7 +46,7 @@
                        <button
                            type="submit"
                            tabindex="-1"
-                           class="btn btn-lg btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb"
+                           class="btn btn-lg btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} {% for class in menuItem['classes']|default([]) %} {{class}}{% endfor %} submitWithVerb"
                            verb="{{menuItem['verb']}}"
                        >
                            {{menuItem['text']}}
@@ -77,5 +77,4 @@
         </div>
 
     {% endif %}
-
 </div>
