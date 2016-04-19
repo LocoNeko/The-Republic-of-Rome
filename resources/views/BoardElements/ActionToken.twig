@@ -1,6 +1,6 @@
 {#
     Creates an action token from the action array
-    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'select' , 'disabled input'
+    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'submitWithVerb' , 'select' , 'disabled input'
 #}
 
 {% if action['type']=='icon' %}
@@ -15,19 +15,17 @@
     </div>
 {% elseif action['type']=='button' %}
     {#
-        A button is contained in its own <form> and has :
-        - verb : the action verb used when the form is submitted by the click of the button
+        A button has :
+        - verb : the action verb used when the button is clicked
         - text : The text on the button
-        - user_id : The user_id of the user clicking the button
         - (optional) disabled : disabled by default or not
-        TO DO : Replace all those by submitWithVerb
     #}
+    <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
     {#
     <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
         <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}}">{{action['text']}}</button>
     </form>
     #}
-    <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
 {% elseif action['type']=='submitWithVerb' %}
     {#
         A submitWithVerb creates a button with :

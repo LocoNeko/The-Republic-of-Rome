@@ -59,6 +59,11 @@ function getReady(phase , subPhase)
             {
                 displayModalSlider(jsonButton.action[1] , '' , jsonButton.action[2] , jsonButton.action[3] , jsonButton.action[4] , jsonButton.action[5]) ;
             }
+            else if (jsonButton.action[0]==="fixedAmount")
+            {
+                json["amount"] = jsonButton.action[1] ;
+                submitJSON(json) ;
+            }
             else
             {
                 alert("ERROR - Wrong action (should be 'slider')");
@@ -129,6 +134,7 @@ function submitJSON(json)
      * Emit the Update event to socket.io
      * This requires a gameId in the "realm" attribute of the title
     */
+    
     socket.emit('Update', $("title").attr('realm'));
 
     $.post(
@@ -139,6 +145,7 @@ function submitJSON(json)
        } ,
        "json"
     );
+    
 }
 
 /**
@@ -262,13 +269,13 @@ function persuasionUpdateOdds()
 
         // Update odds text & enable PERSUADE button
         $('.persuasionOdds').val(valueFor + " - " + valueAgainst + " = " + valueTotal + " (" + parseInt(10000*oddsPercentage)/100 + "%)") ;
-        $("[verb='persuasionPickTarget']").find("[verb='persuasionPickTarget']").removeClass('disabled');
+        $("[verb='persuasionPickTarget']").removeClass('disabled');
     }
     // If we lack either a target or a persuader, update Odds to 'N/A' and disable PERSUADE button
     else
     {
         $('.persuasionOdds').val('N/A');
-        $("[verb='persuasionPickTarget']").find("[verb='persuasionPickTarget']").addClass('disabled');
+        $("[verb='persuasionPickTarget']").addClass('disabled');
     }
 }
 

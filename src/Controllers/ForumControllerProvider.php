@@ -51,7 +51,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             // TO DO : See how to handle this update better (service ?)
             $game->getParty($user_id)->setLastUpdateToNow() ;
             
-            $view = new \Presenters\ForumPhasePresenterNew($game , $user_id) ;
+            $view = new \Presenters\ForumPhasePresenter($game , $user_id) ;
 
             return $app['twig']->render('BoardElements/Main_new.twig', array(
                     'layout_template' => 'InGameLayout.twig' ,
@@ -273,21 +273,20 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->persuasionRoll($game, $user_id, $json_data) ;
+                $game->setSubPhase('Knights') ;
+                $this->knightsInitialise($game, $user_id) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $json_data = $request->request->all() ;
-            error_log(print_r($json_data , TRUE));
-            $user_id = (int)$json_data['user_id'] ;
-            $this->persuasionRoll($game, $user_id, $json_data) ;
-            $game->setSubPhase('Knights') ;
-            $this->knightsInitialise($game, $user_id) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_persuasionRoll');
 
@@ -381,7 +380,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
-                $this->gameSponsor($game , $json_data['senatorid'] , $json_data['amount']) ;
+                $this->gameSponsor($game , $json_data['senatorID'] , $json_data['amount']) ;
             }
             catch (\Exception $exception)
             {
@@ -393,6 +392,32 @@ class ForumControllerProvider implements ControllerProviderInterface
             return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_forumGames');
+
+        /*
+        * POST target
+        * Verb : noKnights
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/noGames', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $user_id = (int)$app['user']->getId() ;
+            $game->log(_('[['.$user_id.']] {are,is} finished sponsoring Games.') , 'log' ) ;
+            $game->setSubPhase('ChangeLeader') ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
+        })
+        ->bind('verb_noGames');
 
         /*
          * 
@@ -768,7 +793,6 @@ class ForumControllerProvider implements ControllerProviderInterface
      * 
      * @param \Entities\Game $game
      * @param int $user_id
-     * @param array $data
      */
     public function persuasionRoll($game , $user_id , $data)
     {
@@ -777,96 +801,98 @@ class ForumControllerProvider implements ControllerProviderInterface
          * Validation
          */
         $forumView = new \Presenters\ForumPhasePresenter($game , $user_id) ;
-        $error = FALSE ;
-        if ($forumView->getPartyWithInitiative()===FALSE || $forumView->getPartyWithInitiative()->getUser_id()!=$user_id )
+        if ($forumView->idWithInitiative!=$user_id )
         {
-            $error = _('ERROR - Wrong party') ;
+            throw new \Exception(_('ERROR - Wrong party')) ;
         }
-        elseif ($forumView->getPersuasionTarget()===NULL)
+        elseif ($game->getPersuasionTarget()===NULL)
         {
-            $error = _('ERROR - No target') ;
+            throw new \Exception(_('ERROR - No target')) ;
         }
-        elseif ($forumView->getPartyWithInitiative()->getBid() > $forumView->getPartyWithInitiative()->getBidWith()->getTreasury())
+        elseif ($game->getParty($forumView->idWithInitiative)->getBid() > $game->getParty($forumView->idWithInitiative)->getBidWith()->getTreasury())
         {
-            $error = _('ERROR - Wrong bid amount') ;
+            throw new \Exception(_('ERROR - Wrong bid amount')) ;
         }
         /*
          * Validation complete - proceed
          */
-        if ($error===FALSE)
+        $persuasionDescription = $forumView->getPersuasionDescription($game) ;
+        $persuader = $game->getParty($forumView->idWithInitiative)->getBidWith() ;
+        $bribes = $game->getParty($forumView->idWithInitiative)->getBid() ;
+        $target = $game->getPersuasionTarget() ;
+        $counterBribes = 0 ;
+        foreach ($game->getParties() as $party)
         {
-            $persuasionDescription = $forumView->getPersuasionDescription() ;
-            $roll = $game->rollDice(2, 1) ;
-            $for = $persuasionDescription['for'] ;
-            $against = $persuasionDescription['against'] ;
-            $targetValue = $for-$against ;
-            $message = _('ERROR - impossible value. ');
-            $success = FALSE ;
-            /*
-             * CHeck outcome : failure on 10+ . failure if roll greater than target , success otherwise
-             */
-            if ($roll['total']>=10)
+            if ( ($party->getUser_id() != $forumView->idWithInitiative))
             {
-                $message = sprintf(_('FAILURE - %1$s He rolls an unmodified %2$d%3$s, which is greater than 9 and an automatic failure. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1)) ;
+                if ($party->getBid()>0)
+                {
+                    $counterBribes+=$party->getBid() ;
+                }
             }
-            elseif ($roll['total']>$targetValue)
+        }
+        $targetValue = $persuader->getINF() + $persuader->getORA() + $bribes - $target->getActualLOY($game) + $target->getTreasury() + $counterBribes ;
+        $roll = $game->rollDice(2, 1) ;
+        $message = _('ERROR - impossible value. ');
+        $success = FALSE ;
+        /*
+         * Check outcome : failure on 10+ . failure if roll greater than target , success otherwise
+         */
+        if ($roll['total']>=10)
+        {
+            $message = sprintf(_('FAILURE - %1$s He rolls an unmodified %2$d%3$s, which is greater than 9 and an automatic failure. ') , $persuasionDescription , $roll['total'] , $game->getEvilOmensMessage(1)) ;
+        }
+        elseif ($roll['total']>$targetValue)
+        {
+            $message = sprintf(_('FAILURE - %1$s He rolls %2$d%3$s, which is greater than or equal to the target number of %4$d. ') , $persuasionDescription , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
+        }
+        else
+        {
+            $success = TRUE ;
+            $message = sprintf(_('SUCCESS - %1$s He rolls %2$d%3$s, which is less than the target number of %4$d. ') , $persuasionDescription , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
+            $target->getLocation()['deck']->getFirstCardByProperty('senatorID' , $target->getSenatorID() , $game->getParty($user_id)->getSenators());
+        }
+
+        /**
+         * Describe what the target does (stay or go)
+         */
+        $message2 = $target->getName().
+        (   $success ?
+            _(' joins ').$game->getParty($forumView->idWithInitiative)->getName().'.' : 
+            _(' stays in ').$target->getLocation()['name'].'.'
+        );
+
+        /**
+         * Bribes received
+         */
+        $totalBribesReceived = 0 ;
+        foreach ($game->getParties() as $party)
+        {
+            $totalBribesReceived+=$party->getBid() ;
+            $target->changeTreasury($party->getBid()) ;
+            // Take bribes from party treasury for every party but the party with the initiative, for which bribes come from the persuader's treasury
+            if ($forumView->idWithInitiative==$party->getUser_id())
             {
-                $message = sprintf(_('FAILURE - %1$s He rolls %2$d%3$s, which is greater than or equal to the target number of %4$d. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
+                $party->getBidWith()->changeTreasury(-$party->getBid()) ;
             }
             else
             {
-                $success = TRUE ;
-                $message = sprintf(_('SUCCESS - %1$s He rolls %2$d%3$s, which is less than the target number of %4$d. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
-                $forumView->getPersuasionTarget()->getLocation()['deck']->getFirstCardByProperty('senatorID' , $forumView->getPersuasionTarget()->getSenatorID() , $game->getParty($user_id)->getSenators());
+                $party->changeTreasury(-$party->getBid()) ;
             }
-            
-            /**
-             * Describe what the target does (stay or go)
-             */
-            $message2 = $forumView->getPersuasionTarget()->getName().
-            (   $success ?
-                _(' joins ').$forumView->getPartyWithInitiative()->getName().'.' : 
-                _(' stays in ').$forumView->getPersuasionTarget()->getLocation()['name'].'.'
-            );
-            
-            /**
-             * Bribes received
-             */
-            $totalBribesReceived = 0 ;
-            foreach ($game->getParties() as $party)
-            {
-                $totalBribesReceived+=$party->getBid() ;
-                $forumView->getPersuasionTarget()->changeTreasury($party->getBid()) ;
-                // Take bribes from party treasury for every party but the party with the initiative, for which bribes come from the persuader's treasury
-                if ($forumView->getPartyWithInitiative()->getUser_id()==$party->getUser_id())
-                {
-                    $party->getBidWith()->changeTreasury(-$party->getBid()) ;
-                }
-                else
-                {
-                    $party->changeTreasury(-$party->getBid()) ;
-                }
-            }
-            if ($totalBribesReceived>0)
-            {
-                $message2.=sprintf(_(' He takes a total of %1$dT in bribes.') , $totalBribesReceived);
-            }
-            
-            $game->log($message, 'log');
-            $game->log($message2, 'log');
         }
-        /*
-         * There was an error
-         */
-        else
+        if ($totalBribesReceived>0)
         {
-            $game->log($error , 'error');
+            $message2.=sprintf(_(' He takes a total of %1$dT in bribes.') , $totalBribesReceived);
         }
+
+        $game->log($message, 'log');
+        $game->log($message2, 'log');
         /*
          * Reset persuasion
          */
         $this->resetPersuasion($game) ;
     }
+    
     /**
      * Initialises isDone to FALSE
      * isDone is used to know whether a party has decided to pressure knights
@@ -916,6 +942,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         }
         return TRUE ;
     }
+    
     /**
      * @param \Entities\Game $game
      * @param string $senatorID
@@ -946,7 +973,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         $senator->changeKnights(-$amount) ;
         $senator->changeTreasury($total) ;
         $senator->getLocation()['value']->setIsDone(TRUE) ;
-        // TO DO : Ugly. Respect the log function protocal and pass an array of parameters !
+        // TO DO : Ugly. Respect the log function protocol and pass an array of parameters !
         $game->log($message) ;
     }
 

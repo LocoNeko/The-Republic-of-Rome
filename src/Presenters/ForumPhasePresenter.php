@@ -1,7 +1,7 @@
 <?php
 namespace Presenters ;
 
-class ForumPhasePresenterNew
+class ForumPhasePresenter
 {
     // Common to all phase presenters
     public $user_id ;
@@ -104,7 +104,7 @@ class ForumPhasePresenterNew
         /**
          * Persuasion - Wait for Bribe, Counter-bribe or Roll
          */
-        elseif ($game->getSubPhase()=='Persuasion' && $game->getPersuasionTarget()!==NULL && !$this->hasInitiative)
+        elseif ($game->getSubPhase()=='Persuasion' && $game->getPersuasionTarget()!==NULL && ($this->hasInitiative || (!$this->hasInitiative && $this->getFirstIsNotDoneUserId($game)!==$user_id)))
         {
             $this->header['description'] .= _('Waiting for Counter-bribe')  ;
             $this->header['details'] = $this->getPersuasionDescription($game) ;
@@ -434,7 +434,7 @@ class ForumPhasePresenterNew
              * @var \Entities\Senator $senatorModel
              */
             $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
-            if ($senatorModel->getTreasury()>=7)
+            if ($senatorModel->getTreasury()>=0)
             {
                 $senator->addMenuItem(
                     array (
@@ -443,8 +443,7 @@ class ForumPhasePresenterNew
                         'verb' => 'forumGames' ,
                         'text' => _('Slice & Dice') ,
                         'attributes' => array (
-                            'amount' => 7 ,
-                            'senatorID' => $senatorModel->getSenatorID()
+                            'data-json'=> '{"action":["fixedAmount" , "7"]}'
                         )
                     )
                 );
@@ -458,8 +457,7 @@ class ForumPhasePresenterNew
                         'verb' => 'forumGames' ,
                         'text' => _('Blood fest') ,
                         'attributes' => array (
-                            'amount' => 13 ,
-                            'senatorID' => $senatorModel->getSenatorID()
+                            'data-json'=> '{"action":["fixedAmount" , "13"]}'
                         )
                     )
                 );
@@ -473,8 +471,7 @@ class ForumPhasePresenterNew
                         'verb' => 'forumGames' ,
                         'text' => _('Gladiator gala') ,
                         'attributes' => array (
-                            'amount' => 18 ,
-                            'senatorID' => $senatorModel->getSenatorID()
+                            'data-json'=> '{"action":["fixedAmount" , "18"]}'
                         )
                     )
                 );
@@ -670,13 +667,10 @@ class ForumPhasePresenterNew
         // Counter bribes
         $counterBribesDescription = _('') ;
         $counterBribes = 0 ;
-        $nonPersuaderAvailableTreasury = array() ;
         foreach ($game->getParties() as $party)
         {
             if ( ($party->getUser_id() != $this->idWithInitiative))
             {
-                // Set non-persuader available treasuries 
-                $nonPersuaderAvailableTreasury[$party->getUser_id()] = $party->getTreasury() - $party->getBid() ;
                 // Counter bribes totals
                 if ($party->getBid()>0)
                 {
@@ -692,7 +686,7 @@ class ForumPhasePresenterNew
         // Odds for : INF + ORA + bribes
         // Odds against : LOY + treasury + counter bribes
         
-        $for= $persuader->getINF() + $persuader->getORA() + $bribes ;
+        $for = $persuader->getINF() + $persuader->getORA() + $bribes ;
         $against = $target->getActualLOY($game) + $target->getTreasury() + $counterBribes ;
         return sprintf( _('%1$s is persuading %2$s, spending %3$d in bribes.%4$s Totals are %5$d for and %6$d against.') , $persuader->getName() , $target->getName() , $bribes , $counterBribesDescription , $for , $against ) ;
     }
