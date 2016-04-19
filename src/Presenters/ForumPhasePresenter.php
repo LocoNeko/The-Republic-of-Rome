@@ -504,6 +504,20 @@ class ForumPhasePresenter
             'text' => ' Leader' ,
             'caption' => 'Drag and drop on top of a Senator to make him Party leader'
         );
+        // droppable : add the droppable to all Senators that can be leadera
+        foreach ($this->yourParty->senators as $senatorID=>$senator)
+        {
+            /**
+             * Get the corresponding Senator Model (entity)
+             * @var \Entities\Senator $senatorModel
+             */
+            $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
+            if (!$senatorModel->isLeader())
+            {
+                $senator->addClass('droppable') ;
+            }
+
+        }
     }
     
     /**

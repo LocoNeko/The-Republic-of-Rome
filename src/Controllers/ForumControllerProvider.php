@@ -376,6 +376,35 @@ class ForumControllerProvider implements ControllerProviderInterface
         })
         ->bind('verb_noGames');
 
+        /**
+        * POST target
+        * Verb : forumChangeLeader
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/forumChangeLeader', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $leader = $game->getFilteredCards(array('senatorID'=>$json_data['to']['senatorID']))->first() ;
+                $party = $game->getParty($user_id) ;
+                $party->setLeader($leader) ;
+                $game->log( _('[['.$user_id.']] {appoint,appoints} %1$s as new party leader') , 'log' , array($leader->getName()) );
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+        ->bind('verb_forumChangeLeader');
+
         /*
          * 
          * =============== DEBUG ===============
@@ -968,5 +997,5 @@ class ForumControllerProvider implements ControllerProviderInterface
             )
         ) ;
     }
-
+    
 }

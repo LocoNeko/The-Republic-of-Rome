@@ -93,6 +93,58 @@ function getReady(phase , subPhase)
         submitJSON(json) ;
     });
 
+    /* 
+     * DRAGGABLE
+     * - Applies to all elements with the .draggable class
+     * - Draggable with a clone as a helper
+     */
+    $('.draggable').each(function() {
+        $(this).draggable({
+            zIndex: 500,
+            scroll:true,
+            start: function (event, ui) {
+               $(this).data("startingScrollTop",window.pageYOffset);
+            },
+            drag: function(event,ui){
+               var st = parseInt($(this).data("startingScrollTop"));
+               ui.position.top -= st;
+            },
+            cursor: 'move' ,
+            helper: 'clone'
+        });
+    });
+
+    /**
+     * DROPPABLE
+     * - Applies to all elements with the .droppable class
+     * - If the draggable has some data-json, it's put in a 'from' object in the json
+     * - The verb always comes from the draggable
+     * - The data-json of the droppable is added in a 'to' object in the json
+     * - Finally : submit
+     * TO DO : The draggable could have an action, for example to generate a slider 
+     */
+    $('.droppable').each( function() {
+        $(this).droppable( {
+            drop: function ( event, ui ) {
+                // The json from the body
+                var json = JSON.parse($(document.body).attr('data-json')) ;
+                
+                // json from the draggable ("from"), if any
+                var dataJsonFrom = ui.draggable.attr('data-json');
+                if (typeof dataJsonFrom !== typeof undefined && dataJsonFrom !== false && dataJsonFrom.length>0)
+                {
+                    json.from = JSON.parse(dataJsonFrom);
+                }
+                json['verb'] = ui.draggable.attr('verb') ;
+
+                // json from the droppable ("to")
+                json.to = JSON.parse($(event.target).attr('data-json')) ;
+                submitJSON(json) ;
+            }
+        });
+    });
+    
+    
     /**
      *  Popover for Rome Current State
      */
@@ -134,7 +186,7 @@ function submitJSON(json)
      * Emit the Update event to socket.io
      * This requires a gameId in the "realm" attribute of the title
     */
-    
+
     socket.emit('Update', $("title").attr('realm'));
 
     $.post(

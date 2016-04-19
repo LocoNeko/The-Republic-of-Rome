@@ -194,6 +194,15 @@ class CardPresenter
     }
 
     /**
+     * Adds a class to the Card
+     * @param string $name
+     */
+    public function addClass($name)
+    {
+        $this->classes[] = $name ;
+    }
+    
+    /**
      * Adds a json value {"name" : "value"} to this card's data_json
      * @param string $name The value's name (key)
      * @param mixed $value The value itself

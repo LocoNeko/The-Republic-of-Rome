@@ -7,10 +7,11 @@
     {#
         An icon has :
         - verb : the action verb used when the token is dropped
+        - data-json : If needed, the data-json used when dropping the token
         - caption : The tooltip on the icon
         - text : The text next to the icon
     #}
-    <div class="btn btn-default btn-lg draggable" verb='{{action['verb']}}' title='{{action['caption']}}'>
+    <div class="btn btn-default btn-lg draggable" data-json="{{action['data_json']|default('')}}" verb='{{action['verb']}}' title='{{action['caption']}}'>
         <span class="glyphicon glyphicon-star" aria-hidden="true"></span>{{action['text']}}
     </div>
 {% elseif action['type']=='button' %}
