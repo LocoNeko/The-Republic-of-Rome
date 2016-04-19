@@ -32,19 +32,6 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->redirect('/') ;
             }
             
-            /*
-            $gameView = new \Presenters\GamePresenter($game) ;
-            $forumView = new \Presenters\ForumPhasePresenter($game , (int)$app['user']->getId()) ;
-            
-            return $app['twig']->render('BoardElements/Main.twig', array(
-                'layout_template' => 'layout.twig' ,
-                'game' => $game ,
-                'gameView' => $gameView ,
-                'header' => $forumView->getHeader() ,
-                'content' => $forumView->getContent()
-            ));
-            */
-            
             $user_id = (int)$app['user']->getId() ;
 
             //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
@@ -71,18 +58,18 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->doRollEvent($user_id , $game) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            // TO DO : user id should be passed in JSON
-            $user_id = (int)$app['user']->getId() ;
-            $this->doRollEvent($user_id , $game) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_RollEvent');
 
@@ -97,20 +84,20 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
+                $game->setSubPhase('Knights') ;
+                $this->knightsInitialise($game, $user_id) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            // TO DO : user id should be passed in JSON
-            $user_id = (int)$app['user']->getId() ;
-            $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
-            $game->setSubPhase('Knights') ;
-            $this->knightsInitialise($game, $user_id) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_noPersuasion');
 
@@ -125,31 +112,17 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->persuasionPickTarget($game , $user_id , $json_data['persuasionTargetList'] , $json_data['persuasionPersuaderList'] , $json_data['persuasionBribe'] , $json_data['persuasionCard']) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
-            }
-            // TO DO : user id should be passed in JSON
-            $user_id = (int)$app['user']->getId() ;
-            $outcome = $this->persuasionPickTarget($game , $user_id , $request->request->all()) ;
-            /**
-             * SUCCESS - No error while picking the target
-             */
-            if ($outcome===TRUE)
-            {
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
-            /*
-             * ERROR - Error while picking the target
-             */
-            else
-            {
-                $app['session']->getFlashBag()->add('danger' , $outcome) ;
-                return $app->json( $outcome , 201);
             }
         })
         ->bind('verb_persuasionPickTarget');
@@ -165,20 +138,20 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                $game->getParty($user_id)->changeBid($json_data['persuasionCounterBribeAmount']);
+                $game->log(_('[['.$user_id.']] {increase,increases} bribes by %d') , 'log' , array($json_data['persuasionCounterBribeAmount'])) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $json_data = $request->request->all() ;
-            $user_id = (int)$json_data['user_id'] ;
-            $game->getParty($user_id)->setIsDone(TRUE) ;
-            $game->getParty($user_id)->changeBid($json_data['persuasionCounterBribeAmount']);
-            $game->log(_('[['.$user_id.']] {increase,increases} bribes by %d') , 'log' , array($json_data['persuasionCounterBribeAmount'])) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_persuasionCounterBribe');
 
@@ -194,27 +167,18 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
-            }
-            catch (Exception $exception)
-            {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201 );
-            }
-            $json_data = $request->request->all() ;
-            $user_id = (int)$json_data['user_id'] ;
-            // User_id mismatch
-            if ( $user_id!=(int)$app['user']->getId() )
-            {
-                $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
-                return $app->json( _('Error - User ID mismatch.') , 201);
-            }
-            else
-            {
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
                 $game->getParty($user_id)->setIsDone(TRUE) ;
                 $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} counter-bribe') , 'log');
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
             }
         })
         ->bind('verb_persuasionNoCounterBribe');
@@ -230,22 +194,8 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
-            }
-            catch (Exception $exception)
-            {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201 );
-            }
-            $json_data = $request->request->all() ;
-            $user_id = (int)$json_data['user_id'] ;
-            // User_id mismatch
-            if ( $user_id!=(int)$app['user']->getId() )
-            {
-                $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
-                return $app->json( _('Error - User ID mismatch.') , 201);
-            }
-            else
-            {
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
                 // Increase the bribe
                 $game->getParty($user_id)->changeBid($json_data['persuasionAddedBribe']);
                 // Set all parties to isDone = FALSE
@@ -258,6 +208,11 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
             }
         })
         ->bind('verb_persuasionBribeMore');
@@ -301,18 +256,19 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $game->log(_('[['.$user_id.']] {is,are} finished with Knights.') , 'log' ) ;
+                $game->setSubPhase('Games') ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $user_id = (int)$app['user']->getId() ;
-            $game->log(_('[['.$user_id.']] {is,are} finished with Knights.') , 'log' ) ;
-            $game->setSubPhase('Games') ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_noKnights');
 
@@ -329,16 +285,16 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $this->knightsAttract($game , $json_data['senatorID'] , $json_data['value']) ;
+                $game->setSubPhase('Games') ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $game->setSubPhase('Games') ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_forumKnightsAttract');
 
@@ -355,16 +311,16 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $this->knightsAttract($game , $json_data['senatorID'] , $json_data['value']) ;
+                $game->setSubPhase('Games') ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $game->setSubPhase('Games') ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_forumKnightsAttract');
 
@@ -381,15 +337,15 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $this->gameSponsor($game , $json_data['senatorID'] , $json_data['amount']) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_forumGames');
 
@@ -404,18 +360,19 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $game->log(_('[['.$user_id.']] {are,is} finished sponsoring Games.') , 'log' ) ;
+                $game->setSubPhase('ChangeLeader') ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
-            $user_id = (int)$app['user']->getId() ;
-            $game->log(_('[['.$user_id.']] {are,is} finished sponsoring Games.') , 'log' ) ;
-            $game->setSubPhase('ChangeLeader') ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_noGames');
 
@@ -496,6 +453,7 @@ class ForumControllerProvider implements ControllerProviderInterface
      * @param int $user_id
      * @param \Entities\Game $game
      * @return boolean
+     * @throws \Exception 
      */
     public function doRollEvent($user_id , $game)
     {
@@ -714,7 +672,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         }
         else
         {
-            return FALSE ;
+            throw new \Exception(_('ERROR - Wrong phase'));
         }
     }
     
@@ -735,42 +693,47 @@ class ForumControllerProvider implements ControllerProviderInterface
     }
 
     /**
-     *
+     * 
      * @param \Entities\Game $game
      * @param int $user_id
-     * @param array $data
-     * @return string | boolean TRUE if successful, an erro message otherwise
+     * @param SenatorID $target
+     * @param SenatorID $persuader
+     * @param int $bribe
+     * @param Card_id $card
+     * @throws \Exception
      */
-    public function persuasionPickTarget($game , $user_id , $data)
+    public function persuasionPickTarget($game , $user_id , $target , $persuader , $bribe , $card)
     {
-        $target = $game->getFilteredCards(array('senatorID'=>$data['persuasionTargetList'])) ;
-        $persuader= $game->getFilteredCards(array('senatorID'=>$data['persuasionPersuaderList'])) ;
-        $bribe = (int)$data['persuasionBribe'] ;
-        $persuasionCard = $game->getFilteredCards(array('id'=>$data['persuasionCard'])) ;
-        // validation
+        $target = $game->getFilteredCards(array('senatorID'=>$target)) ;
+        $persuader= $game->getFilteredCards(array('senatorID'=>$persuader)) ;
+        $bribe = (int)$bribe ;
+        $persuasionCard = $game->getFilteredCards(array('id'=>$card)) ;
+        /*
+         * Validation
+         */
         if (count($target)!=1)
         {
-            return _('Wrong target') ;
+            throw new \Exception(_('Wrong target'));
         }
         if ($target->first()->getLocation()['type']!='party' && $target->first()->getLocation()['name']!='forum')
         {
-            return _('Target not in a party or the forum') ;
+            throw new \Exception(_('Target not in a party or the forum'));
         }
         if (count($persuader)!=1)
         {
-            return _('Wrong persuader') ;
+            throw new \Exception(_('Wrong persuader'));
         }
         if ($persuader->first()->getLocation()['type']!='party' || $persuader->first()->getLocation()['value']->getUser_id()!=$user_id)
         {
-            return _('Persuader in wrong party') ;
+            throw new \Exception(_('Persuader in wrong party'));
         }
         if ($bribe<0 || $bribe>$persuader->first()->getTreasury())
         {
-            return _('Invalid bribe value') ;
+            throw new \Exception(_('Invalid bribe value'));
         }
         if (count($persuasionCard)>0 && ( count($persuasionCard->first())!=1 || $persuasionCard->first()->getLocation()['type']!='hand' || $persuasionCard->first()->getLocation()['value']->getUser_id()!=$user_id))
         {
-            return _('Persuasion card comes from the wrong place') ;
+            throw new \Exception(_('Persuasion card comes from the wrong place'));
         }
         /*
          * Validation done. Set persuader as $party->bidWith , bribe as $party->bid and target as $game->persuasiontarget
@@ -784,9 +747,8 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             // TO DO : Validate card
             // TO DO : If the card bypasses the proces entirely, we can jump to persuasionRoll :
-            //$this->persuasionRoll($game, $user_id, $data) ;
+            //$this->persuasionRoll($game, $user_id, ....) ;
         }
-        return TRUE ;
     }
     
     /**
@@ -905,9 +867,9 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             $game->getParty($user_id)->setIsDone(FALSE) ;
         }
-        catch (Exception $e)
+        catch (\Exception $e)
         {
-            return FALSE ;
+            throw new \Exception($e->getMessage());
         }
     }
     
@@ -916,6 +878,7 @@ class ForumControllerProvider implements ControllerProviderInterface
      * @param \Entities\Game $game
      * @param string $senatorID The Seantor ID of the attracting Senator
      * @param int $amount Number of talents spent
+     * @throws \Exception
      */
     public function knightsAttract($game , $senatorID , $amount)
     {
@@ -940,7 +903,6 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             $game->log(_('FAILURE - %1$s spends %2$dT and rolls %3$d%4$s. The total is less than 6.') , 'log' , array ($senator->getName() , $amount , $roll , $game->getEvilOmensMessage(-1))) ;
         }
-        return TRUE ;
     }
     
     /**
