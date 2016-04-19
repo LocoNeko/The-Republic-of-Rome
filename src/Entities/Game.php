@@ -12,6 +12,11 @@ class Game
     public static $VALID_SCENARIOS = array('EarlyRepublic') ;
     public static $VALID_VARIANTS = array('Pontifex Maximus' , 'Provincial Wars' , 'Rebel governors' , 'Legionary disbandment' , 'Advocates' , 'Passing Laws' , 'Hide odds') ;
     public static $VALID_DECKS = array('drawDeck' , 'earlyRepublic' , 'middleRepublic' , 'lateRepublic' , 'discard' , 'unplayedProvinces' , 'inactiveWars' , 'activeWars' , 'imminentWars' , 'unprosecutedWars' , 'forum' , 'curia') ;
+    public static $GAMES_TABLE = array (
+       7 => array ('name' => 'Slice & dice' , 'effect' => 1) , 
+       13 => array ('name' => 'Blood fest' , 'effect' => 2) , 
+       18 => array ('name' => 'Gladiator Gala' , 'effect' => 3) , 
+    ) ;
     public static $MIN_PLAYERS = 3 ;
     public static $MAX_PLAYERS = 6 ;
 
@@ -354,7 +359,7 @@ class Game
 
     public function changeUnrest($value)
     {
-        $this->unrest+=(int)$value ;
+        $this->unrest = max($this->getUnrest() + (int)$value , 0) ;
     }
 
     public function changeTreasury($amount)

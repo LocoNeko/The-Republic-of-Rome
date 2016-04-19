@@ -106,7 +106,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             // TO DO : user id should be passed in JSON
             $user_id = (int)$app['user']->getId() ;
             $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} make a persuasion attempt.') , 'log' ) ;
-            $game->setSubPhase('knights') ;
+            $game->setSubPhase('Knights') ;
             $this->knightsInitialise($game, $user_id) ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();
@@ -280,22 +280,14 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
             $json_data = $request->request->all() ;
+            error_log(print_r($json_data , TRUE));
             $user_id = (int)$json_data['user_id'] ;
-            // User_id mismatch
-            if ( $user_id!=(int)$app['user']->getId() )
-            {
-                $app['session']->getFlashBag()->add('danger', _('Error - User ID mismatch.'));
-                return $app->json( _('Error - User ID mismatch.') , 201);
-            }
-            else
-            {
-                $this->persuasionRoll($game, $user_id, $json_data) ;
-                $game->setSubPhase('knights') ;
-                $this->knightsInitialise($game, $user_id) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                return $app->json( 'SUCCESS' , 201);
-            }
+            $this->persuasionRoll($game, $user_id, $json_data) ;
+            $game->setSubPhase('Knights') ;
+            $this->knightsInitialise($game, $user_id) ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_persuasionRoll');
 
@@ -317,15 +309,91 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
             $user_id = (int)$app['user']->getId() ;
-            $game->log(_('[['.$user_id.']] {don\'t,doesn\'t} is finished with Knights.') , 'log' ) ;
-            $game->setSubPhase('games') ;
+            $game->log(_('[['.$user_id.']] {is,are} finished with Knights.') , 'log' ) ;
+            $game->setSubPhase('Games') ;
             $this->entityManager->persist($game);
             $this->entityManager->flush();
             return $app->json( 'SUCCESS' , 201);
         })
         ->bind('verb_noKnights');
 
-        
+        /**
+        * POST target
+        * Verb : forumKnightsAttract
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/forumKnightsAttract', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $this->knightsAttract($game , $json_data['senatorID'] , $json_data['value']) ;
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $game->setSubPhase('Games') ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
+        })
+        ->bind('verb_forumKnightsAttract');
+
+        /**
+        * POST target
+        * Verb : forumKnightsAttract
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/forumKnightsAttract', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $this->knightsAttract($game , $json_data['senatorID'] , $json_data['value']) ;
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $game->setSubPhase('Games') ;
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
+        })
+        ->bind('verb_forumKnightsAttract');
+
+        /**
+        * POST target
+        * Verb : forumGames
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/forumGames', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $this->gameSponsor($game , $json_data['senatorid'] , $json_data['amount']) ;
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+            $this->entityManager->persist($game);
+            $this->entityManager->flush();
+            return $app->json( 'SUCCESS' , 201);
+        })
+        ->bind('verb_forumGames');
+
         /*
          * 
          * =============== DEBUG ===============
@@ -743,7 +811,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             elseif ($roll['total']>$targetValue)
             {
-                $message = sprintf(_('FAILURE - %1$s He rolls %2$d%3$s, which is greater than the target number of %4$d. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
+                $message = sprintf(_('FAILURE - %1$s He rolls %2$d%3$s, which is greater than or equal to the target number of %4$d. ') , $persuasionDescription['text'] , $roll['total'] , $game->getEvilOmensMessage(1) , $targetValue) ;
             }
             else
             {
@@ -816,4 +884,100 @@ class ForumControllerProvider implements ControllerProviderInterface
             return FALSE ;
         }
     }
+    
+    /**
+     * Attracts a knight for a Senator
+     * @param \Entities\Game $game
+     * @param string $senatorID The Seantor ID of the attracting Senator
+     * @param int $amount Number of talents spent
+     */
+    public function knightsAttract($game , $senatorID , $amount)
+    {
+        /** @var \Entities\Senator $senator */
+        $senator = $game->getFilteredCards(array('senatorID'=>$senatorID))->first() ;
+        if ($senator->getLocation()['type']!='party' || $senator->getLocation()['value']->getUser_id() != $game->whoseTurn()->getUser_id())
+        {
+            throw new \Exception(_('ERROR - Senator & party mismatch.'));
+        }
+        if ($amount>$senator->getTreasury())
+        {
+            throw new \Exception(_('ERROR - Not enough talents'));
+        }
+        $senator->changeTreasury(-$amount) ;
+        $roll = $game->rollOneDie(-1) ;
+        if (($roll+$amount) >= 6)
+        {
+            $senator->changeKnights(1);
+            $game->log(_('SUCCESS - %1$s spends %2$dT and rolls %3$d%4$s. The total is greater than or equal to 6.') , 'log' , array($senator->getName() , $amount , $roll , $game->getEvilOmensMessage(-1))) ;
+        }
+        else 
+        {
+            $game->log(_('FAILURE - %1$s spends %2$dT and rolls %3$d%4$s. The total is less than 6.') , 'log' , array ($senator->getName() , $amount , $roll , $game->getEvilOmensMessage(-1))) ;
+        }
+        return TRUE ;
+    }
+    /**
+     * @param \Entities\Game $game
+     * @param string $senatorID
+     * @param int $amount
+     */
+    public function knightsPressure($game , $senatorID , $amount)
+    {
+        /** @var \Entities\Senator $senator */
+        $senator = $game->getFilteredCards(array('senatorID'=>$senatorID))->first() ;
+        if ($senator->getLocation()['type']!='party' || $senator->getLocation()['value']->getUser_id() != $game->whoseTurn()->getUser_id())
+        {
+            throw new \Exception(_('ERROR - Senator & party mismatch.'));
+        }
+        if ($amount>$senator->getKnights())
+        {
+            throw new \Exception(_('ERROR - Not enough knights'));
+        }
+        $message = sprintf(_('%1$s pressures %2$d knight%3$s. Rolls : ') ,$senator->getName() , $amount , ($amount>1 ? 's' : '') );
+        $total = 0 ;
+        for ($i=0 ; $i<$senator->getKnights() ; $i++)
+        {
+            $roll = max($game->rollOneDie(-1),0);
+            $message.=$roll.', ';
+            $total+=$roll ;
+        }
+        $message = substr($message, 0 , -2) ;
+        $message.= sprintf(_('%1$s. Earns a total of %2$dT.') , $game->getEvilOmensMessage(-1) , $total);
+        $senator->changeKnights(-$amount) ;
+        $senator->changeTreasury($total) ;
+        $senator->getLocation()['value']->setIsDone(TRUE) ;
+        // TO DO : Ugly. Respect the log function protocal and pass an array of parameters !
+        $game->log($message) ;
+    }
+
+    /**
+     * @param \Entities\Game $game
+     * @param string $senatorID
+     * @param int $amount
+     * @throws \Exception
+     */
+    public function gameSponsor($game , $senatorID , $amount)
+    {
+        /** @var \Entities\Senator $senator */
+        $senator = $game->getFilteredCards(array('senatorID'=>$senatorID))->first() ;
+        if ($senator->getLocation()['type']!='party' || $senator->getLocation()['value']->getUser_id() != $game->whoseTurn()->getUser_id())
+        {
+            throw new \Exception(_('ERROR - Senator & party mismatch.'));
+        }
+        if ($amount>$senator->getTreasury())
+        {
+            throw new \Exception(_('ERROR - Not enough talents'));
+        }
+        $senator->changeTreasury(-$amount) ;
+        $senator->changePOP($amount) ;
+        $game->changeUnrest(-\Entities\Game::$GAMES_TABLE[$amount]['effect']) ;
+        $game->log(_('%1$s organises %2$s games, reducing the unrest by %3$d and gaining %3$d popularity.') , 'log' , 
+            array (
+                $senator->getName() ,
+                \Entities\Game::$GAMES_TABLE[$amount]['name'] ,
+                \Entities\Game::$GAMES_TABLE[$amount]['effect']
+            )
+        ) ;
+    }
+
 }

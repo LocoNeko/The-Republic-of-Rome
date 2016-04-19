@@ -1,3 +1,20 @@
+Most up-to-date description of POST handling :
+
+- The < body> has a **data-json** attribute that holds only one value upon loading : **{user_id : _the user id_}**
+- Each **card < div>** (they have the 'sprite' class) has a **data-json** attribute as well
+- All global elements that need to be passed through POST must have the **global-postable** class
+- Buttons have a **verb** attribute
+- Upon clicking the button, the following happens :
+ - The json from **data-json** is put into a **json** variable
+ - If the button was on a card the json from the card's **data-json** is added to the json , otherwise all **global-postable** data is added to json
+ - **{verb : _the verb from the button_}** is added to the json
+ - the socket.io event is emitted
+ - The POST is called, with the **json** as data on the route **[current route] / [verb]**
+
+Refactoring :
+Remove the attributes of the card div from Card Presenter and Card_new.twig
+---
+
 Refactor all < forms > and their elements so they behave like that :
 
 < form > classes :

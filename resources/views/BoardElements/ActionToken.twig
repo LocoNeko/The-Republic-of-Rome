@@ -22,9 +22,12 @@
         - (optional) disabled : disabled by default or not
         TO DO : Replace all those by submitWithVerb
     #}
+    {#
     <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
         <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}}">{{action['text']}}</button>
     </form>
+    #}
+    <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
 {% elseif action['type']=='submitWithVerb' %}
     {#
         A submitWithVerb creates a button with :
@@ -42,7 +45,7 @@
         - One of those must be 'description' => 'XXXX'
     #}
     <div class="form-group">
-        <select class="form-control {{action['class']|default('')}}" name="{{action['class']|default('')}}">
+        <select class="form-control {{action['class']|default('')}} global-postable" name="{{action['class']|default('')}}">
             {% for item in action['items'] %}
                 <option {% for key, value in item %} {{key}}="{{value}}"{% endfor %} >
                     {{item['description']|escape('html')}}

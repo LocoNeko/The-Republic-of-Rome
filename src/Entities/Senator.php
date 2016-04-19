@@ -426,6 +426,19 @@ class Senator extends Card
     }
     
     /**
+     * Changes the Senator's knight by (int)$number
+     * @param int $number
+     */
+    public function changeKnights($number)
+    {
+        $this->knights+=(int)$number ;
+        if ($this->knights < 0)
+        {
+            $this->knights = 0 ;
+        }
+    }
+    
+    /**
      * Returns the actual Loyalty of a Senator as follows :
      * +7 for being in a Party
      * +/- the special LOY effects of being in the same party as an enemy, or a different party than a brother

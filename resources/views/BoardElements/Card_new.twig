@@ -17,7 +17,7 @@
     - style <optional> : 'warning'<default> , 'danger' , etc...
     - disabled <optional> : whether or not the item is disabled by default<FALSE by default>
 #}
-<div class="span3 sprite col-md-1{% for class in card.classes|default([]) %} {{class}}{% endfor %}" {% for key , attribute in card.attributes|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
+<div class="span3 sprite col-md-1{% for class in card.classes|default([]) %} {{class}}{% endfor %}" data-json="{{card.data_json}}" {% for key , attribute in card.attributes|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
     
     {#
         Elements generate internal divs 
@@ -47,6 +47,7 @@
                            type="submit"
                            tabindex="-1"
                            class="btn btn-lg btn-{{menuItem['style']|default('warning')}} {{menuItem['disabled']|default(false) ? 'disabled' : ''}} {% for class in menuItem['classes']|default([]) %} {{class}}{% endfor %} submitWithVerb"
+                           {% for key , attribute in menuItem.attributes|default([]) %} {{key}}="{{attribute}}"{% endfor %}
                            verb="{{menuItem['verb']}}"
                        >
                            {{menuItem['text']}}

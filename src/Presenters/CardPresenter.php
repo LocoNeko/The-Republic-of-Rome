@@ -10,6 +10,7 @@ class CardPresenter
     private $user_id ;
     public $classes;
     public $attributes ;
+    public $data_json ;
     public $elements ;
     public $menu ;
     public $controlledCards ;
@@ -37,8 +38,7 @@ class CardPresenter
          * All cards have :
          * - Attribute card_id
          */
-        
-        $this->attributes['card_id'] = $card->getId() ; 
+        $this->addAttribute('card_id', $card->getId()) ; 
         
         /**
          * Senator or Statesman
@@ -48,8 +48,8 @@ class CardPresenter
         {
             /** @var \Entities\Senator $card */
             $this->classes[] = 'sprite-Senator' ;
-            $this->attributes['name'] = $card->getName() ;
-            $this->attributes['senatorID'] = $card->getSenatorID() ;
+            $this->addAttribute('name', $card->getName()) ;
+            $this->addAttribute('senatorID', $card->getSenatorID()) ;
             $this->elements[] = array (
                 'classes' => array(
                     'sprite-position-name' ,
@@ -193,9 +193,18 @@ class CardPresenter
         }
     }
 
+    /**
+     * Adds a json value {"name" : "value"} to this card's data_json
+     * @param string $name The value's name (key)
+     * @param mixed $value The value itself
+     */
     public function addAttribute($name , $value)
     {
+        // TO DO ; Once attributes have been made obsolete, remove this
         $this->attributes[$name] = $value ;
+        $json = json_decode($this->data_json , TRUE) ;
+        $json[$name] = $value ;
+        $this->data_json = json_encode($json) ;
     }
 
     /**

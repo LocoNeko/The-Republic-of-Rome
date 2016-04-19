@@ -104,7 +104,7 @@ class ForumPhasePresenterNew
         /**
          * Persuasion - Wait for Bribe, Counter-bribe or Roll
          */
-        elseif ($game->getSubPhase()=='Persuasion' && $game->getPersuasionTarget()!==NULL && $this->getFirstIsNotDoneUserId($game)!==$user_id)
+        elseif ($game->getSubPhase()=='Persuasion' && $game->getPersuasionTarget()!==NULL && !$this->hasInitiative)
         {
             $this->header['description'] .= _('Waiting for Counter-bribe')  ;
             $this->header['details'] = $this->getPersuasionDescription($game) ;
@@ -117,14 +117,26 @@ class ForumPhasePresenterNew
         /**
          * Knights
          */
-        elseif ($game->getSubPhase()=='knights' && $this->hasInitiative)
+        elseif ($game->getSubPhase()=='Knights' && $this->hasInitiative)
         {
             $this->header['description'] .= _('Attracting or pressuring Knights') ;
             $this->setKnightsInitiative($game) ;
         }
-        elseif ($game->getSubPhase()=='knights' && !$this->hasInitiative)
+        elseif ($game->getSubPhase()=='Knights' && !$this->hasInitiative)
         {
             $this->header['description'] .= _('Waiting for Knights') ;
+        }
+        /**
+         * Games
+         */
+        elseif ($game->getSubPhase()=='Games' && $this->hasInitiative)
+        {
+            $this->header['description'] .= _('Sponsoring Games') ;
+            $this->setGamesInitiative($game) ;
+        }
+        elseif ($game->getSubPhase()=='Games' && !$this->hasInitiative)
+        {
+            $this->header['description'] .= _('Waiting for sponsoring of Games') ;
         }
     }
 
@@ -323,7 +335,11 @@ class ForumPhasePresenterNew
      */
     public function setKnightsInitiative($game)
     {
-        $this->header['list'][] = _('You can attract knights by rolling 6 on one die, adding 1 for every talent spent');
+        // Only offer the option to attract knights if none have been pressured yet
+        if ($game->getParty($this->idWithInitiative)->getIsDone() === FALSE)
+        {
+            $this->header['list'][] = _('You can attract knights by rolling 6 on one die, adding 1 for every talent spent');
+        }
         $this->header['list'][] = _('You can pressure existing knights to gain 1d talent per knight pressured');
         $this->header['action'] = array (
             'type' => 'button' ,
@@ -368,6 +384,9 @@ class ForumPhasePresenterNew
                         'text' => _('Attract a knight') ,
                         'classes' => array (
                             'forumKnightsAttract'
+                        ) ,
+                        'attributes' => array (
+                            'data-json'=> '{"action":["slider" , "KnightsAttractModal" , "'.$senatorModel->getName().' spends talents" , "0" , "'.$senatorModel->getTreasury().'" , "T." ]}'
                         )
                     )
                 );
@@ -385,6 +404,77 @@ class ForumPhasePresenterNew
                         'text' => _('Pressure Knights') ,
                         'classes' => array (
                             'forumKnightsPressure'
+                        )
+                    )
+                );
+            }
+        }
+    }
+    
+    /**
+     * - Games
+     * Set interface on cards
+     * @param \Entities\Game $game
+     */
+    public function setGamesInitiative($game)
+    {
+        $this->header['list'][] = _('Slice & Dice : 7T , +1 POP , -1 Unrest') ;
+        $this->header['list'][] = _('Blood fest : 13T , +2 POP , -2 Unrest') ;
+        $this->header['list'][] = _('Gladiator gala : 18T , +3 POP , -3 Unrest') ;
+        $this->header['action'] = array (
+            'type' => 'button' ,
+            'verb' => 'noGames' ,
+            'text' => 'DONE' ,
+            'user_id' => $this->user_id
+        );
+        foreach ($this->yourParty->senators as $senatorID=>$senator)
+        {
+            /**
+             * Get the corresponding Senator Model (entity)
+             * @var \Entities\Senator $senatorModel
+             */
+            $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
+            if ($senatorModel->getTreasury()>=7)
+            {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'primary' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'forumGames' ,
+                        'text' => _('Slice & Dice') ,
+                        'attributes' => array (
+                            'amount' => 7 ,
+                            'senatorID' => $senatorModel->getSenatorID()
+                        )
+                    )
+                );
+            }
+            if ($senatorModel->getTreasury()>=13)
+            {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'primary' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'forumGames' ,
+                        'text' => _('Blood fest') ,
+                        'attributes' => array (
+                            'amount' => 13 ,
+                            'senatorID' => $senatorModel->getSenatorID()
+                        )
+                    )
+                );
+            }
+            if ($senatorModel->getTreasury()>=18)
+            {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'primary' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'forumGames' ,
+                        'text' => _('Gladiator gala') ,
+                        'attributes' => array (
+                            'amount' => 18 ,
+                            'senatorID' => $senatorModel->getSenatorID()
                         )
                     )
                 );
