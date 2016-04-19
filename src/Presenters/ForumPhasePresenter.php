@@ -18,7 +18,6 @@ class ForumPhasePresenter
     public $hasInitiative ;
     
     /**
-     * 
      * @param \Entities\Game $game
      * @param int $user_id
      */
@@ -212,8 +211,10 @@ class ForumPhasePresenter
     
     public function setRollEventInitiative()
     {
-        $this->header['list'][] = _('In case a 7 is rolled, another roll will be made on the events table');
-        $this->header['list'][] = _('In case a 7 is not rolled, a card will be drawn and put in the hand or a deck, depending on its type');
+        $this->header['list'] = array (
+            _('In case a 7 is rolled, another roll will be made on the events table') ,
+            _('In case a 7 is not rolled, a card will be drawn and put in the hand or a deck, depending on its type')
+        );
         $this->header['actions'] = array (
             array (
                 'type' => 'button' ,
@@ -418,6 +419,7 @@ class ForumPhasePresenter
                         'verb' => 'forumKnightsPressure' ,
                         'text' => _('Pressure Knights') ,
                         'classes' => array (
+                            // TO DO : Modal for knights pressure
                             'forumKnightsPressure'
                         )
                     )
@@ -433,9 +435,11 @@ class ForumPhasePresenter
      */
     public function setGamesInitiative($game)
     {
-        $this->header['list'][] = _('Slice & Dice : 7T , +1 POP , -1 Unrest') ;
-        $this->header['list'][] = _('Blood fest : 13T , +2 POP , -2 Unrest') ;
-        $this->header['list'][] = _('Gladiator gala : 18T , +3 POP , -3 Unrest') ;
+        $this->header['list'] = array (
+            _('Slice & Dice : 7T , +1 POP , -1 Unrest') ,
+            _('Blood fest : 13T , +2 POP , -2 Unrest') ,
+            _('Gladiator gala : 18T , +3 POP , -3 Unrest')
+        );
         $this->header['actions'] = array (
             array (
                 'type' => 'button' ,

@@ -6,6 +6,7 @@ class DeckPresenter
     public $name ;
     public $description ;
     public $nbOfCards ;
+    /** @var \Presenters\CardPresenter [] */
     public $cards = array();
         
     /**
@@ -21,7 +22,7 @@ class DeckPresenter
             $this->description = $deck->getFullName() ;
             foreach ($deck->getCards() as $card)
             {
-                $this->cards[] = new \Presenters\CardPresenter($card, $user_id) ;
+                $this->cards[] = new CardPresenter($card, $user_id) ;
             }
         }
         else

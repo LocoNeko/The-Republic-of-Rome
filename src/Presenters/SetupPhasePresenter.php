@@ -6,111 +6,128 @@ use Doctrine\Common\Collections\Criteria;
 
 class SetupPhasePresenter
 {
-    private $game ;
-    /**
-     * 
-     * @param \Entities\Game $game
-     */
-    public function __construct($game) {
-        $this->game = $game ;
-    }
-    
-    /**
-     * The function provides an array with :
-     * 'description' : Example 'You have playbale cards' , 'You have no playbale cards and are waiting'
-     * 'list' : Example 'list1' => 'item 1' , 'item 2' ,...
-     * 'action' : Used to provide an action in the header. Example : 'type' => 'button' , 'verb' => 'DonePlayingCards' , 'text' => 'DONE' , 'user_id' => a user_id
-     * 
-     * @param int $user_id
-     * @return array
-     */
-    public function getHeader($user_id)
-    {
-        $result = array() ;
-        $result['list'] = array() ;
-        $result['action'] = array () ;
-        // Header for PickLeaders sub phase
-        if ($this->game->getPhase()=='Setup' && $this->game->getSubPhase()=='PickLeaders')
-        {
-            // Leader not yet picked
-            if ($this->game->getParty($user_id)->getLeader() === NULL)
-            {
-                $result['description'] = _('Drag and drop the leader token on one of your Senators to make him party leader.') ;
-                $result['action'] = array (
-                    'type' => 'icon' ,
-                    'verb' => 'PickLeader' ,
-                    'text' => ' Leader' ,
-                    'caption' => 'Drag and drop on top of a Senator to make him Party leader'
-                );
-            }
-            // Leader already picked, waiting for others
-            else
-            {
-                $result['description'] = _('You have set your party\'s leader and are currently waiting for :');
-                foreach ($this->game->getAllPartiesButOne($user_id) as $party)
-                {
-                    if ($party->getLeader() === NULL)
-                    {
-                        $result['list'][] = $party->getFullName();
-                    }
-                }
-            }
-        }
-        // Header for PlayCards sub phase
-        elseif ($this->game->getPhase()=='Setup' && $this->game->getSubPhase()=='PlayCards')
-        {
-            // Has cards and is not done yet
-            if ( ($this->game->getParty($user_id)->hasPlayableCards()) && ($this->game->getParty($user_id)->getIsDone() == FALSE))
-            {
-                $result['description'] = _('You have playable cards :') ;
-                $result['list'] = array (
-                    'Drag and drop Concessions on Senators' ,
-                    'Play Statesmen if they are playable' ,
-                    'Click DONE when finished'
-                ) ;
-                $result['action'] = array (
-                    'type' => 'button' ,
-                    'verb' => 'DonePlayingCards' ,
-                    'text' => 'DONE' ,
-                    'user_id' => $user_id
-                );
-            }
-            elseif ($this->game->getParty($user_id)->getIsDone())
-            {
-                $result['description'] = _('You are done playing cards and are waiting for :') ;
-                foreach ($this->game->getParties() as $party)
-                {
-                    if ($party->getId() != $user_id && $party->hasPlayableCards() && $party->getIsDone() == FALSE)
-                    {
-                        $result['list'][] = $party->getFullName();
-                    }
-                }
-            }
-            else
-            {
-                $result['description'] = _('You don\'t have any playable card') ;
-                $waiting = FALSE ;
-                foreach ($this->game->getParties() as $party)
-                {
-                    if ( ($party->getId() != $user_id) && ($party->hasPlayableCards() && $party->getIsDone() == FALSE) )
-                    {
-                        $result['list'][] = $party->getFullName();
-                        $waiting = TRUE ;
-                    }
-                }
-                if ($waiting)
-                {
-                    $result['description'].=_(' and are waiting for :');
-                }
-                $result['action'] = array (
-                    'type' => 'button' ,
-                    'verb' => 'DonePlayingCards' ,
-                    'text' => 'DONE' ,
-                    'user_id' => $user_id
-                );
+    // Common to all phase presenters
+    public $user_id ;
+    public $game ;
+    public $yourParty ;
+    public $otherParties = [] ;
+    public $header = [] ;
+    public $interface = [] ;
+    public $sliders = [] ;
 
+    /**
+     * @param \Entities\Game $game
+     * @param int $user_id
+     */
+    public function __construct($game , $user_id)
+    {
+        /**
+         * Common to all Phase presenters (should I abstract / extend ?)
+         */
+        $this->user_id = $user_id;
+        $this->game = new GamePresenterNew($game, $user_id);
+        foreach ($game->getParties() as $party) {
+            if ($party->getUser_id() == $user_id) {
+                $this->yourParty = new PartyPresenter($party, $user_id);
+            } else {
+                $this->otherParties[$party->getUser_id()] = new PartyPresenter($party, $user_id);
             }
         }
-        return $result ;
+        /**
+         * Phase Header
+         */
+        $this->header['list'] = array();
+        $this->header['actions'] = array();
+        if ($game->getPhase() != 'Setup')
+        {
+            $this->header['description'] .= _('ERROR - Wrong phase');
+        }
+        elseif ($game->getSubPhase() == 'PickLeaders' && $game->getParty($user_id)->getLeader() === NULL )
+        {
+            $this->header['description'] = _('Drag and drop the leader token on one of your Senators to make him party leader.');
+            $this->header['actions'] = array(
+                array (
+                    'type' => 'icon',
+                    'verb' => 'PickLeader',
+                    'text' => ' Leader',
+                    'caption' => 'Drag and drop on top of a Senator to make him Party leader'
+                )
+            );
+            // droppable : add the droppable to all Senators
+            foreach ($this->yourParty->senators as $senatorID => $senator)
+            {
+                $senator->addClass('droppable');
+            }
+        }
+        // Leader already picked, waiting for others
+        elseif ($game->getSubPhase() == 'PickLeaders')
+        {
+            $this->header['description'] = _('You have set your party\'s leader and are currently waiting for other parties to do the same');
+        }
+        // TO DO : refactor hasPlayableCards
+        elseif ($game->getSubPhase() == 'PlayCards' && $game->getParty($user_id)->hasPlayableCards() && $game->getParty($user_id)->getIsDone() == FALSE)
+        {
+            $this->header['description'] = _('You have playable cards :');
+            $this->header['list'] = array(
+                'Drag and drop Concessions on Senators',
+                'Play Statesmen if they are playable',
+                'Click DONE when finished'
+            );
+            $this->header['actions'] = array (
+                array(
+                    'type' => 'button',
+                    'verb' => 'DonePlayingCards',
+                    'text' => 'DONE'
+                )
+            );
+            // droppable : add the droppable to all Senators
+            foreach ($this->yourParty->senators as $senatorID=>$senator)
+            {
+                $senator->addClass('droppable') ;
+            }
+            // TO DO : draggable on concessions
+            foreach ($this->yourParty->hand->cards as $card)
+            {
+                /** @var \Presenters\CardPresenter */
+                if ($card->preciseType=='Concession')
+                {
+                    $card->addClass('draggable') ;
+                    $card->addAttribute('verb' , 'setupPlayConcession') ;
+                }
+                // Menu on Statesman
+                elseif ($card->preciseType=='Statesman')
+                {
+                    $card->addMenuItem (
+                        array (
+                            'style' => 'primary' ,
+                            'verb' => 'setupPlayStatesman' ,
+                            'text' => _('Play Statesman')
+                        )
+                    ) ;
+                }
+            }
+        }
+        elseif ($game->getSubPhase() == 'PlayCards' && $game->getParty($user_id)->getIsDone())
+        {
+            $this->header['description'] = _('You are done playing cards and are waiting for :');
+            foreach ($game->getParties() as $party)
+            {
+                if ($party->getId() != $user_id && $party->hasPlayableCards() && $party->getIsDone() == FALSE)
+                {
+                    $this->header['list'][] = $party->getFullName();
+                }
+            }
+        }
+        elseif ($game->getSubPhase() == 'PlayCards')
+        {
+            $this->header['description'] = _('You don\'t have any playable card');
+            $this->header['actions'] = array (
+                array(
+                    'type' => 'button',
+                    'verb' => 'DonePlayingCards',
+                    'text' => 'DONE'
+                )
+            );
+        }
     }
 }

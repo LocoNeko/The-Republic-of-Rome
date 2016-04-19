@@ -768,23 +768,22 @@ class Game
     /**
      * 
      * @param int $user_id The user_id of the player playing the Statesman
-     * @param string $statesmanId The card id of the Statesman being played
+     * @param string $statesmanId The senator ID of the Statesman being played
      * @return boolean Success or Failure
+     * @throws \Exception
      */
     public function playStatesman($user_id , $statesmanId) 
     {
         $party=$this->getParty($user_id) ;
-        $statesman = $this->getParty($user_id)->getHand()->getFirstCardByProperty('id', $statesmanId) ;
+        $statesman = $this->getParty($user_id)->getHand()->getFirstCardByProperty('senatorID', $statesmanId) ;
         if ($statesman->getPreciseType()!=='Statesman') 
         {
-            $this->log(sprintf(_('ERROR - %1$s is not a Statesman') , 'error' , array($statesman->getName()))) ;
-            return FALSE ;
+            throw new \Exception(sprintf(_('ERROR - %1$s is not a Statesman') , array($statesman->getName()))) ;
         }
         $location = $statesman->getLocation() ;
         if ($location['type']!=='hand' || $location['value']->getUser_id()!=$party->getUser_id()) 
         {
-            $this->log(sprintf(_('ERROR - %1$s is not in [['.$party->getUser_id().']]\'s hand') , 'error', array($statesman->getName()) )) ;
-            return FALSE ;
+            throw new \Exception(sprintf(_('ERROR - %1$s is not in [['.$party->getUser_id().']]\'s hand') , array($statesman->getName()))) ;
         }
         // Put the Statesman in the party
         $party->getHand()->getFirstCardByProperty('id', $statesman->getId() , $party->getSenators()) ;

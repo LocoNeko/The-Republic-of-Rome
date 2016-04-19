@@ -8,6 +8,7 @@ use Entities ;
 class CardPresenter
 {
     private $user_id ;
+    public $preciseType ;
     public $classes;
     public $attributes ;
     public $data_json ;
@@ -23,7 +24,7 @@ class CardPresenter
     public function __construct($card , $user_id , $menu=NULL)
     {
         $this->user_id = $user_id ;
-        
+        $this->preciseType = $card->getPreciseType() ;
         /*
          * What we need to display the card :
          */
@@ -187,7 +188,7 @@ class CardPresenter
         {
             foreach ($card->getCardsControlled()->getCards() as $subCard)
             {
-                $subCardPresenter = new \Presenters\CardPresenter($subCard, $user_id) ;
+                $subCardPresenter = new CardPresenter($subCard, $user_id) ;
                 $this->controlledCards[] = $subCardPresenter ;
             }
         }

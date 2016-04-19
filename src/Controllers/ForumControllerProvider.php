@@ -38,7 +38,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             // TO DO : See how to handle this update better (service ?)
             $game->getParty($user_id)->setLastUpdateToNow() ;
             
-            $view = new \Presenters\ForumPhasePresenter($game , $user_id) ;
+            $view = new ForumPhasePresenter($game , $user_id) ;
 
             return $app['twig']->render('BoardElements/Main_new.twig', array(
                     'layout_template' => 'InGameLayout.twig' ,
@@ -1040,7 +1040,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         }
         else
         {
-            $game->initiative++;
+            $game->setInitiative($game->getInitiative()+1);
             $game->setSubPhase('RollEvent') ;
             $game->resetAllIsDone() ;
         }
