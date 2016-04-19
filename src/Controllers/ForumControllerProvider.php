@@ -385,14 +385,15 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             try 
             {
-                /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                /** @var \Entities\Game $game */
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 $leader = $game->getFilteredCards(array('senatorID'=>$json_data['to']['senatorID']))->first() ;
                 $party = $game->getParty($user_id) ;
                 $party->setLeader($leader) ;
                 $game->log( _('[['.$user_id.']] {appoint,appoints} %1$s as new party leader') , 'log' , array($leader->getName()) );
+                $this->nextInitiative($game) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -404,6 +405,33 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
         })
         ->bind('verb_forumChangeLeader');
+
+        /*
+        * POST target
+        * Verb : noChangeLeader
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/noChangeLeader', function($game_id , Request $request) use ($app)
+        {
+            try 
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $game->log(_('[['.$user_id.']] {are,is} not changing leaders.') , 'log' ) ;
+                $this->nextInitiative($game) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            catch (Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+        ->bind('verb_noChangeLeader');
 
         /*
          * 
@@ -895,6 +923,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         try
         {
             $game->getParty($user_id)->setIsDone(FALSE) ;
+            $game->setPersuasionTarget(NULL) ;
         }
         catch (\Exception $e)
         {
@@ -998,4 +1027,22 @@ class ForumControllerProvider implements ControllerProviderInterface
         ) ;
     }
     
+    /**
+     * 
+     * @param \Entities\Game $game
+     */
+    public function nextInitiative($game)
+    {
+        if ($game->getInitiative()==6)
+        {
+            $game->log(_('TO DO - Put Rome in Order')) ;
+            // TO DO : Put Rome in order
+        }
+        else
+        {
+            $game->initiative++;
+            $game->setSubPhase('RollEvent') ;
+            $game->resetAllIsDone() ;
+        }
+    }
 }

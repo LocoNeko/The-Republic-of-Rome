@@ -49,7 +49,7 @@ class ForumPhasePresenter
          * Phase Header
          */
         $this->header['list'] = array() ;
-        $this->header['action'] = array () ;
+        $this->header['actions'] = array () ;
         $this->header['description'] = _('Initiative #').$this->initiative.$this->getInitiativeDescription($user_id , $game).' - ' ;
         if ($game->getPhase()!='Forum')
         {
@@ -214,11 +214,13 @@ class ForumPhasePresenter
     {
         $this->header['list'][] = _('In case a 7 is rolled, another roll will be made on the events table');
         $this->header['list'][] = _('In case a 7 is not rolled, a card will be drawn and put in the hand or a deck, depending on its type');
-        $this->header['action'] = array (
-            'type' => 'button' ,
-            'verb' => 'RollEvent' ,
-            'text' => 'ROLL' ,
-            'user_id' => $this->user_id
+        $this->header['actions'] = array (
+            array (
+                'type' => 'button' ,
+                'verb' => 'RollEvent' ,
+                'text' => 'ROLL' ,
+                'user_id' => $this->user_id
+            )
         );
     }
 
@@ -353,11 +355,12 @@ class ForumPhasePresenter
             $this->header['list'][] = _('You can attract knights by rolling 6 on one die, adding 1 for every talent spent');
         }
         $this->header['list'][] = _('You can pressure existing knights to gain 1d talent per knight pressured');
-        $this->header['action'] = array (
-            'type' => 'button' ,
-            'verb' => 'noKnights' ,
-            'text' => 'DONE' ,
-            'user_id' => $this->user_id
+        $this->header['actions'] = array (
+            array (
+                'type' => 'button' ,
+                'verb' => 'noKnights' ,
+                'text' => 'DONE'
+            )
         );
         $this->sliders[] = array (
             'ID' => 'KnightsAttractModal' ,
@@ -433,11 +436,12 @@ class ForumPhasePresenter
         $this->header['list'][] = _('Slice & Dice : 7T , +1 POP , -1 Unrest') ;
         $this->header['list'][] = _('Blood fest : 13T , +2 POP , -2 Unrest') ;
         $this->header['list'][] = _('Gladiator gala : 18T , +3 POP , -3 Unrest') ;
-        $this->header['action'] = array (
-            'type' => 'button' ,
-            'verb' => 'noGames' ,
-            'text' => 'DONE' ,
-            'user_id' => $this->user_id
+        $this->header['actions'] = array (
+            array (
+                'type' => 'button' ,
+                'verb' => 'noGames' ,
+                'text' => 'DONE'
+            )
         );
         foreach ($this->yourParty->senators as $senatorID=>$senator)
         {
@@ -498,11 +502,18 @@ class ForumPhasePresenter
     public function setChangeLeaderInitiative($game)
     {
         $this->header['list'][] = _('Drag and drop the leader token on one of your Senators to make him party leader.') ;
-        $this->header['action'] = array (
-            'type' => 'icon' ,
-            'verb' => 'forumChangeLeader' ,
-            'text' => ' Leader' ,
-            'caption' => 'Drag and drop on top of a Senator to make him Party leader'
+        $this->header['actions'] = array (
+            array (
+                'type' => 'icon' ,
+                'verb' => 'forumChangeLeader' ,
+                'text' => ' Leader' ,
+                'caption' => 'Drag and drop on top of a Senator to make him Party leader'
+            ) ,
+            array (
+                'type' => 'button' ,
+                'verb' => 'noChangeLeader' ,
+                'text' => 'DONE'
+            )
         );
         // droppable : add the droppable to all Senators that can be leadera
         foreach ($this->yourParty->senators as $senatorID=>$senator)

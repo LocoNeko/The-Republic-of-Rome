@@ -326,11 +326,6 @@ class Game
         $this->turn++;
     }
 
-    public function nextInitiative()
-    {
-        $this->initiative++;
-    }
-
     /**
      * Sets all parties isDone to FALSE
      */

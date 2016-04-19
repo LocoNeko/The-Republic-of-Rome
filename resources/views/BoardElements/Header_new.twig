@@ -52,7 +52,9 @@
 
 {# Header : Action (optional) #}
 
-{% if view.header['action']|default([])|length > 0 %}
-    {% embed 'BoardElements/ActionToken.twig' with {'action': view.header['action']}%}
-    {% endembed %}
+{% if view.header['actions']|default([])|length > 0 %}
+    {% for action in view.header['actions'] %}
+        {% embed 'BoardElements/ActionToken.twig' with {'action': action}%}
+        {% endembed %}
+    {% endfor %}
 {% endif %}
