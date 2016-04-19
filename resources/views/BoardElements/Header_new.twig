@@ -15,10 +15,10 @@
         <td class="text-right">Order of play</td>
         <td>
             {% for position in view.game.orderOfPlay %}
-                <span style="{{ (position['playingNow']) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
-                    <a href="#Party_{{position['user_id']}}" class="silent-link">{{ position['name']}}</a>
+                <span class="{{ (position['playingNow']) ? 'orderOfPlay-on' : ''}}">
+                    <a href="#Party_{{position['user_id']}}" class="{{ (position['playingNow']) ? '' : 'orderOfPlay-off'}}">{{ position['name']}}</a>
                 </span>
-                {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}
+                {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" style="margin-right: 4px; margin-left: 4px;" aria-hidden="true"></span>' }}
             {% endfor %}
         </td>
     </tr>

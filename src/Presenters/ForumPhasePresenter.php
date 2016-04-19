@@ -138,6 +138,18 @@ class ForumPhasePresenter
         {
             $this->header['description'] .= _('Waiting for sponsoring of Games') ;
         }
+        /**
+         * Change Leader
+         */
+        elseif ($game->getSubPhase()=='ChangeLeader' && $this->hasInitiative)
+        {
+            $this->header['description'] .= _('Change leader') ;
+            $this->setChangeLeaderInitiative($game) ;
+        }
+        elseif ($game->getSubPhase()=='ChangeLeader' && !$this->hasInitiative)
+        {
+            $this->header['description'] .= _('Waiting for leader change') ;
+        }
     }
 
     /**
@@ -434,7 +446,7 @@ class ForumPhasePresenter
              * @var \Entities\Senator $senatorModel
              */
             $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
-            if ($senatorModel->getTreasury()>=0)
+            if ($senatorModel->getTreasury()>=7)
             {
                 $senator->addMenuItem(
                     array (
@@ -477,6 +489,21 @@ class ForumPhasePresenter
                 );
             }
         }
+    }
+    
+    /**
+     * - Change leader
+     * @param \Entities\Game $game
+     */
+    public function setChangeLeaderInitiative($game)
+    {
+        $this->header['list'][] = _('Drag and drop the leader token on one of your Senators to make him party leader.') ;
+        $this->header['action'] = array (
+            'type' => 'icon' ,
+            'verb' => 'forumChangeLeader' ,
+            'text' => ' Leader' ,
+            'caption' => 'Drag and drop on top of a Senator to make him Party leader'
+        );
     }
     
     /**

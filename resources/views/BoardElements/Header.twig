@@ -15,7 +15,7 @@
         <td class="text-right">Order of play</td>
         <td>
             {% for position in gameView.getOrderOfPlay(app.user.id) %}
-                <span style="{{ (position['user_id'] == gameView.whoseTurn.getUser_id()) ? 'font-weight: bold;' : 'color: lightgrey;'}}">
+                <span style="{{ (position['user_id'] == gameView.whoseTurn.getUser_id()) ? 'font-weight: bold; text-decoration: underline;' : 'color: lightgrey;'}}">
                     <a href="#Party_{{position['user_id']}}" class="silent-link">{{ position['name']}}</a>
                 </span>
                 {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span>' }}

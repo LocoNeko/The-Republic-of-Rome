@@ -10,28 +10,12 @@ Most up-to-date description of POST handling :
  - **{verb : _the verb from the button_}** is added to the json
  - the socket.io event is emitted
  - The POST is called, with the **json** as data on the route **[current route] / [verb]**
+- A button can have an **"action"** array in its json. This action will be performed instead or before the submit and can be "slider" (to pop up a modal slider) , "fixedAmount" (to add {amount: X} to the json and immediately submit)
 
 Refactoring :
-Remove the attributes of the card div from Card Presenter and Card_new.twig
+- Remove the attributes of the card div from Card Presenter and Card_new.twig
+
 ---
-
-Refactor all < forms > and their elements so they behave like that :
-
-< form > classes :
-- a static **json-submit** class, used to trigger the actual submit
-
-< form > attributes :
-- a variable **user_id**, used to store the user_id fo the player submitting the form
-- a variable **phase**
-- a variable **verb**, used to know the end point to use in the form {phase}/{verb}
-
-< button type="submit" > class :
-- **submitWithVerb** triggers the update of the Form's verb
-
-< div > attributes for cards :
-- **treasury** : The current treasury (if this is a senator)
-- **card_name** : The name of the card
-- **card_id** : The id of the card (warning : for Senators, this is NOT the SenatorID)
 
 Type of events :
 - Clicking a button

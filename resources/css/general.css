@@ -15,9 +15,14 @@
     padding-top: 5px;
 }
 
-.silent-link:visited
+.orderOfPlay-off
 {
     color: black ;
+}
+
+.orderOfPlay-on
+{
+    border: 2px solid lightseagreen;
 }
 
 .leader 
