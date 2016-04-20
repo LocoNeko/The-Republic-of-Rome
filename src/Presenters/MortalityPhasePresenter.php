@@ -3,49 +3,69 @@ namespace Presenters ;
 
 class MortalityPhasePresenter
 {
-    private $game ;
+    // Common to all phase presenters
+    public $user_id ;
+    public $game ;
+    public $yourParty ;
+    public $otherParties = [] ;
+    public $header = [] ;
+    public $interface = [] ;
+    public $sliders = [] ;
+
     /**
-     * 
      * @param \Entities\Game $game
+     * @param int $user_id
      */
-    public function __construct($game) {
-        $this->game = $game ;
-    }
-    
-    public function getHeader($user_id)
+    public function __construct($game , $user_id)
     {
-        $result = array() ;
-        $result['list'] = array() ;
-        $result['action'] = array () ;
-        if ($this->game->getPhase()=='Mortality')
+        /**
+         * Common to all Phase presenters (should I abstract / extend ?)
+         */
+        $this->user_id = $user_id;
+        $this->game = new GamePresenterNew($game, $user_id);
+        foreach ($game->getParties() as $party) {
+            if ($party->getUser_id() == $user_id) {
+                $this->yourParty = new PartyPresenter($party, $user_id);
+            } else {
+                $this->otherParties[$party->getUser_id()] = new PartyPresenter($party, $user_id);
+            }
+        }
+        
+        /**
+         * Phase Header
+         */
+        $this->header['list'] = array();
+        $this->header['actions'] = array();
+        if ($game->getPhase() != 'Mortality')
         {
-            if ($this->game->getParty($user_id)->getIsDone())
+            $this->header['description'] .= _('ERROR - Wrong phase');
+        }
+        else
+        {
+            if ($game->getParty($user_id)->getIsDone())
             {
-                $result['description'] = _('You are ready for the Mortality roll. Waiting for :') ;
-                foreach ($this->game->getAllPartiesButOne($user_id) as $party)
+                $this->header['description'] = _('You are ready for the Mortality roll. Waiting for :') ;
+                foreach ($game->getParties() as $party)
                 {
-                    if ($party->getIsDone() === FALSE)
+                    if ($party->getId() != $user_id && $party->getIsDone() === FALSE)
                     {
-                        $result['list'][] = $party->getFullName();
+                        $this->header['list'][] = $party->getFullName();
                     }
                 }
 
             }
             else
             {
-            $result['description'] = _('Click READY when you are ready for the Mortality roll.') ;
-                $result['action'] = array (
+            $this->header['description'] = _('Click when you are ready for the Mortality roll :') ;
+                $this->header['actions'] = array (
+                    array(
                     'type' => 'button' ,
                     'verb' => 'MortalityReady' ,
-                    'text' => 'READY' ,
-                    'user_id' => $user_id
+                    'text' => 'READY'
+                    )
                 );
             }
+            
         }
-        else
-        {
-            $result['description'] = _('ERROR - Should be Mortality phase') ;
-        }
-        return $result;
     }
 }

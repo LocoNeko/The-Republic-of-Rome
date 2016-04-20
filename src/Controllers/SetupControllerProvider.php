@@ -167,7 +167,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);

@@ -155,15 +155,15 @@
         $result = $query->getResult() ;
         if (count($result)!==1)
         {
-            throw new Exception(sprintf(_('ERROR - No game with unique id %1$d') , (int)$game_id)) ;
+            throw new \Exception(sprintf(_('ERROR - No game with unique id %1$d') , (int)$game_id)) ;
         }
         elseif($checkStarted && !$result[0]->gameStarted())
         {
-            throw new Exception(sprintf(_('ERROR - Game %1$s not started.') , (int)$game_id )) ;
+            throw new \Exception(sprintf(_('ERROR - Game %1$s not started.') , (int)$game_id )) ;
         }
         elseif ( ($checkSubPhases != NULL) && !in_array($result[0]->getSubPhase(), $checkSubPhases))
         {
-            throw new Exception(sprintf(_('ERROR - Sub phase not recognised.') , (int)$game_id )) ;
+            throw new \Exception(sprintf(_('ERROR - Sub phase not recognised.') , (int)$game_id )) ;
         }
         $app['session']->set('game_id', (int)$game_id);
         return $result[0];

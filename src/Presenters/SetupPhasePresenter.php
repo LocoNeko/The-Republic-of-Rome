@@ -121,7 +121,7 @@ class SetupPhasePresenter
                 $this->header['description'] = _('You are done playing cards and are waiting for :');
                 foreach ($game->getParties() as $party)
                 {
-                    if ($party->getId() != $user_id && $party->getIsDone() == FALSE)
+                    if ($party->getId() != $user_id && $party->getIsDone() === FALSE)
                     {
                         $this->header['list'][] = $party->getFullName();
                     }
