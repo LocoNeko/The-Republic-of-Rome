@@ -25,21 +25,25 @@ class RevenueControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $user_id = (int)$app['user']->getId() ;
+
+                //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
+                // TO DO : See how to handle this update better (service ?)
+                $game->getParty($user_id)->setLastUpdateToNow() ;
+                
+                $view = new \Presenters\RevenuePhasePresenter($game , $user_id) ;
+
+                return $app['twig']->render('BoardElements/Main_new.twig', array(
+                        'layout_template' => 'InGameLayout.twig' ,
+                        'view' => $view
+                ));
+
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect('/') ;
             }
-            $gameView = new \Presenters\GamePresenter($game) ;
-            $revenueView = new \Presenters\RevenuePhasePresenter($game , (int)$app['user']->getId()) ;
-            return $app['twig']->render('BoardElements/Main.twig', array(
-                'layout_template' => 'layout.twig' ,
-                'game' => $game,
-                'gameView' => $gameView ,
-                'header' => $revenueView->getHeader() ,
-                'content' => $revenueView->getContent()
-            ));
         })
         ->bind('Revenue');
         
@@ -55,7 +59,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);
@@ -86,7 +90,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);
@@ -135,28 +139,30 @@ class RevenueControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
-        * Verb : Redistribute
+        * Verb : revenueRedistribute
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/Redistribute', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/revenueRedistribute', function($game_id , Request $request) use ($app)
         {
             try 
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+
+                $this->doTransfer($game , $user_id , $json_data['from'] , $json_data['to'] , $json_data['value']) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);
             }
-            $user_id = (int)$app['user']->getId() ;
-            $this->doTransfer($game , $user_id , $request->request->all()) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('verb_Redistribute');
+        ->bind('verb_revenueRedistribute');
         
         /*
         * POST target
@@ -170,7 +176,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);
@@ -185,17 +191,17 @@ class RevenueControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
-        * Verb : RedistributionDone
+        * Verb : revenueRedistributionDone
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/RedistributionDone', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/revenueRedistributionDone', function($game_id , Request $request) use ($app)
         {
             try 
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);
@@ -215,7 +221,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $this->entityManager->flush();
             return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('verb_RedistributionDone');
+        ->bind('verb_revenueRedistributionDone');
 
         return $controllers ;
     }
@@ -223,7 +229,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
     /**
      * Performs all Revenue operations both standard (senators, knights, etc...) and special (Concessions drought income, Provincial spoils, rebel legions maintenance)
      * For special revenue, the player's choice must have been submitted through JSON data. The function checks if all submitted data is correct and if it was all used properly
-     * @param Game $game
+     * @param \Entities\Game $game
      * @param int $user_id
      * @param array $submittedData : For Concessions & Provinces in the form [card_id] => choice (scalar or array). For legions, in the form [legion id] => choice
      */
@@ -396,83 +402,66 @@ class RevenueControllerProvider implements ControllerProviderInterface
     
     /**
      * This function transfers money based on the $data submitted.
-     * @param Game $game
+     * @param \Entities\Game $game
      * @param int $user_id
-     * @param array $data array 'fromSenator','fromParty','toSenator','toParty','amount'<br>
-     * For senators : card_id|'' , for parties : user_id|'' , for amount : (int)
-     * @return boolean Success or failure
+     * @param json $from
+     * @param json $to
+     * @param int $amount
+     * @throws \Exception
      */
-    private function doTransfer($game , $user_id , $data)
+    private function doTransfer($game , $user_id , $from , $to , $amount)
     {
-        $party = $game->getParty($user_id) ;
-        /* Checks on the data :
-         * - fromSenator & fromParty cannot both be set
-         * - fromSenator & fromParty cannot both be null
-         * - toSenator & toParty cannot both be set
-         * - toSenator & toParty cannot both be null
-         * - fromParty can only be $user_id
-         * - fromSenator & toSenator can only be in the party 
-         */
-        if (
-            ((int)$data['amount']<=0) ||
-            ($data['fromSenator']!='' && $data['fromParty']!='') ||
-            ($data['fromSenator']=='' && $data['fromParty']=='') ||
-            ($data['toSenator']!='' && $data['toParty']!='') ||
-            ($data['toSenator']=='' && $data['toParty']=='') ||
-            ($data['fromParty']!='' && $data['fromParty']!=$user_id) ||
-            ($data['fromSenator']!='' && ($party->getSenators()->getFirstCardByProperty('id', $data['fromSenator']) === FALSE) ) ||
-            ($data['toSenator']!='' && ($party->getSenators()->getFirstCardByProperty('id', $data['toSenator']) === FALSE) )
-        )
+        if ((int)$amount <= 0)
         {
-            $game->log(_('ERROR - Redistributing from or to wrong Seantor or with invalid amount') , 'error' ) ;
-            return FALSE ;
+            throw new \Exception(_('ERROR - Wrong amount'));
         }
-        else 
-        {
-            $fromText = '' ;
-            $toText = '' ;
-            // FROM
-            if ($data['fromParty']!='')
-            {
-                if ($party->getTreasury()<(int)$data['amount'])
-                {
-                    $game->log(_('ERROR - Insufficient funds for Redistribution') , 'error' ) ;
-                    return FALSE ;
-                }
-                else
-                {
-                    $party->changeTreasury(-(int)$data['amount']) ; $fromText=_(' party treasury');
-                }
-            }
-            else
-            {
-                $fromSenator = $party->getSenators()->getFirstCardByProperty('id' , $data['fromSenator']) ;
-                if ($fromSenator->getTreasury() <(int)$data['amount'])
-                {
-                    $game->log(_('ERROR - Insufficient funds for Redistribution') , 'error' ) ;
-                    return FALSE ;
-                }
-                else
-                {
-                    $fromSenator->changeTreasury(-(int)$data['amount']) ; $fromText=$fromSenator->getName();
-                }
-            }
         
-            // TO
-            if ($data['toParty']!='')
+        /**
+         * From
+         */
+        if (isset($from['senatorID']))
+        {
+            // From Senator $from['senatorID']
+            $fromEntity = $game->getFilteredCards(array('senatorID'=>$from['senatorID']))->first() ;
+            if ($fromEntity->getLocation()['type']!=='party' || $fromEntity->getLocation()['value']->getUser_id()!==$user_id)
             {
-                $game->getParty($data['toParty'])->changeTreasury((int)$data['amount']) ;
-                $toText = ( ($data['toParty']==$user_id) ? _('party treasury') : _('[['.$data['toParty'].']]') ) ;
+                throw new \Exception(_('ERROR - Senator is not in your party'));
             }
-            else
-            {
-                $toSenator = $party->getSenators()->getFirstCardByProperty('id' , $data['toSenator']) ;
-                $toSenator->changeTreasury((int)$data['amount']) ;
-                $toText = $toSenator->getName() ;
-            }
-            $game->log(_('[['.$user_id.']] {transfer '.(int)$data['amount'].'T , transfers money} from '.$fromText.' to '.$toText) , 'log' ) ;
         }
-        return TRUE ;
+        else
+        {
+            // From Party treasury
+            $fromEntity = $game->getParty($user_id) ;
+        }
+
+        /**
+         * Enough talents ?
+         */
+        if ($fromEntity->getTreasury() < (int)$amount)
+        {
+            throw new \Exception(_('ERROR - Not enough talents'));
+        }
+        
+        /**
+         * To
+         */
+        if (isset($to['senatorID']))
+        {
+            // To Senator $to['senatorID']
+            $toEntity = $game->getFilteredCards(array('senatorID'=>$to['senatorID']))->first() ;
+            if ($toEntity->getLocation()['type']!=='party' || $toEntity->getLocation()['value']->getUser_id()!==$user_id)
+            {
+                throw new \Exception(_('ERROR - Senator is not in your party'));
+            }
+        }
+        else
+        {
+            // To party $to['user_id']
+            $toEntity = $game->getParty($to['user_id']) ;
+        }
+        $fromEntity->changeTreasury(-$amount) ;
+        $toEntity->changeTreasury($amount) ;
+        $game->log(_('[['.$user_id.']] {transfer '.(int)$amount.'T , transfers money} from '.$fromEntity->getName().' to '.$toEntity->getName()) , 'log' ) ;
     }
     
     /**

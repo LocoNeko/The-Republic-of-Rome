@@ -211,7 +211,7 @@ class CardPresenter
     public function addAttribute($name , $value)
     {
         // TO DO ; Once attributes have been made obsolete, remove this
-        $this->attributes[$name] = $value ;
+        //$this->attributes[$name] = $value ;
         $json = json_decode($this->data_json , TRUE) ;
         $json[$name] = $value ;
         $this->data_json = json_encode($json) ;

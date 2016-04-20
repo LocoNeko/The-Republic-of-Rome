@@ -55,7 +55,7 @@ $(document).ready(function(){
         socket.emit('Update', $("title").attr('realm'));
 
         $.post(
-            window.location.pathname + '/Redistribute',
+            window.location.pathname + '/revenueRedistribute',
             json ,
             function( data ) {
                 window.location.reload(true) ;

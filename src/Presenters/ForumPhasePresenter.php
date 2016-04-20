@@ -513,7 +513,8 @@ class ForumPhasePresenter
                 'type' => 'icon' ,
                 'verb' => 'forumChangeLeader' ,
                 'text' => ' Leader' ,
-                'caption' => 'Drag and drop on top of a Senator to make him Party leader'
+                'caption' => 'Drag and drop on top of a Senator to make him Party leader' ,
+                'class' => 'glyphicon glyphicon-star'
             ) ,
             array (
                 'type' => 'button' ,

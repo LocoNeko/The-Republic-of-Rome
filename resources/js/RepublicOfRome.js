@@ -47,27 +47,15 @@ function getReady(phase , subPhase)
         $(document.body).attr('data-json' , JSON.stringify(json)) ;
         
         /*
-         *  Finally, check if the button's json-data as a slider (can be extended to other functions)
-         *  Sliders will by pass the normal submit
+         *  Finally, check if the button's json-data as an action (slider, fixedAmount...)
+         *  - Sliders bypass the normal submit
+         *  - fixedAmount add the amount to the json and submit it
          */
         
-        var dataJsonButton = $(this).attr('data-json');
-        if (typeof dataJsonButton !== typeof undefined && dataJsonButton !== false)
+        var actionData = $(this).attr('data-json');
+        if (typeof actionData !== typeof undefined && actionData !== false)
         {
-            var jsonButton = JSON.parse(dataJsonButton) ;
-            if (jsonButton.action[0]==="slider")
-            {
-                displayModalSlider(jsonButton.action[1] , '' , jsonButton.action[2] , jsonButton.action[3] , jsonButton.action[4] , jsonButton.action[5]) ;
-            }
-            else if (jsonButton.action[0]==="fixedAmount")
-            {
-                json["amount"] = jsonButton.action[1] ;
-                submitJSON(json) ;
-            }
-            else
-            {
-                alert("ERROR - Wrong action (should be 'slider')");
-            }
+            handleAction(json , actionData) ;
         }
         else
         {
@@ -139,7 +127,18 @@ function getReady(phase , subPhase)
 
                 // json from the droppable ("to")
                 json.to = JSON.parse($(event.target).attr('data-json')) ;
-                submitJSON(json) ;
+
+                // Is there an action (slider, fixedAmount...) on the draggable ?
+                if (json.from.action)
+                {
+                    // If there is an action, store the current json (with 'to' and 'from' in the data-json attribute and execute the action)
+                    $(document.body).attr('data-json' , JSON.stringify(json)) ;
+                    handleAction(json , JSON.stringify(json.from)) ;
+                }
+                else
+                {
+                    submitJSON(json) ;
+                }
             }
         });
     });
@@ -175,8 +174,35 @@ function getReady(phase , subPhase)
  */
 
 /**
+ * If there was some actionData passed (slider, fixedAmount...) handle it :
+ * - slider : display the corresponding modal slider
+ * - fixedAmount : add it to the json and submit
+ * - Otherwise : ERROR 
+ * @param {json} json
+ * @param {json} actionData
+ * @returns {mixed}
+ */
+function handleAction(json , actionData)
+{
+    var jsonActionData = JSON.parse(actionData) ;
+    if (jsonActionData.action[0]==="slider")
+        {
+            displayModalSlider(jsonActionData.action[1] , '' , jsonActionData.action[2] , jsonActionData.action[3] , jsonActionData.action[4] , jsonActionData.action[5]) ;
+        }
+        else if (jsonActionData.action[0]==="fixedAmount")
+        {
+            json["amount"] = jsonActionData.action[1] ;
+            submitJSON(json) ;
+        }
+        else
+        {
+            alert("ERROR - Wrong action (should be 'slider')");
+        }
+}
+
+/**
  * Emits the socket.io notification and posts the data using the <b>Verb</b> passed within the data
- * @param {JSON} JSONdata The data being submitted
+ * @param {json} json The data being submitted
  * @returns {undefined}
  */
 function submitJSON(json)
@@ -197,7 +223,7 @@ function submitJSON(json)
        } ,
        "json"
     );
-    
+  
 }
 
 /**

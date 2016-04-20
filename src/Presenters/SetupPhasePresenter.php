@@ -50,7 +50,8 @@ class SetupPhasePresenter
                     'type' => 'icon',
                     'verb' => 'PickLeader',
                     'text' => ' Leader',
-                    'caption' => 'Drag and drop on top of a Senator to make him Party leader'
+                    'caption' => 'Drag and drop on top of a Senator to make him Party leader' ,
+                    'class' => 'glyphicon glyphicon-star'
                 )
             );
             // droppable : add the droppable to all Senators

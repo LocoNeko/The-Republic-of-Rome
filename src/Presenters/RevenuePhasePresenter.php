@@ -1,167 +1,243 @@
 <?php
 namespace Presenters ;
 
-use Doctrine\Common\Collections\ArrayCollection;
-
 class RevenuePhasePresenter
 {
-    private $user_id ;
-    private $phase ;
-    private $subPhase ;
-    private $parties ;
-    private $isDone ;
-    private $revenue_base ;
-    private $droughtLevel ;
+    // Common to all phase presenters
+    public $user_id ;
+    public $game ;
+    public $yourParty ;
+    public $otherParties = [] ;
+    public $header = [] ;
+    public $interface = [] ;
+    public $sliders = [] ;
+
+    // Specific to Revenue
+    public $isDone = FALSE ;
+
     private $areThereReleasedLegions ;
     private $isPartyOfHRAO ;
     
     /**
      * @param \Entities\Game $game
-     * @param int $user_id user_id of the user viewing this
+     * @param int $user_id
      */
-    public function __construct($game , $user_id) {
-        $this->setUser_id($user_id) ;
-        $this->setPhase($game->getPhase()) ;
-        $this->setSubPhase($game->getSubPhase()) ;
-        $this->setParties($game->getParties()) ;
-        $this->setIsDone($game->getParty($user_id)->getIsDone()) ;
-        $this->setRevenue_base($game->getParty($user_id)->revenue_base($game->getLegions())) ;
-        $this->setDroughtLevel($game->getEventProperty('name' , 'Drought'));
-        $this->setAreThereReleasedLegions($game->areThereReleasedLegions()) ;
-        $this->setIsPartyOfHRAO($game->getHRAO()->getLocation()['value']->getUser_id() == $user_id) ;
-        //game.getHRAO().getLocation()['value'].getUser_id() == app.user.id ;
-    }
-    
-    /*
-     * Setters & Getters
-     */
-    public function setUser_id($user_id) { $this->user_id = $user_id; }
-    public function setPhase($phase) { $this->phase = $phase;}
-    public function setSubPhase($subPhase) { $this->subPhase = $subPhase;}
-    public function setParties($parties) { $this->parties = $parties;}
-    public function setIsDone($isDone) { $this->isDone = $isDone; }
-    public function setRevenue_base($revenue_base) { $this->revenue_base = $revenue_base; }
-    public function setDroughtLevel($droughtLevel) { $this->droughtLevel = $droughtLevel; }
-    public function setAreThereReleasedLegions($areThereReleasedLegions) { $this->areThereReleasedLegions = $areThereReleasedLegions; }
-    public function setIsPartyOfHRAO($isPartyOfHRAO) { $this->isPartyOfHRAO = $isPartyOfHRAO; }
-
-    public function getUser_id() { return $this->user_id; }
-    public function getPhase() { return $this->phase;}
-    public function getSubPhase() { return $this->subPhase;}
-    public function getParties() { return $this->parties;}
-    public function getIsDone() { return $this->isDone;}
-    public function getRevenue_base() { return $this->revenue_base; }
-    public function getDroughtLevel() { return $this->droughtLevel; }
-    public function getAreThereReleasedLegions() { return $this->areThereReleasedLegions; }
-    public function getIsPartyOfHRAO() { return $this->isPartyOfHRAO; }
-
-    public function getParty($user_id)
+    public function __construct($game , $user_id)
     {
-        foreach ($this->getParties() as $party)
+        /**
+         * Common to all Phase presenters (should I abstract / extend ?)
+         */
+        $this->user_id = $user_id ;
+        $this->game =  new \Presenters\GamePresenterNew($game , $user_id) ;
+        foreach ($game->getParties() as $party)
         {
-            if ($party->getUser_id()==$user_id)
+            if ($party->getUser_id() == $user_id)
             {
-                return $party ;
+                $this->yourParty = new \Presenters\PartyPresenter($party, $user_id) ;
+                $this->isDone = $party->getIsDone() ;
+            }
+            else
+            {
+                $this->otherParties[$party->getUser_id()] = new \Presenters\PartyPresenter($party, $user_id) ;
             }
         }
-        return FALSE ;
+        
+        /**
+         * Phase Header
+         */
+        $this->header['list'] = array() ;
+        $this->header['actions'] = array () ;
+        if ($game->getPhase()!='Revenue')
+        {
+            $this->header['description'] .= _('ERROR - Wrong Phase') ;
+        }
+        
+        /**
+         * Base Revenue
+         */
+        elseif($game->getSubPhase()=='Base' && !$this->isDone)
+        {
+            $this->header['description'] = _('This is your base revenue :') ;
+            $this->setBase($game) ;
+        }
+        elseif($game->getSubPhase()=='Base' && $this->isDone)
+        {
+            $this->header['description'] = _('You are done with revenue and are currently waiting for :') ;
+            foreach ($game->getParties() as $party)
+            {
+                if ($party->getId() != $user_id && $party->getIsDone() == FALSE)
+                {
+                    $this->header['list'][] = $party->getFullName();
+                }
+            }
+        }
+        
+        /**
+         * Redistribution
+         */
+        elseif($game->getSubPhase()=='Redistribution' && !$this->isDone)
+        {
+            $this->setRedistribution($game) ;
+        }
+        elseif($game->getSubPhase()=='Redistribution' && $this->isDone)
+        {
+            $this->header['description'] = _('You are done with redistribution and are currently waiting for :') ;
+            foreach ($game->getParties() as $party)
+            {
+                if ($party->getId() != $user_id && $party->getIsDone() == FALSE)
+                {
+                    $this->header['list'][] = $party->getFullName();
+                }
+            }
+        }
+
+        /**
+         * Contributions
+         */
+        elseif($game->getSubPhase()=='Contributions' && !$this->isDone)
+        {
+                $this->header['description'] = _('Your Senators can give to Rome\'s treasury') ;
+                $this->header['list'] = array (
+                    _('A contribution of 50T or more will increase his Influence by 7') ,
+                    _('A contribution of 25T or more will increase his Influence by 3') ,
+                    _('A contribution of 10T or more will increase his Influence by 1')
+                ) ;
+                $this->header['actions'] = array (
+                    array (
+                        'type' => 'button' ,
+                        'verb' => 'ContributionsDone' ,
+                        'text' => 'DONE'
+                    )
+                ) ;
+        }
+        elseif($game->getSubPhase()=='Contributions' && $this->isDone)
+        {
+            $this->header['description'] = _('You are done with contributions and are currently waiting for :') ;
+            foreach ($game->getParties() as $party)
+            {
+                if ($party->getId() != $user_id && $party->getIsDone() == FALSE)
+                {
+                    $this->header['list'][] = $party->getFullName();
+                }
+            }
+        }
+        else
+        {
+            $this->header['description'] .= _('ERROR - Wrong Sub Phase') ;
+        }
     }
     
     /**
-     * Get header and return $result with ['description'] , optional ['list'] , optional ['action']
-     * @return array
+     * 
+     * @param \Entities\Game $game
      */
-    public function getHeader()
+    public function setBase($game)
     {
-        $result = array() ;
-        $result['list'] = array() ;
-        $result['action'] = array () ;
-        if ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Base')
+        $this->interface['name'] = 'revenueBase';
+        $this->interface['droughtLevel'] = $game->getEventProperty('name' , 'Drought') ;
+        $this->interface['base'] = $game->getParty($this->user_id)->revenue_base($game->getLegions()) ;
+        $this->header['actions'][] = array (
+            'type' => 'button' ,
+            'verb' => 'RevenueDone' ,
+            'text' => 'DONE'
+        );
+
+    }
+    
+    /**
+     * Taken out of the constructor for convenience and lisabilatility
+     * @param \Entities\Game $game
+     */
+    public function setRedistribution ($game)
+    {
+        $this->header['description'] = _('You can redistribute money between your party, senators, and other parties') ;
+        $this->header['list'] = array (
+            _('Drag and drop to transfer money'),
+            _('Tokens below : To/From treasury of your party and other players\' parties'),
+            _('Senators : To/From this Senator')
+        );
+        $this->interface['name'] = 'revenueRedistribution';
+        
+        //TO DO - Release legions interface
+        $this->interface['showReleasedLegions'] = FALSE ;
+        
+        // The RevenueRedistributeModal will pop up each time a "FROM" is dropped
+        $this->sliders[] = array (
+            'ID' => 'RevenueRedistributeModal' ,
+            'title' => _('Redistribute'),
+            'verb' => 'revenueRedistribute',
+            'text' => 'TRANSFER'
+        ) ;
+        
+        // The first potential "FROM" is the party treasury
+        $this->header['actions'][] = array (
+            'type' => 'icon' ,
+            'verb' => 'revenueRedistribute' ,
+            'text' => ' '.$game->getParty($this->user_id)->getName() ,
+            'draggable' => 'YES' ,
+            'droppable' => 'YES' ,
+            'caption' => 'Drag and drop to transfer money to/from your party treasury' ,
+            'class' => 'glyphicon glyphicon-plus' ,
+            'data_json'=> '{"action":["slider" , "RevenueRedistributeModal" , "Transfer talents from party treasury" , "0" , "'.$game->getParty($this->user_id)->getTreasury().'" , "T." ]}'
+        );
+        
+        // All other parties are potential "TO"
+        foreach ($game->getParties() as $party)
         {
-            if ($this->getIsDone() === FALSE)
-            {
-                $result['description'] = _('This is your base revenue :') ;
-            }
-            else
-            {
-                $result['description'] = _('You are done with revenue and are currently waiting for :') ;
-                foreach ($this->getParties() as $party)
-                {
-                    if ($party->getId() != $this->getUser_id() && $party->getIsDone() == FALSE)
-                    {
-                        $result['list'][] = $party->getFullName();
-                    }
-                }
-            }
-        }
-        elseif ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Redistribution')
-        {
-            if ($this->getIsDone() === FALSE)
-            {
-                $result['description'] = _('You can redistribute money between your party, senators, and other parties') ;
-                $result['list'][] = _('Drag and drop to transfer money') ;
-                $result['list'][] = _('Tokens below : To/From treasury of your party and other players\' parties') ;
-                $result['list'][] = _('Senators : To/From this Senator');
-            }
-            else
-            {
-                $result['description'] = _('You are done with redistribution and are currently waiting for :') ;
-                foreach ($this->getParties() as $party)
-                {
-                    if ($party->getId() != $this->getUser_id() && $party->getIsDone() == FALSE)
-                    {
-                        $result['list'][] = $party->getFullName();
-                    }
-                }
-            }
-            
-        }
-        elseif ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Contributions')
-        {
-            if ($this->getIsDone() === FALSE)
-            {
-                $result['description'] = _('Your Senators can give to Rome\'s treasury') ;
-                $result['list'][] = _('A contribution of 50T or more will increase his Influence by 7') ;
-                $result['list'][] = _('A contribution of 25T or more will increase his Influence by 3') ;
-                $result['list'][] = _('A contribution of 10T or more will increase his Influence by 1') ;
-                $result['action'] = array (
-                    'type' => 'button' ,
-                    'verb' => 'ContributionsDone' ,
-                    'text' => 'DONE' ,
-                    'user_id' => $this->getUser_id()
+            if ($party->getUser_id() != $this->user_id)
+            {        
+                $this->header['actions'][] = array (
+                    'type' => 'icon' ,
+                    'verb' => 'revenueRedistribute' ,
+                    'text' => ' '.$party->getName() ,
+                    'draggable' => 'NO' ,
+                    'droppable' => 'YES' ,
+                    'caption' => 'Drag and drop to transfer money to this party treasury' ,
+                    'class' => 'glyphicon glyphicon-plus' ,
+                    'data_json'=> json_encode(array("user_id"=>$party->getUser_id()))
                 );
             }
-            else
-            {
-                $result['description'] = _('You are done with contributions and are currently waiting for :') ;
-                foreach ($this->getParties() as $party)
-                {
-                    if ($party->getId() != $this->getUser_id() && $party->getIsDone() == FALSE)
-                    {
-                        $result['list'][] = $party->getFullName();
-                    }
-                }
-            }
         }
-        return $result ;
+        
+        // The last action in the header is "DONE"
+        $this->header['actions'][] = array (
+            'type' => 'button' ,
+            'verb' => 'revenueRedistributionDone' ,
+            'text' => 'DONE'
+        );
+
+        // Senators in the party are both potential "FROM" and "TO"
+        foreach ($this->yourParty->senators as $senatorID=>$senator)
+        {
+            /**
+             * Get the corresponding Senator Model (entity)
+             * @var \Entities\Senator $senatorModel
+             */
+            $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
+            // Potential "From"
+            $senator->addClass('draggable') ;
+            $senator->addAttribute("action", 
+                array(
+                    "slider" ,
+                    "RevenueRedistributeModal" ,
+                    "Transfer talents from ".$senatorModel->getName() ,
+                    "0" ,
+                    $senatorModel->getTreasury() ,
+                    "T."
+                )
+            ) ;
+            //$senator->setDataJson ('{"action":["slider" , "RevenueRedistributeModal" , "Transfer talents from '.$senatorModel->getName().'" , "0" , "'.$senatorModel->getTreasury().'" , "T." ]}') ;
+            // Potential "To"
+            $senator->addClass('droppable') ;
+        }
     }
     
     public function getContent()
     {
-        $result= array() ;
-        $result['showInterface'] = !$this->getIsDone() ;
-        /*
-         *  Base
-         */
-        if ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Base')
-        {
-            $result['base'] = $this->getRevenue_base() ;
-            $result['droughtLevel'] = $this->getDroughtLevel();
-        }
         /*
          * Redistribution
          */
-        elseif ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Redistribution')
+        if ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Redistribution')
         {
             $result['showReleasedLegions'] = ( $this->getAreThereReleasedLegions() && $this->getIsPartyOfHRAO() ) ;
             $result['otherParties'] = array() ;
@@ -178,7 +254,7 @@ class RevenuePhasePresenter
             }
             $result['action'] = array (
                 'type' => 'button' ,
-                'verb' => 'RedistributionDone' ,
+                'verb' => 'revenueRedistributionDone' ,
                 'text' => 'DONE' ,
                 'user_id' => $this->getUser_id()
             );

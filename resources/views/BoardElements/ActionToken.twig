@@ -6,13 +6,15 @@
 {% if action['type']=='icon' %}
     {#
         An icon has :
+        - draggable (defaults to TRUE) : Whether or not this icon is draggable. Since it often is, this is TRUE by default so can be omitted for convenience
+        - droppable (defaults to FALSE) : Same with droppable, which defaults to FALSE as it's more likely
         - verb : the action verb used when the token is dropped
         - data-json : If needed, the data-json used when dropping the token
         - caption : The tooltip on the icon
         - text : The text next to the icon
     #}
-    <div class="btn btn-default btn-lg draggable" data-json="{{action['data_json']|default('')}}" verb='{{action['verb']}}' title='{{action['caption']}}'>
-        <span class="glyphicon glyphicon-star" aria-hidden="true"></span>{{action['text']}}
+    <div class="btn btn-default btn-lg {{(action['draggable']|default('YES')=='YES' ? 'draggable' : '')}} {{(action['droppable']|default('NO')=='YES' ? 'droppable' : '')}}" data-json="{{action['data_json']|default('')}}" verb='{{action['verb']}}' title='{{action['caption']}}'>
+        <span class="{{action['class']|default('')}}" aria-hidden="true"></span>{{action['text']}}
     </div>
 {% elseif action['type']=='button' %}
     {#

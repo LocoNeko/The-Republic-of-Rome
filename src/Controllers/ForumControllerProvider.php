@@ -25,25 +25,24 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $user_id = (int)$app['user']->getId() ;
+
+                //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
+                // TO DO : See how to handle this update better (service ?)
+                $game->getParty($user_id)->setLastUpdateToNow() ;
+
+                $view = new \Presenters\ForumPhasePresenter($game , $user_id) ;
+
+                return $app['twig']->render('BoardElements/Main_new.twig', array(
+                        'layout_template' => 'InGameLayout.twig' ,
+                        'view' => $view
+                ));
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->redirect('/') ;
             }
-            
-            $user_id = (int)$app['user']->getId() ;
-
-            //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
-            // TO DO : See how to handle this update better (service ?)
-            $game->getParty($user_id)->setLastUpdateToNow() ;
-            
-            $view = new ForumPhasePresenter($game , $user_id) ;
-
-            return $app['twig']->render('BoardElements/Main_new.twig', array(
-                    'layout_template' => 'InGameLayout.twig' ,
-                    'view' => $view
-            ));
         })
         ->bind('Forum');
         
@@ -65,7 +64,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -93,7 +92,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -119,7 +118,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -147,7 +146,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -175,7 +174,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -209,7 +208,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -237,7 +236,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -264,7 +263,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -367,7 +366,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -424,7 +423,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
@@ -450,7 +449,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
             }
-            catch (Exception $exception)
+            catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('alert', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
