@@ -26,6 +26,10 @@ class SetupControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id , TRUE , array('PickLeaders' , 'PlayCards')) ;
                 $user_id = (int)$app['user']->getId() ;
+
+                //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
+                $game->getParty($user_id)->setLastUpdateToNow() ;
+
                 $view = new \Presenters\SetupPhasePresenter($game , $user_id) ;
 
                 return $app['twig']->render('BoardElements/Main_new.twig', array(

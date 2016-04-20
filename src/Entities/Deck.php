@@ -47,7 +47,7 @@ class Deck
     public function setInParty($inParty) { $this->inParty = $inParty; }
     public function setInHand($inHand) { $this->inHand = $inHand; }
  
-    /** @return \Entities\Card\[] */
+    /** @return \Entities\Card[] */
     public function getCards()
     {
         $iterator = $this->cards->getIterator();

@@ -218,6 +218,22 @@ class CardPresenter
     }
 
     /**
+     * Returns the attribute named $name for this card
+     * @param string $name
+     * @return mixed The value of the attribute
+     * @throws \Exception
+     */
+    public function getAttribute($name)
+    {
+        $json = json_decode($this->data_json , TRUE) ;
+        if (isset($json[$name]))
+        {
+            return $json[$name] ;
+        }
+        throw new \Exception(_('ERROR - Attribute '.$name.' not found on card'));
+    }
+
+    /**
      * Adds a menu item to the menu for this card
      * Menu items behave like a 'submitWithVerb' element
      * @param array $item
@@ -226,5 +242,6 @@ class CardPresenter
     {
         $this->menu[] = $item ;
     }
+    
 }
 

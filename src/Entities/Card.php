@@ -312,42 +312,5 @@ abstract class Card
     public function hasControlledCards()
     {
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
-    }
-
-    /**
-     * Returns an array of possible cards actions based on the card's location, type, game phase & subphase
-     * @param bool $self
-     * @return array
-     */
-    public function getAction($self=FALSE)
-    {
-        $location = $this->getLocation() ;
-        $game = $this->getGame() ;
-        $phase = $game->getPhase() ;
-        $subPhase = $game->getSubPhase() ;
-        if ($phase=='Setup' && $subPhase == 'PlayCards' && $this->getPreciseType()=='Statesman' && $location['type'] == 'hand' && $this->statesmanPlayable($location['value']->getUser_id())['flag'] )
-        {
-            return [ 'menu' => 'setupPlayStatesman' ];
-        }
-        elseif ($phase=='Revenue' && $subPhase == 'Contributions' && $location['type'] == 'party' && $this->getTreasury() > 0 && $self)
-        {
-            return [ 'menu' => 'revenueGiveToRome' ];
-        }
-        elseif ($phase=='Setup' && $subPhase == 'PlayCards' && $this->getPreciseType()=='Concession' && $location['type'] == 'hand')
-        {
-            // Prevent from playing land commissioner if there are no Land Bill
-            if (($this->getSpecial()=='land bill') && ($game->getLandBillsTotalCost()['total']==0) ) {
-                return array() ;
-            }
-            return [ 'drag' => 'setupPlayConcession' ] ;
-        }
-        elseif($phase=='Forum' && $subPhase=='knights' && $location['type'] == 'party')
-        {
-            return [ 'menu' => 'attractKnight' ];
-        }
-        else {
-            return array();
-        }
-    }
-    
+    }    
 }

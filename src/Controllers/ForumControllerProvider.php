@@ -300,18 +300,17 @@ class ForumControllerProvider implements ControllerProviderInterface
 
         /**
         * POST target
-        * Verb : forumKnightsAttract
+        * Verb : forumKnightsPressure
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/forumKnightsAttract', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/forumKnightsPressure', function($game_id , Request $request) use ($app)
         {
             try 
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
-                $this->knightsAttract($game , $json_data['senatorID'] , $json_data['value']) ;
-                $game->setSubPhase('Games') ;
+                $this->knightsPressure($game , $json_data['senatorID'] , $json_data['value']) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -322,7 +321,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-        ->bind('verb_forumKnightsAttract');
+        ->bind('verb_forumKnightsPressure');
 
         /**
         * POST target
@@ -992,6 +991,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         $message.= sprintf(_('%1$s. Earns a total of %2$dT.') , $game->getEvilOmensMessage(-1) , $total);
         $senator->changeKnights(-$amount) ;
         $senator->changeTreasury($total) ;
+        // Set isDone to TRUE so the party cannot attract more knights this turn
         $senator->getLocation()['value']->setIsDone(TRUE) ;
         // TO DO : Ugly. Respect the log function protocol and pass an array of parameters !
         $game->log($message) ;

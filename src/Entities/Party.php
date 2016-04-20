@@ -255,38 +255,6 @@ class Party
 
     /**
     * ----------------------------------------------------
-    * Setup
-    * ----------------------------------------------------
-    */
-
-    /**
-     * Returns TRUE if this party has cards in hand that can be played during the Setup/Revolution phases :
-     * - Concessions
-     * - A Playable Statesman
-     * @return boolean
-     */
-    public function hasPlayableCards() {
-        try {
-            foreach($this->getHand()->getCards() as $card) {
-                /* @var \Entities\Card $card */
-                $cardAction = $card->getAction(TRUE) ;
-                if (
-                    ( key_exists('menu', $cardAction) && ($cardAction['menu'] == 'setupPlayStatesman' ) ) ||
-                    ( key_exists('drag', $cardAction) && ($cardAction['drag'] == 'setupPlayConcession') )
-                )
-                {
-                    return TRUE ;
-                }
-            }
-        } catch (Exception $e) {
-            error_log($e->getMessage()) ;
-            return FALSE ;
-        }
-        return FALSE ;
-    }
-    
-    /**
-    * ----------------------------------------------------
     * Revenue
     * ----------------------------------------------------
     */

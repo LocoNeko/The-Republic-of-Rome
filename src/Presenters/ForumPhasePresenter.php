@@ -419,8 +419,10 @@ class ForumPhasePresenter
                         'verb' => 'forumKnightsPressure' ,
                         'text' => _('Pressure Knights') ,
                         'classes' => array (
-                            // TO DO : Modal for knights pressure
                             'forumKnightsPressure'
+                        ) ,
+                        'attributes' => array (
+                            'data-json'=> '{"action":["slider" , "KnightsPressureModal" , "'.$senatorModel->getName().' pressures his knights" , "0" , "'.$senatorModel->getKnights().'" , "" ]}'
                         )
                     )
                 );
