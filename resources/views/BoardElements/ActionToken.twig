@@ -14,7 +14,8 @@
         - text : The text next to the icon
     #}
     <div class="btn btn-default btn-lg {{(action['draggable']|default('YES')=='YES' ? 'draggable' : '')}} {{(action['droppable']|default('NO')=='YES' ? 'droppable' : '')}}" data-json="{{action['data_json']|default('')}}" verb='{{action['verb']}}' title='{{action['caption']}}'>
-        <span class="{{action['class']|default('')}}" aria-hidden="true"></span>{{action['text']}}
+        {# there is a glyphicon without an actual glyphicon-* fix this#}
+        <span class="glyphicon {{action['class']|default('')}}" aria-hidden="true" style="min-height: 150px; min-width: 150px;">{{action['text']}}</span>
     </div>
 {% elseif action['type']=='button' %}
     {#

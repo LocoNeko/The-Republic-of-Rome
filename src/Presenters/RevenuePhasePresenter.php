@@ -169,18 +169,32 @@ class RevenuePhasePresenter
             'text' => 'TRANSFER'
         ) ;
         
-        // The first potential "FROM" is the party treasury
-        $this->header['actions'][] = array (
-            'type' => 'icon' ,
-            'verb' => 'revenueRedistribute' ,
-            'text' => ' '.$game->getParty($this->user_id)->getName() ,
-            'draggable' => 'YES' ,
-            'droppable' => 'YES' ,
-            'caption' => 'Drag and drop to transfer money to/from your party treasury' ,
-            'class' => 'glyphicon glyphicon-plus' ,
-            'data_json'=> '{"action":["slider" , "RevenueRedistributeModal" , "Transfer talents from party treasury" , "0" , "'.$game->getParty($this->user_id)->getTreasury().'" , "T." ]}'
-        );
-        
+        // The first potential "FROM" is the party treasury if greater than 0
+        if ($game->getParty($this->user_id)->getTreasury()>0)
+        {
+            $this->header['actions'][] = array (
+                'type' => 'icon' ,
+                'verb' => 'revenueRedistribute' ,
+                'text' => ' '.$game->getParty($this->user_id)->getName().' ('.$game->getParty($this->user_id)->getTreasury().'T.)' ,
+                'draggable' => 'YES' ,
+                'droppable' => 'YES' ,
+                'caption' => 'Drag and drop to transfer money to/from your party treasury' ,
+                'data_json'=> '{"user_id":'.$this->user_id.' , "action":["slider" , "RevenueRedistributeModal" , "Transfer talents from party treasury" , "0" , "'.$game->getParty($this->user_id)->getTreasury().'" , "T." ]}'
+            );
+        }
+        else
+        {
+            $this->header['actions'][] = array (
+                'type' => 'icon' ,
+                'verb' => 'revenueRedistribute' ,
+                'text' => ' '.$game->getParty($this->user_id)->getName().'( '.$game->getParty($this->user_id)->getTreasury().'T.)' ,
+                'draggable' => 'NO' ,
+                'droppable' => 'YES' ,
+                'caption' => 'Drop here to transfer money to your party treasury' ,
+                'data_json'=> '{"user_id":'.$this->user_id.'}'
+            );
+        }
+
         // All other parties are potential "TO"
         foreach ($game->getParties() as $party)
         {
@@ -192,9 +206,8 @@ class RevenuePhasePresenter
                     'text' => ' '.$party->getName() ,
                     'draggable' => 'NO' ,
                     'droppable' => 'YES' ,
-                    'caption' => 'Drag and drop to transfer money to this party treasury' ,
-                    'class' => 'glyphicon glyphicon-plus' ,
-                    'data_json'=> json_encode(array("user_id"=>$party->getUser_id()))
+                    'caption' => 'Drop here to transfer money to this party treasury' ,
+                    'data_json'=> '{"user_id":'.$party->getUser_id().'}'
                 );
             }
         }
@@ -215,18 +228,20 @@ class RevenuePhasePresenter
              */
             $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
             // Potential "From"
-            $senator->addClass('draggable') ;
-            $senator->addAttribute("action", 
-                array(
-                    "slider" ,
-                    "RevenueRedistributeModal" ,
-                    "Transfer talents from ".$senatorModel->getName() ,
-                    "0" ,
-                    $senatorModel->getTreasury() ,
-                    "T."
-                )
-            ) ;
-            //$senator->setDataJson ('{"action":["slider" , "RevenueRedistributeModal" , "Transfer talents from '.$senatorModel->getName().'" , "0" , "'.$senatorModel->getTreasury().'" , "T." ]}') ;
+            if ($senatorModel->getTreasury()>0)
+            {
+                $senator->addClass('draggable') ;
+                $senator->addAttribute("action",
+                    array(
+                        "slider" ,
+                        "RevenueRedistributeModal" ,
+                        "Transfer talents from ".$senatorModel->getName() ,
+                        "1" ,
+                        $senatorModel->getTreasury() ,
+                        "T."
+                    )
+                ) ;
+            }
             // Potential "To"
             $senator->addClass('droppable') ;
         }

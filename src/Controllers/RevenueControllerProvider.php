@@ -419,6 +419,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         /**
          * From
          */
+        $fromParty=FALSE ;
         if (isset($from['senatorID']))
         {
             // From Senator $from['senatorID']
@@ -432,6 +433,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         {
             // From Party treasury
             $fromEntity = $game->getParty($user_id) ;
+            $fromParty=TRUE ;
         }
 
         /**
@@ -445,6 +447,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         /**
          * To
          */
+        $toParty=FALSE ;
         if (isset($to['senatorID']))
         {
             // To Senator $to['senatorID']
@@ -458,10 +461,11 @@ class RevenueControllerProvider implements ControllerProviderInterface
         {
             // To party $to['user_id']
             $toEntity = $game->getParty($to['user_id']) ;
+            $toParty = ($to['user_id'] == $user_id) ;
         }
         $fromEntity->changeTreasury(-$amount) ;
         $toEntity->changeTreasury($amount) ;
-        $game->log(_('[['.$user_id.']] {transfer '.(int)$amount.'T , transfers money} from '.$fromEntity->getName().' to '.$toEntity->getName()) , 'log' ) ;
+        $game->log(_('[['.$user_id.']] {transfer '.(int)$amount.'T , transfers money} from '.($fromParty ? _('party treasury') : $fromEntity->getName()).' to '.($toParty ? _('party treasury') : $toEntity->getName())) , 'log' ) ;
     }
     
     /**
