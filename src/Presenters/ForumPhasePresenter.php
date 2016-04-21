@@ -56,10 +56,16 @@ class ForumPhasePresenter
         }
         /**
          * Initiative bidding
+         * - The player is the first who is not done : bid or pass
          */
+        elseif ($this->idWithInitiative===FALSE && $this->getFirstIsNotDoneUserId($game)===$this->user_id)
+        {
+            $this->setInitiativeBidding($game) ;
+        }
+        // The player already bid : wait for current bidder
         elseif ($this->idWithInitiative===FALSE)
         {
-            $this->setInitiativeBidding() ;
+            $this->header['description'] .= _('Waiting for '.$game->getParty($this->getFirstIsNotDoneUserId($game))->getName().' to bid') ;
         }
         /**
          * Roll event
@@ -196,19 +202,68 @@ class ForumPhasePresenter
     
     /**
      *
-     * Functions taken out of the constructor for readibility
+     * Functions taken out of the constructor for readability
      * Setting of optional elements :
      * - Header list
      * - Header action
      * - Interface
      *  
      */
-    
-    public function setInitiativeBidding()
+
+    /**
+     * - Initiative bidding : it's your turn to bid.
+     * @param \Entities\Game $game
+     */
+    public function setInitiativeBidding($game)
     {
-        
+        $this->header['description'].= _('You can bid for initiative') ;
+        $highestBid = $this->getHighestBid($game) ;
+        $this->sliders[] = array (
+            'ID' => 'forumInitiativeBidModal' ,
+            'title' => _('Bid for the initiative'),
+            'verb' => 'forumInitiativeBid',
+            'text' => 'BID'
+        ) ;
+        // Case 1 : You are the HRAO and can decide to pass
+        if ($game->getHRAO()->getLocation()['value']->getUser_id() == $this->user_id)
+        {
+            $this->header['description'] .= _(' or pass as you are the HRAO') ;
+            $this->header['actions'] = array (
+                array (
+                    'type' => 'button' ,
+                    'verb' => 'forumInitiativeBidPass' ,
+                    'text' => 'PASS'
+                )
+            );
+        }
+        // Default : If we are here, it means you have at least one Senator who can bid more than the current highest bid
+        foreach ($this->yourParty->senators as $senatorID=>$senator) {
+            /**
+             * Get the corresponding Senator Model (entity)
+             * @var \Entities\Senator $senatorModel
+             */
+            $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first();
+            if ($senatorModel->getTreasury()>$highestBid)
+            {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'primary' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'forumInitiativeBid' ,
+                        'text' => _('Bid') ,
+                        'attributes' => array (
+                            'data-json'=> '{"action":["slider" , "forumInitiativeBidModal" , "'.$senatorModel->getName().' bids for the initiative" , "'.$highestBid.'" , "'.$senatorModel->getTreasury().'" , "" ]}'
+                        )
+                    )
+                );
+            }
+        }
     }
-    
+
+    /**
+     * - Roll event
+     * - Player with the initiative
+     */
     public function setRollEventInitiative()
     {
         $this->header['list'] = array (
@@ -227,6 +282,7 @@ class ForumPhasePresenter
 
     /**
      * - Persuasion
+     * - Player with the initiative
      * - Pick Target
      * @param \Entities\Game $game
      */
@@ -343,6 +399,7 @@ class ForumPhasePresenter
 
     /**
      * - Knights
+     * - Player with the initiative
      * - Set interface on cards :
      * - If the user has already pressured knights, only set 'pressure'
      * - If the user has not yet pressured knights, set both 'pressure' and 'attract' 
@@ -433,6 +490,7 @@ class ForumPhasePresenter
     
     /**
      * - Games
+     * - Player with the initiative
      * Set interface on cards
      * @param \Entities\Game $game
      */
@@ -504,6 +562,7 @@ class ForumPhasePresenter
     
     /**
      * - Change leader
+     * - Player with the initiative
      * @param \Entities\Game $game
      */
     public function setChangeLeaderInitiative($game)
@@ -632,6 +691,7 @@ class ForumPhasePresenter
      * - Pick Target
      * - Gets a list of persuasion cards
      * @param \Entities\Game $game
+     * @return array cards
      */
     public function getPersuasionCards($game)
     {
@@ -665,6 +725,25 @@ class ForumPhasePresenter
             }
         }
         return FALSE ;
+    }
+
+    /**
+     * Returns the highest bid
+     * @param \Entities\Game $game
+     * @return int
+     */
+    public function getHighestBid($game)
+    {
+        $result = 0 ;
+        foreach ($game->getParties() as $party)
+        {
+            $theBid = $party->getBid() ;
+            if ($party->getBid()>$result)
+            {
+                $result = $theBid ;
+            }
+        }
+        return $result ;
     }
 
     /**

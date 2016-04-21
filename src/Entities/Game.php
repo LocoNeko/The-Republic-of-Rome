@@ -334,6 +334,8 @@ class Game
         foreach($this->getParties() as $party)
         {
             $party->setIsDone(FALSE) ;
+            $party->setBid(0) ;
+            $party->setInitiativeWon(FALSE) ;
         }
     }
 

@@ -28,7 +28,6 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $user_id = (int)$app['user']->getId() ;
 
                 //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
-                // TO DO : See how to handle this update better (service ?)
                 $game->getParty($user_id)->setLastUpdateToNow() ;
 
                 $view = new \Presenters\ForumPhasePresenter($game , $user_id) ;
@@ -40,12 +39,64 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect('/') ;
             }
         })
         ->bind('Forum');
-        
+
+        /*
+        * POST target
+        * Verb : forumInitiativeBid
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/forumInitiativeBid', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->doBid($user_id , $game , $json_data['value']);
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+            ->bind('verb_forumInitiativeBid');
+
+        /*
+        * POST target
+        * Verb : forumInitiativeBidPass
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/forumInitiativeBidPass', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->doBidPass($user_id , $game);
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+            ->bind('verb_forumInitiativeBidPass');
+
         /*
         * POST target
         * Verb : RollEvent
@@ -53,7 +104,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/{game_id}/RollEvent', function($game_id , Request $request) use ($app)
         {
-            try 
+            try
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
@@ -66,11 +117,11 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-        ->bind('verb_RollEvent');
+            ->bind('verb_RollEvent');
 
         /*
         * POST target
@@ -94,7 +145,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -120,7 +171,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -148,7 +199,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -176,7 +227,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -210,7 +261,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -229,7 +280,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $this->persuasionRoll($game, $user_id, $json_data) ;
+                $this->persuasionRoll($game, $user_id) ;
                 $game->setSubPhase('Knights') ;
                 $this->knightsInitialise($game, $user_id) ;
                 $this->entityManager->persist($game);
@@ -238,7 +289,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -265,7 +316,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
@@ -502,9 +553,98 @@ class ForumControllerProvider implements ControllerProviderInterface
         }
         return $result ;
     }
-    
+
     /**
-     * 
+     * @param int $user_id
+     * @param \Entities\Game $game
+     * @param int $amount
+     * @throws \Exception
+     */
+    public function doBid($user_id , $game , $amount)
+    {
+        //TO DO
+    }
+
+    /**
+     * @param int $user_id
+     * @param \Entities\Game $game
+     * @throws \Exception
+     */
+    public function doBidPass($user_id , $game)
+    {
+        if ($game->getHRAO()->getLocation()['type']!=='party' || $game->getHRAO()->getLocation()['value']->getUser_id()!==$user_id)
+        {
+            throw new \Exception(_('ERROR - Cannot pass if you are not HRAO')) ;
+        }
+
+        $game->getParty($user_id)->setIsDone(TRUE) ;
+        $this->advanceToNext($game) ;
+    }
+
+    /**
+     * Starting from the HRAO, goes through all parties :
+     * - If the party cannot bid more, it is set to isDone(TRUE)
+     * - If the party can bid more, we stop the loop
+     * After the loop, if we couldn't find any party that could bid more :
+     * - The highest bidder pays the bid
+     * - The highest bidder wins the initiative
+     * @param \Entities\Game $game
+     */
+    public function advanceToNext($game)
+    {
+        $highestBid = 0 ;
+        $highestBidderId = FALSE ;
+        $finished = TRUE ;
+        foreach ($game->getOrderOfPlay() as $party)
+        {
+            if ($highestBidderId === FALSE)
+            {
+                $highestBidderId = $party->getUser_id() ;
+            }
+            // If party is done and has a better bid than the current highest, update it
+            if ($party->getIsDone() && $party->getBid() > $highestBid)
+            {
+                $highestBid = $party->getBid() ;
+                $highestBidderId = $party->getUser_id() ;
+            }
+            // If party is NOT done, check highest senator's treasury
+            elseif (!$party->getIsDone())
+            {
+                $highestTreasury = 0 ;
+                foreach ($party->getSenators()->getCards() as $senator)
+                {
+                    if ($senator->getTreasury() > $highestTreasury)
+                    {
+                        $highestTreasury = $senator->getTreasury() ;
+                    }
+                }
+                // If no senator can bid higher than the highest bid, setIsDone to true
+                if ($highestTreasury<=$highestBid)
+                {
+                    // TO DO : message for passing
+                    $party->setIsDone(TRUE) ;
+                }
+                else
+                {
+                    /*
+                     * This is the only case where at least one party is not done :
+                     * - The party was not done to being with
+                     * - One of his Senator has a highest treasury then the current highest bid
+                     */
+                    $finished = FALSE ;
+                    break ;
+                }
+            }
+        }
+        if ($finished)
+        {
+            // TO DO : message for initiative won
+            // TO DO : Spend the bid money
+            $game->getParty($highestBidderId)->setInitiativeWon(TRUE) ;
+        }
+    }
+
+    /**
      * @param int $user_id
      * @param \Entities\Game $game
      * @return boolean
@@ -801,7 +941,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         if (count($persuasionCard->first())==1)
         {
             // TO DO : Validate card
-            // TO DO : If the card bypasses the proces entirely, we can jump to persuasionRoll :
+            // TO DO : If the card bypasses the process entirely, we can jump to persuasionRoll :
             //$this->persuasionRoll($game, $user_id, ....) ;
         }
     }
@@ -810,8 +950,9 @@ class ForumControllerProvider implements ControllerProviderInterface
      * 
      * @param \Entities\Game $game
      * @param int $user_id
+     * @throws \Exception
      */
-    public function persuasionRoll($game , $user_id , $data)
+    public function persuasionRoll($game , $user_id)
     {
         // TO DO : Persuasion Card
         /*
@@ -915,6 +1056,7 @@ class ForumControllerProvider implements ControllerProviderInterface
      * isDone is used to know whether a party has decided to pressure knights
      * @param \Entities\Game $game
      * @param int $user_id
+     * @throws \Exception
      */
     public function knightsInitialise($game , $user_id)
     {
@@ -967,6 +1109,7 @@ class ForumControllerProvider implements ControllerProviderInterface
      * @param \Entities\Game $game
      * @param string $senatorID
      * @param int $amount
+     * @throws \Exception
      */
     public function knightsPressure($game , $senatorID , $amount)
     {
