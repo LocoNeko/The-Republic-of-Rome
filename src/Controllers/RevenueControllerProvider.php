@@ -80,10 +80,10 @@ class RevenueControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
-        * Verb : ContributionsDone
+        * Verb : revenueContributionsDone
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/ContributionsDone', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/revenueContributionsDone', function($game_id , Request $request) use ($app)
         {
             try 
             {
@@ -135,7 +135,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $this->entityManager->flush();
             return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('verb_ContributionsDone');
+        ->bind('verb_revenueContributionsDone');
 
         /*
         * POST target
@@ -166,28 +166,29 @@ class RevenueControllerProvider implements ControllerProviderInterface
         
         /*
         * POST target
-        * Verb : revenueGiveToRome
+        * Verb : revenueContributions
         * JSON data : user_id
         */
-        $controllers->post('/{game_id}/revenueGiveToRome', function($game_id , Request $request) use ($app)
+        $controllers->post('/{game_id}/revenueContributions', function($game_id , Request $request) use ($app)
         {
             try 
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->revenueContributions($game , $user_id , $json_data['senatorID'] , $json_data['value']) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
             }
             catch (\Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201);
             }
-            $user_id = (int)$app['user']->getId() ;
-            $this->doContribution($game , $user_id , $request->request->all()) ;
-            $this->entityManager->persist($game);
-            $this->entityManager->flush();
-            return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('verb_revenueGiveToRome');
+        ->bind('verb_revenueContributions');
 
         /*
         * POST target
@@ -472,64 +473,58 @@ class RevenueControllerProvider implements ControllerProviderInterface
      * This function gives money to Rome based on the $data submitted.
      * @param \Entities\Game $game
      * @param int $user_id
-     * @param array $data array 'fromSenator', 'amount'<br>
-     * @return boolean Success or failure
+     * @param string $senator_ID
+     * @param int $amount
+     * @throws \Exception
      */
-    private function doContribution($game , $user_id , array $data)
+    private function revenueContributions($game , $user_id , $senator_ID , $amount)
     {
-        $party = $game->getParty($user_id) ;
-        /* Checks on the data :
-         * - fromSenator can only be in the party 
-         * - amount must be positive
+        /**
+         * Validation
          */
-        if (
-            ((int)$data['amount']<=0) ||
-            ($data['fromSenator']!='' && ($party->getSenators()->getFirstCardByProperty('id', $data['fromSenator']) === FALSE) )
-        )
+        $giver = $game->getFilteredCards(array('senator_ID' => $senator_ID))->first() ;
+        if ($giver->getLocation()['type']!=='party' || $giver->getLocation()['value']->getUser_id()!==$user_id)
         {
-            $game->log(_('ERROR - Contribution from wrong Senator or with invalid amount') , 'error' ) ;
-            return FALSE ;
+            throw new \Exception(_('ERROR - Contribution from Senator in wrong party'));
         }
-        else 
+        if ((int)$amount<=0 || (int)$amount>$giver->getTreasury())
         {
-            $fromSenator = $party->getSenators()->getFirstCardByProperty('id', $data['fromSenator']) ;
-            $amount = (int)$data['amount'] ;
+            throw new \Exception(_('ERROR - Invalid amount for Contribution'));
+        }
+        $INFgain = 0 ;
+        $INFgainMessage = '' ;
+        if ($amount>=50)
+        {
+            $INFgain = 7 ;
+            $INFgainMessage = ' He gains 7 INF.' ;
+        }
+        elseif ($amount>=25)
+        {
+            $INFgain = 3 ;
+            $INFgainMessage = ' He gains 3 INF.' ;
+        }
+        elseif ($amount>=10)
+        {
+            $INFgain = 1 ;
+            $INFgainMessage = ' He gains 1 INF.' ;
+        }
+        else
+        {
             $INFgain = 0 ;
-            $INFgainMessage = '' ;
-            if ($amount>=50)
-            {
-                $INFgain = 7 ;
-                $INFgainMessage = ' He gains 7 INF.' ;
-            }
-            elseif ($amount>=25)
-            {
-                $INFgain = 3 ;
-                $INFgainMessage = ' He gains 3 INF.' ;
-            }
-            elseif ($amount>=10)
-            {
-                $INFgain = 1 ;
-                $INFgainMessage = ' He gains 1 INF.' ;
-            }
-            else
-            {
-                $INFgain = 0 ;
-                $INFgainMessage = ' He doesn\'t gain any INF.' ;
-            }
-            $fromSenator->changeTreasury(-$amount) ;
-            $fromSenator->changeINF($INFgain) ;
-            $game->changeTreasury($amount) ;
-            $game->log(
-                _('%1s ([['.$user_id.']]) gives %2dT to Rome.%3s') ,
-                'log' ,
-                array(
-                    $fromSenator->getName() ,
-                    $amount ,
-                    $INFgainMessage
-                ) 
-            ) ;
+            $INFgainMessage = ' He doesn\'t gain any INF.' ;
         }
-        return TRUE ;
+        $giver->changeTreasury(-$amount) ;
+        $giver->changeINF($INFgain) ;
+        $game->changeTreasury($amount) ;
+        $game->log(
+            _('%1s ([['.$user_id.']]) gives %2dT to Rome.%3s') ,
+            'log' ,
+            array(
+                $giver->getName() ,
+                $amount ,
+                $INFgainMessage
+            ) 
+        ) ;
     }
 
     

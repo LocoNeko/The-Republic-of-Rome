@@ -29,18 +29,17 @@
             {% endautoescape %}
         </div>
     {% endfor %}
-    
+
     {#
-        Optional : Card drop down action menu
+        Optional : Card drop down action menu - needs the card_id attribute
     #}
-    
-    {% if (card.menu|default([])|length > 0) and (card.attributes['card_id'] is defined) %}
-        
+
+    {% if (card.menu|default([])|length > 0) and (card.getAttribute('card_id') is defined) %}
         <div class="sprite-position-topright dropdown" style="z-index:50; opacity: 0.9;">
-            <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.attributes['card_id']}}" data-toggle="dropdown" aria-expanded="true">
+            <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.getAttribute('card_id')}}" data-toggle="dropdown" aria-expanded="true" style="margin-bottom: -20px;">
                 <span class="glyphicon glyphicon-collapse-down" aria-hidden="true" style="font-size: 1.5em;"></span>
             </button>
-            <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.attributes['card_id']}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
+            <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.getAttribute('card_id')}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px;">
                 {% for menuItem in card.menu %}
                     <li role="presentation">
                        <button
@@ -58,18 +57,16 @@
         </div>
                 
     {% endif %}
-    
+
     {#
         Optional : Card has controlled cards
     #}
-    
-    {% if (card.controlledCards|default([])|length > 0) and (card.attributes['card_id'] is defined) %}
-        
+    {% if (card.controlledCards|default([])|length > 0) and (card.getAttribute('card_id') is defined) %}
         <div class="sprite-position-topleft">
-            <a href="#CardsControlledBy_{{card.attributes['card_id']}}" class="btn btn-default" data-toggle="collapse">
+            <a href="#CardsControlledBy_{{card.getAttribute('card_id')}}" class="btn btn-default" data-toggle="collapse">
                 <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
             </a>
-            <div id="CardsControlledBy_{{card.attributes['card_id']}}" class="row collapse sprite-modal">
+            <div id="CardsControlledBy_{{card.getAttribute('card_id')}}" class="row collapse sprite-modal">
                 {% for controlledCard in card.controlledCards %}
                     {% embed "BoardElements/Card_new.twig" with { 'card': controlledCard } %}
                     {% endembed %}

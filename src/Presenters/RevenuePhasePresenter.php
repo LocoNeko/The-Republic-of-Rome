@@ -96,19 +96,7 @@ class RevenuePhasePresenter
          */
         elseif($game->getSubPhase()=='Contributions' && !$this->isDone)
         {
-                $this->header['description'] = _('Your Senators can give to Rome\'s treasury') ;
-                $this->header['list'] = array (
-                    _('A contribution of 50T or more will increase his Influence by 7') ,
-                    _('A contribution of 25T or more will increase his Influence by 3') ,
-                    _('A contribution of 10T or more will increase his Influence by 1')
-                ) ;
-                $this->header['actions'] = array (
-                    array (
-                        'type' => 'button' ,
-                        'verb' => 'ContributionsDone' ,
-                        'text' => 'DONE'
-                    )
-                ) ;
+            $this->setContributions($game) ;
         }
         elseif($game->getSubPhase()=='Contributions' && $this->isDone)
         {
@@ -141,7 +129,6 @@ class RevenuePhasePresenter
             'verb' => 'RevenueDone' ,
             'text' => 'DONE'
         );
-
     }
     
     /**
@@ -158,9 +145,16 @@ class RevenuePhasePresenter
         );
         $this->interface['name'] = 'revenueRedistribution';
         
+        // The first action in the interface is "DONE"
+        $this->interface['revenueRedistributionDone'] = array (
+            'type' => 'button' ,
+            'verb' => 'revenueRedistributionDone' ,
+            'text' => 'DONE'
+        );
+
         //TO DO - Release legions interface
         $this->interface['showReleasedLegions'] = FALSE ;
-        
+
         // The RevenueRedistributeModal will pop up each time a "FROM" is dropped
         $this->sliders[] = array (
             'ID' => 'RevenueRedistributeModal' ,
@@ -169,7 +163,7 @@ class RevenuePhasePresenter
             'text' => 'TRANSFER'
         ) ;
         
-        // The first potential "FROM" is the party treasury if greater than 0
+        // The first potential "FROM" is the party treasury if greater than 0, it's also a "TO"
         if ($game->getParty($this->user_id)->getTreasury()>0)
         {
             $this->header['actions'][] = array (
@@ -182,12 +176,13 @@ class RevenuePhasePresenter
                 'data_json'=> '{"user_id":'.$this->user_id.' , "action":["slider" , "RevenueRedistributeModal" , "Transfer talents from party treasury" , "0" , "'.$game->getParty($this->user_id)->getTreasury().'" , "T." ]}'
             );
         }
+        // if it's only a "TO", don't make it draggable
         else
         {
             $this->header['actions'][] = array (
                 'type' => 'icon' ,
                 'verb' => 'revenueRedistribute' ,
-                'text' => ' '.$game->getParty($this->user_id)->getName().'( '.$game->getParty($this->user_id)->getTreasury().'T.)' ,
+                'text' => ' '.$game->getParty($this->user_id)->getName().' ('.$game->getParty($this->user_id)->getTreasury().'T.)' ,
                 'draggable' => 'NO' ,
                 'droppable' => 'YES' ,
                 'caption' => 'Drop here to transfer money to your party treasury' ,
@@ -211,13 +206,6 @@ class RevenuePhasePresenter
                 );
             }
         }
-        
-        // The last action in the header is "DONE"
-        $this->header['actions'][] = array (
-            'type' => 'button' ,
-            'verb' => 'revenueRedistributionDone' ,
-            'text' => 'DONE'
-        );
 
         // Senators in the party are both potential "FROM" and "TO"
         foreach ($this->yourParty->senators as $senatorID=>$senator)
@@ -246,35 +234,58 @@ class RevenuePhasePresenter
             $senator->addClass('droppable') ;
         }
     }
-    
-    public function getContent()
+        
+    /**
+     * Taken out of the constructor for convenience and lisabilatility
+     * @param \Entities\Game $game
+     */
+    public function setContributions($game)
     {
-        /*
-         * Redistribution
-         */
-        if ($this->getPhase()=='Revenue' && $this->getSubPhase()=='Redistribution')
-        {
-            $result['showReleasedLegions'] = ( $this->getAreThereReleasedLegions() && $this->getIsPartyOfHRAO() ) ;
-            $result['otherParties'] = array() ;
-            foreach ($this->getParties() as $party)
-            {
-                if ($party->getUser_id() == $this->getUser_id())
-                {
-                    $result['yourParty'] = $party ;
-                }
-                else
-                {
-                    $result['otherParties'][] = $party ;
-                }
-            }
-            $result['action'] = array (
+        $this->header['description'] = _('Your Senators can give to Rome\'s treasury') ;
+        $this->header['list'] = array (
+            _('A contribution of 50T or more will increase his Influence by 7') ,
+            _('A contribution of 25T or more will increase his Influence by 3') ,
+            _('A contribution of 10T or more will increase his Influence by 1')
+        ) ;
+        $this->header['actions'] = array (
+            array (
                 'type' => 'button' ,
-                'verb' => 'revenueRedistributionDone' ,
-                'text' => 'DONE' ,
-                'user_id' => $this->getUser_id()
-            );
+                'verb' => 'revenueContributionsDone' ,
+                'text' => 'DONE'
+            )
+        ) ;
+        // The revenueContributionsModal will pop up each time a "FROM" is dropped
+        $this->sliders[] = array (
+            'ID' => 'revenueContributionsModal' ,
+            'title' => _('Give to Rome'),
+            'verb' => 'revenueContributions',
+            'text' => 'GIVE TO ROME'
+        ) ;
 
+        foreach ($this->yourParty->senators as $senatorID=>$senator)
+        {
+            /**
+             * Get the corresponding Senator Model (entity)
+             * @var \Entities\Senator $senatorModel
+             */
+            $senatorModel = $game->getFilteredCards(array('SenatorID' => $senatorID))->first() ;
+            if ($senatorModel->getTreasury()>0)
+            {
+                $senator->addMenuItem(
+                    array (
+                        'style' => 'primary' ,
+                        'disabled' => FALSE ,
+                        'verb' => 'revenueContributions' ,
+                        'text' => _('Give to Rome') ,
+                        'classes' => array (
+                            'revenueContributions'
+                        ) ,
+                        'attributes' => array (
+                            'data-json'=> '{"action":["slider" , "revenueContributionsModal" , "'.$senatorModel->getName().' give to Rome" , "0" , "'.$senatorModel->getTreasury().'" , "T." ]}'
+                        )
+                    )
+                );
+            }
         }
-        return $result ;
     }
 }

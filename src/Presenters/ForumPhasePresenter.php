@@ -391,6 +391,7 @@ class ForumPhasePresenter
             /**
              * Can't attract knights if some have already been pressured
              */
+            // TO DO : Check if Class is necessary
             if (!$game->getParty($this->user_id)->getIsDone()) {
                 $senator->addMenuItem(
                     array (

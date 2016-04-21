@@ -638,6 +638,4 @@ class LobbyControllerProvider implements ControllerProviderInterface
         }
         fclose($filePointer);
     }
-    
-
 }
