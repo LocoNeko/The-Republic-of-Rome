@@ -283,7 +283,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
-                $this->knightsAttract($game , $json_data['senatorID'] , $json_data['value']) ;
+                $this->knightsAttract($game , $json_data['user_id'] , $json_data['senatorID'] , $json_data['value']) ;
                 $game->setSubPhase('Games') ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -932,15 +932,17 @@ class ForumControllerProvider implements ControllerProviderInterface
     /**
      * Attracts a knight for a Senator
      * @param \Entities\Game $game
+     * @param int $user_id
      * @param string $senatorID The Seantor ID of the attracting Senator
      * @param int $amount Number of talents spent
      * @throws \Exception
      */
-    public function knightsAttract($game , $senatorID , $amount)
+    public function knightsAttract($game , $user_id , $senatorID , $amount)
     {
+        error_log($user_id.' , '.$senatorID.' , '.$amount);
         /** @var \Entities\Senator $senator */
         $senator = $game->getFilteredCards(array('senatorID'=>$senatorID))->first() ;
-        if ($senator->getLocation()['type']!='party' || $senator->getLocation()['value']->getUser_id() != $game->whoseTurn()->getUser_id())
+        if ($senator->getLocation()['type']!='party' || $senator->getLocation()['value']->getUser_id() != $user_id)
         {
             throw new \Exception(_('ERROR - Senator & party mismatch.'));
         }
