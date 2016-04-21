@@ -473,16 +473,16 @@ class RevenueControllerProvider implements ControllerProviderInterface
      * This function gives money to Rome based on the $data submitted.
      * @param \Entities\Game $game
      * @param int $user_id
-     * @param string $senator_ID
+     * @param string $senatorID
      * @param int $amount
      * @throws \Exception
      */
-    private function revenueContributions($game , $user_id , $senator_ID , $amount)
+    private function revenueContributions($game , $user_id , $senatorID , $amount)
     {
         /**
          * Validation
          */
-        $giver = $game->getFilteredCards(array('senator_ID' => $senator_ID))->first() ;
+        $giver = $game->getFilteredCards(array('senatorID' => $senatorID))->first() ;
         if ($giver->getLocation()['type']!=='party' || $giver->getLocation()['value']->getUser_id()!==$user_id)
         {
             throw new \Exception(_('ERROR - Contribution from Senator in wrong party'));

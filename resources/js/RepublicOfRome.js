@@ -129,7 +129,7 @@ function getReady(phase , subPhase)
                 json.to = JSON.parse($(event.target).attr('data-json')) ;
 
                 // Is there an action (slider, fixedAmount...) on the draggable ?
-                if (json.from.action)
+                if (typeof dataJsonFrom !== typeof undefined && dataJsonFrom !== false && dataJsonFrom.length>0 && json.from.action)
                 {
                     // If there is an action, store the current json (with 'to' and 'from' in the data-json attribute and execute the action)
                     $(document.body).attr('data-json' , JSON.stringify(json)) ;
