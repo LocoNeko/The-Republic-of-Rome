@@ -595,6 +595,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         $highestBid = 0 ;
         $highestBidderId = FALSE ;
         $finished = TRUE ;
+        $passNames = array () ;
         foreach ($game->getOrderOfPlay() as $party)
         {
             if ($highestBidderId === FALSE)
@@ -621,7 +622,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 // If no senator can bid higher than the highest bid, setIsDone to true
                 if ($highestTreasury<=$highestBid)
                 {
-                    // TO DO : message for passing
+                    $passNames[]=$party->getName();
                     $party->setIsDone(TRUE) ;
                 }
                 else
@@ -635,6 +636,10 @@ class ForumControllerProvider implements ControllerProviderInterface
                     break ;
                 }
             }
+        }
+        if (count($passNames)>0)
+        {
+            $game->log(implode(' ,' , $passNames)._(' cannot overbid and are skipped'));
         }
         if ($finished)
         {
