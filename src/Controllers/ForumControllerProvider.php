@@ -654,7 +654,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             if ($highestBid===0)
             {
-                $game->log(_('The HRAO $1%s wins this initiative as all bets are 0') , 'log' , array($game->getHRAO()->getName()));
+                $game->log(_('The HRAO %1$s wins this initiative as all bets are 0') , 'log' , array($game->getHRAO()->getName()));
             }
             else
             {
