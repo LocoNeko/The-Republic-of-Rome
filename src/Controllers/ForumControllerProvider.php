@@ -934,27 +934,27 @@ class ForumControllerProvider implements ControllerProviderInterface
          */
         if (count($target)!=1)
         {
-            throw new \Exception(_('Wrong target'));
+            throw new \Exception(_('ERROR - Wrong target'));
         }
         if ($target->first()->getLocation()['type']!='party' && $target->first()->getLocation()['name']!='forum')
         {
-            throw new \Exception(_('Target not in a party or the forum'));
+            throw new \Exception(_('ERROR - Target not in a party or the forum'));
         }
         if (count($persuader)!=1)
         {
-            throw new \Exception(_('Wrong persuader'));
+            throw new \Exception(_('ERROR - Wrong persuader'));
         }
         if ($persuader->first()->getLocation()['type']!='party' || $persuader->first()->getLocation()['value']->getUser_id()!=$user_id)
         {
-            throw new \Exception(_('Persuader in wrong party'));
+            throw new \Exception(_('ERROR - Persuader in wrong party'));
         }
         if ($bribe<0 || $bribe>$persuader->first()->getTreasury())
         {
-            throw new \Exception(_('Invalid bribe value'));
+            throw new \Exception(_('ERROR - Invalid bribe value'));
         }
         if (count($persuasionCard)>0 && ( count($persuasionCard->first())!=1 || $persuasionCard->first()->getLocation()['type']!='hand' || $persuasionCard->first()->getLocation()['value']->getUser_id()!=$user_id))
         {
-            throw new \Exception(_('Persuasion card comes from the wrong place'));
+            throw new \Exception(_('ERROR - Persuasion card comes from the wrong place'));
         }
         /*
          * Validation done. Set persuader as $party->bidWith , bribe as $party->bid and target as $game->persuasiontarget
@@ -966,9 +966,11 @@ class ForumControllerProvider implements ControllerProviderInterface
         // A persuasion card was played
         if (count($persuasionCard->first())==1)
         {
-            // TO DO : Validate card
-            // TO DO : If the card bypasses the process entirely, we can jump to persuasionRoll :
-            //$this->persuasionRoll($game, $user_id, ....) ;
+            if (($card->getName()!=='SEDUCTION') && ($card->getName()!=='BLACKMAIL'))
+            {
+                throw new \Exception(_('ERROR - Wrong persuasion card'));
+            }
+            $this->persuasionRoll($game, $user_id , $persuasionCard->getId()) ;
         }
     }
     
@@ -976,11 +978,11 @@ class ForumControllerProvider implements ControllerProviderInterface
      * 
      * @param \Entities\Game $game
      * @param int $user_id
+     * @param int $persuasion_cardId
      * @throws \Exception
      */
-    public function persuasionRoll($game , $user_id)
+    public function persuasionRoll($game , $user_id , $persuasion_cardId=NULL)
     {
-        // TO DO : Persuasion Card
         /*
          * Validation
          */
@@ -997,6 +999,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             throw new \Exception(_('ERROR - Wrong bid amount')) ;
         }
+        
         /*
          * Validation complete - proceed
          */
@@ -1005,16 +1008,40 @@ class ForumControllerProvider implements ControllerProviderInterface
         $bribes = $game->getParty($forumView->idWithInitiative)->getBid() ;
         $target = $game->getPersuasionTarget() ;
         $counterBribes = 0 ;
-        foreach ($game->getParties() as $party)
+        
+        /**
+         * A persuasion card was played : SEDUCTION or BLACKMAIL
+         */
+        $blackmail = FALSE ;
+        if ($persuasion_cardId!==NULL)
         {
-            if ( ($party->getUser_id() != $forumView->idWithInitiative))
+            $persuasionCard = $game->getFilteredCards(array('id'=>$persuasion_cardId))->first();
+            if ($persuasionCard->getName()!=='SEDUCTION' && $persuasionCard->getName()!=='BLACKMAIL')
             {
-                if ($party->getBid()>0)
+                throw new \Exception(_('ERROR - Wrong persuasion card')) ;
+            }
+            elseif ($persuasionCard->getLocation()['type']!=='hand' && $persuasionCard->getLocation()['value']->getUser_id()!==$user_id)
+            {
+                throw new \Exception(_('ERROR - This persuasion card is not in your hand')) ;
+            }
+            $persuasionDescription.=_(' He plays the '.$persuasionCard->getName().' card. ');
+            $blackmail = ($persuasionCard->getName()==='BLACKMAIL') ;
+            $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $persuasion_cardId, $game->getDecks('discard')) ;
+        }
+        else
+        {
+            foreach ($game->getParties() as $party)
+            {
+                if ( ($party->getUser_id() != $forumView->idWithInitiative))
                 {
-                    $counterBribes+=$party->getBid() ;
+                    if ($party->getBid()>0)
+                    {
+                        $counterBribes+=$party->getBid() ;
+                    }
                 }
             }
         }
+        
         $targetValue = $persuader->getINF() + $persuader->getORA() + $bribes - $target->getActualLOY($game) + $target->getTreasury() + $counterBribes ;
         $roll = $game->rollDice(2, 1) ;
         $message = _('ERROR - impossible value. ');
@@ -1069,6 +1096,17 @@ class ForumControllerProvider implements ControllerProviderInterface
             $message2.=sprintf(_(' He takes a total of %1$dT in bribes.') , $totalBribesReceived);
         }
 
+        /*
+         * Blackmail card failure - Target loses 1DR INF and POP
+         */
+        if (($roll['total']>=10 || $roll['total']>$targetValue) && $blackmail)
+        {
+            $loss = $game->rollOneDie(1);
+            $target->changeINF(-$loss) ;
+            $target->changePOP(-$loss) ;
+            $message2.=sprintf(_(' The blackmail causes a loss of %1$d%2$s INF and POP ') , $loss , $game->getEvilOmensMessage(1)) ;
+        }
+        
         $game->log($message, 'log');
         $game->log($message2, 'log');
         /*
@@ -1148,7 +1186,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             throw new \Exception(_('ERROR - Not enough knights'));
         }
-        $message = sprintf(_('%1$s pressures %2$d knight%3$s. Rolls : ') ,$senator->getName() , $amount , ($amount>1 ? 's' : '') );
+        $message = _('%1$s pressures %2$d knight%3$s. Rolls : ');
         $total = 0 ;
         for ($i=0 ; $i<$senator->getKnights() ; $i++)
         {
@@ -1157,13 +1195,12 @@ class ForumControllerProvider implements ControllerProviderInterface
             $total+=$roll ;
         }
         $message = substr($message, 0 , -2) ;
-        $message.= sprintf(_('%1$s. Earns a total of %2$dT.') , $game->getEvilOmensMessage(-1) , $total);
+        $message.= _('%4$s. Earns a total of %5$dT.') ;
         $senator->changeKnights(-$amount) ;
         $senator->changeTreasury($total) ;
         // Set isDone to TRUE so the party cannot attract more knights this turn
         $senator->getLocation()['value']->setIsDone(TRUE) ;
-        // TO DO : Ugly. Respect the log function protocol and pass an array of parameters !
-        $game->log($message) ;
+        $game->log($message , 'log' , array($senator->getName() , $amount , ($amount>1 ? 's' : '') , $game->getEvilOmensMessage(-1) , $total)) ;
     }
 
     /**
@@ -1205,7 +1242,6 @@ class ForumControllerProvider implements ControllerProviderInterface
         if ($game->getInitiative()==6)
         {
             $game->log(_('TO DO - Put Rome in Order')) ;
-            // TO DO : Put Rome in order
         }
         else
         {
