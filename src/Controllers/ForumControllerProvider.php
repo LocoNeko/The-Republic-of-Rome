@@ -58,7 +58,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $this->doBid($user_id , $game , $json_data['value']);
+                $this->doBid($user_id , $game , $json_data['senatorID'] , $json_data['value']);
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -557,12 +557,22 @@ class ForumControllerProvider implements ControllerProviderInterface
     /**
      * @param int $user_id
      * @param \Entities\Game $game
+     * @param string $senatorID
      * @param int $amount
      * @throws \Exception
      */
-    public function doBid($user_id , $game , $amount)
+    public function doBid($user_id , $game , $senatorID , $amount)
     {
-        //TO DO
+        $senator = $game->getFilteredCards(array('senatorID'=>$senatorID))->first() ;
+        if ($senator->getLocation()['type']!=='party' || $senator->getLocation()['value']->getUser_id()!==$user_id)
+        {
+            throw new \Exception(_('ERROR - Senator in wrong party')) ;
+        }
+        $game->getParty($user_id)->setBid((int)$amount) ;
+        $game->getParty($user_id)->setBidWith($senator) ;
+        $game->getParty($user_id)->setIsDone(TRUE) ;
+        $game->log(_('[['.$user_id.']] bids %1$s on the initiative with %2$s') , 'log' , array((int)$amount , $senator->getName()));
+        $this->advanceToNext($game) ;
     }
 
     /**
@@ -576,7 +586,6 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             throw new \Exception(_('ERROR - Cannot pass if you are not HRAO')) ;
         }
-
         $game->getParty($user_id)->setIsDone(TRUE) ;
         $this->advanceToNext($game) ;
     }
@@ -639,12 +648,24 @@ class ForumControllerProvider implements ControllerProviderInterface
         }
         if (count($passNames)>0)
         {
-            $game->log(implode(' ,' , $passNames)._(' cannot overbid and are skipped'));
+            $game->log( (count($passNames)>1 ? implode(' ,' , $passNames)._(' cannot overbid and are skipped') : implode(' ,' , $passNames)._(' cannot overbid and is skipped')) );
         }
         if ($finished)
         {
-            // TO DO : message for initiative won
-            // TO DO : Spend the bid money
+            if ($highestBid===0)
+            {
+                $game->log(_('The HRAO $1%s wins this initiative as all bets are 0') , 'log' , array($game->getHRAO()->getName()));
+            }
+            else
+            {
+                $game->log(_('%1$s wins the initiative with of bid of %2$d from %3$s') , 'log' , array(
+                    $game->getParty($highestBidderId)->getName() ,
+                    $game->getParty($highestBidderId)->getBid() ,
+                    $game->getParty($highestBidderId)->getBidWith()->getName() ,
+                ));
+                $game->getParty($highestBidderId)->getBidWith()->changeTreasury(-$game->getParty($highestBidderId)->getBid()) ;
+            }
+            $game->resetAllIsDone() ;
             $game->getParty($highestBidderId)->setInitiativeWon(TRUE) ;
         }
     }
@@ -1086,7 +1107,6 @@ class ForumControllerProvider implements ControllerProviderInterface
      */
     public function knightsAttract($game , $user_id , $senatorID , $amount)
     {
-        error_log($user_id.' , '.$senatorID.' , '.$amount);
         /** @var \Entities\Senator $senator */
         $senator = $game->getFilteredCards(array('senatorID'=>$senatorID))->first() ;
         if ($senator->getLocation()['type']!='party' || $senator->getLocation()['value']->getUser_id() != $user_id)

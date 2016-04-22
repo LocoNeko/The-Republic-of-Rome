@@ -192,7 +192,8 @@ class ForumPhasePresenter
     {
         if ($this->idWithInitiative === FALSE)
         {
-            return _(' is up for bidding');
+            $highestBid = $this->getHighestBid($game) ;
+            return _(' is up for bidding'.($highestBid > 0 ? sprintf(_('. Highest bid is currently %1$d') , $highestBid) : ''));
         }
         else
         {
@@ -252,7 +253,7 @@ class ForumPhasePresenter
                         'verb' => 'forumInitiativeBid' ,
                         'text' => _('Bid') ,
                         'attributes' => array (
-                            'data-json'=> '{"action":["slider" , "forumInitiativeBidModal" , "'.$senatorModel->getName().' bids for the initiative" , "'.$highestBid.'" , "'.$senatorModel->getTreasury().'" , "" ]}'
+                            'data-json'=> '{"action":["slider" , "forumInitiativeBidModal" , "'.$senatorModel->getName().' bids for the initiative" , "'.($highestBid+1).'" , "'.$senatorModel->getTreasury().'" , "" ]}'
                         )
                     )
                 );
