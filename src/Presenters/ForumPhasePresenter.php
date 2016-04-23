@@ -26,7 +26,7 @@ class ForumPhasePresenter
          * Common to all Phase presenters (should I abstract / extend ?)
          */
         $this->user_id = $user_id ;
-        $this->game =  new \Presenters\GamePresenterNew($game , $user_id) ;
+        $this->game =  new \Presenters\GamePresenter($game , $user_id) ;
         foreach ($game->getParties() as $party)
         {
             if ($party->getUser_id() == $user_id)

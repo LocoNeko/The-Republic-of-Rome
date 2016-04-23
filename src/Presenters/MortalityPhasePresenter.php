@@ -22,7 +22,7 @@ class MortalityPhasePresenter
          * Common to all Phase presenters (should I abstract / extend ?)
          */
         $this->user_id = $user_id;
-        $this->game = new GamePresenterNew($game, $user_id);
+        $this->game = new GamePresenter($game, $user_id);
         foreach ($game->getParties() as $party) {
             if ($party->getUser_id() == $user_id) {
                 $this->yourParty = new PartyPresenter($party, $user_id);
