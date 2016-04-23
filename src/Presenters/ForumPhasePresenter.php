@@ -217,7 +217,7 @@ class ForumPhasePresenter
      */
     public function setInitiativeBidding($game)
     {
-        $this->header['description'].= _('You can bid for initiative') ;
+        $this->header['description'].= _('You can bid for initiative or pass') ;
         $highestBid = $this->getHighestBid($game) ;
         $this->sliders[] = array (
             'ID' => 'forumInitiativeBidModal' ,
@@ -225,18 +225,14 @@ class ForumPhasePresenter
             'verb' => 'forumInitiativeBid',
             'text' => 'BID'
         ) ;
-        // Case 1 : You are the HRAO and can decide to pass
-        if ($game->getHRAO()->getLocation()['value']->getUser_id() == $this->user_id)
-        {
-            $this->header['description'] .= _(' or pass as you are the HRAO') ;
-            $this->header['actions'] = array (
-                array (
-                    'type' => 'button' ,
-                    'verb' => 'forumInitiativeBidPass' ,
-                    'text' => 'PASS'
-                )
-            );
-        }
+        // You can always decide to pass
+        $this->header['actions'] = array (
+            array (
+                'type' => 'button' ,
+                'verb' => 'forumInitiativeBidPass' ,
+                'text' => 'PASS'
+            )
+        );
         // Default : If we are here, it means you have at least one Senator who can bid more than the current highest bid
         foreach ($this->yourParty->senators as $senatorID=>$senator) {
             /**
@@ -313,14 +309,14 @@ class ForumPhasePresenter
             'items' => $this->getPersuasionCards($game)
         ) ;
         $this->interface['noPersuasion'] = array (
-            'type' => 'submitWithVerb' ,
+            'type' => 'button' ,
             'verb' => 'noPersuasion' ,
             'text' => _('NO PERSUASION') ,
             'style' => 'danger' ,
             'user_id' => $this->user_id
         );
         $this->interface['persuade'] = array (
-            'type' => 'submitWithVerb' ,
+            'type' => 'button' ,
             'verb' => 'persuasionPickTarget' ,
             'text' => _('PERSUADE') ,
             'disabled' => TRUE ,
@@ -348,14 +344,14 @@ class ForumPhasePresenter
             'items' => $items
         ) ;
         $this->interface['persuasionBribeMore'] = array (
-            'type' => 'submitWithVerb' ,
+            'type' => 'button' ,
             'verb' => 'persuasionBribeMore' ,
             'text' => _('BRIBE MORE') ,
             'disabled' => TRUE ,
             'user_id' => $this->user_id
         );
         $this->interface['persuasionRoll'] = array (
-            'type' => 'submitWithVerb' ,
+            'type' => 'button' ,
             'verb' => 'persuasionRoll' ,
             'text' => _('ROLL') ,
             'style' => 'danger' ,
@@ -382,14 +378,14 @@ class ForumPhasePresenter
             'items' => $items
         ) ;
         $this->interface['persuasionNoCounterBribe'] = array (
-            'type' => 'submitWithVerb' ,
+            'type' => 'button' ,
             'verb' => 'persuasionNoCounterBribe' ,
             'text' => _('NO COUNTER BRIBE') ,
             'style' => 'danger' ,
             'user_id' => $this->user_id
         );
         $this->interface['persuasionCounterBribe'] = array (
-            'type' => 'submitWithVerb' ,
+            'type' => 'button' ,
             'verb' => 'persuasionCounterBribe' ,
             'text' => _('COUNTER BRIBE') ,
             'style' => 'success' ,
@@ -575,7 +571,8 @@ class ForumPhasePresenter
                 'verb' => 'forumChangeLeader' ,
                 'text' => ' Leader' ,
                 'caption' => 'Drag and drop on top of a Senator to make him Party leader' ,
-                'class' => 'glyphicon glyphicon-star'
+                'class' => 'glyphicon glyphicon-star' ,
+                'data_json' =>'{"verb":"forumChangeLeader"}'
             ) ,
             array (
                 'type' => 'button' ,
@@ -583,7 +580,7 @@ class ForumPhasePresenter
                 'text' => 'DONE'
             )
         );
-        // droppable : add the droppable to all Senators that can be leadera
+        // droppable : add the droppable to all Senators that can be leaders
         foreach ($this->yourParty->senators as $senatorID=>$senator)
         {
             /**

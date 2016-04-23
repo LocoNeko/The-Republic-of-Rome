@@ -23,27 +23,13 @@
         - verb : the action verb used when the button is clicked
         - text : The text on the button
         - (optional) disabled : disabled by default or not
+        - (optional) style : Can be btn-default , btn-primary , btn-success , btn-info , btn-warning (default), btn-danger , btn-link
     #}
-    <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
+    <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
     {#
     <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
         <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}}">{{action['text']}}</button>
     </form>
-    #}
-    {#
-    TO DO - DELETE ONCE HAPPY
-    {% elseif action['type']=='submitWithVerb' %}
-    #}
-    {#
-        A submitWithVerb creates a button with :
-        - verb : the action verb. When the button is clicked, a JS function updates the parent's form verb and submits the form
-        - text : The text on the button
-        - (optionql) style : Can be btn-default , btn-primary , btn-success , btn-info , btn-warning (default), btn-danger , btn-link
-        - (optional) disabled : disabled by default or not
-    #}
-    {#
-    TO DO - DELETE ONCE HAPPY
-    <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(false) ? 'disabled' : ''}} submitWithVerb" verb='{{action['verb']}}'>{{action['text']}}</button>
     #}
 {% elseif action['type']=='select' %}
     {#

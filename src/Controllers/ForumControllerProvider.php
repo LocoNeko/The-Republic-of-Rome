@@ -386,6 +386,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $this->gameSponsor($game , $json_data['senatorID'] , $json_data['amount']) ;
+                $game->setSubPhase('ChangeLeader') ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -571,7 +572,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         $game->getParty($user_id)->setBid((int)$amount) ;
         $game->getParty($user_id)->setBidWith($senator) ;
         $game->getParty($user_id)->setIsDone(TRUE) ;
-        $game->log(_('[['.$user_id.']] bids %1$s on the initiative with %2$s') , 'log' , array((int)$amount , $senator->getName()));
+        $game->log(_('[['.$user_id.']] {bid,bids} %1$s on the initiative with %2$s') , 'log' , array((int)$amount , $senator->getName()));
         $this->advanceToNext($game) ;
     }
 
@@ -582,10 +583,6 @@ class ForumControllerProvider implements ControllerProviderInterface
      */
     public function doBidPass($user_id , $game)
     {
-        if ($game->getHRAO()->getLocation()['type']!=='party' || $game->getHRAO()->getLocation()['value']->getUser_id()!==$user_id)
-        {
-            throw new \Exception(_('ERROR - Cannot pass if you are not HRAO')) ;
-        }
         $game->getParty($user_id)->setIsDone(TRUE) ;
         $this->advanceToNext($game) ;
     }
@@ -920,15 +917,15 @@ class ForumControllerProvider implements ControllerProviderInterface
      * @param SenatorID $target
      * @param SenatorID $persuader
      * @param int $bribe
-     * @param Card_id $card
+     * @param Card_id $cardID
      * @throws \Exception
      */
-    public function persuasionPickTarget($game , $user_id , $target , $persuader , $bribe , $card)
+    public function persuasionPickTarget($game , $user_id , $target , $persuader , $bribe , $cardID)
     {
         $target = $game->getFilteredCards(array('senatorID'=>$target)) ;
         $persuader= $game->getFilteredCards(array('senatorID'=>$persuader)) ;
         $bribe = (int)$bribe ;
-        $persuasionCard = $game->getFilteredCards(array('id'=>$card)) ;
+        $persuasionCard = $game->getFilteredCards(array('id'=>$cardID)) ;
         /*
          * Validation
          */
@@ -952,7 +949,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         {
             throw new \Exception(_('ERROR - Invalid bribe value'));
         }
-        if (count($persuasionCard)>0 && ( count($persuasionCard->first())!=1 || $persuasionCard->first()->getLocation()['type']!='hand' || $persuasionCard->first()->getLocation()['value']->getUser_id()!=$user_id))
+        if (count($persuasionCard)>0 && ( count($persuasionCard)!=1 || $persuasionCard->first()->getLocation()['type']!='hand' || $persuasionCard->first()->getLocation()['value']->getUser_id()!=$user_id))
         {
             throw new \Exception(_('ERROR - Persuasion card comes from the wrong place'));
         }
@@ -964,13 +961,13 @@ class ForumControllerProvider implements ControllerProviderInterface
         $game->getParty($user_id)->setBid($bribe) ;
         $game->getParty($user_id)->setIsDone(TRUE);
         // A persuasion card was played
-        if (count($persuasionCard->first())==1)
+        if (count($persuasionCard)==1)
         {
-            if (($card->getName()!=='SEDUCTION') && ($card->getName()!=='BLACKMAIL'))
+            if (($persuasionCard->first()->getName()!=='SEDUCTION') && ($persuasionCard->first()->getName()!=='BLACKMAIL'))
             {
                 throw new \Exception(_('ERROR - Wrong persuasion card'));
             }
-            $this->persuasionRoll($game, $user_id , $persuasionCard->getId()) ;
+            $this->persuasionRoll($game, $user_id , $persuasionCard->first()->getId()) ;
         }
     }
     
@@ -1042,7 +1039,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
         }
         
-        $targetValue = $persuader->getINF() + $persuader->getORA() + $bribes - $target->getActualLOY($game) + $target->getTreasury() + $counterBribes ;
+        $targetValue = $persuader->getINF() + $persuader->getORA() + $bribes - $target->getActualLOY($game) - $target->getTreasury() - $counterBribes ;
         $roll = $game->rollDice(2, 1) ;
         $message = _('ERROR - impossible value. ');
         $success = FALSE ;
@@ -1110,9 +1107,11 @@ class ForumControllerProvider implements ControllerProviderInterface
         $game->log($message, 'log');
         $game->log($message2, 'log');
         /*
-         * Reset persuasion
+         * Reset persuasion & advance to next sub phase
          */
         $this->resetPersuasion($game) ;
+        $game->setSubPhase('Knights') ;
+        $this->knightsInitialise($game, $user_id) ;
     }
     
     /**
@@ -1222,7 +1221,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             throw new \Exception(_('ERROR - Not enough talents'));
         }
         $senator->changeTreasury(-$amount) ;
-        $senator->changePOP($amount) ;
+        $senator->changePOP(\Entities\Game::$GAMES_TABLE[$amount]['effect']) ;
         $game->changeUnrest(-\Entities\Game::$GAMES_TABLE[$amount]['effect']) ;
         $game->log(_('%1$s organises %2$s games, reducing the unrest by %3$d and gaining %3$d popularity.') , 'log' , 
             array (
@@ -1248,6 +1247,8 @@ class ForumControllerProvider implements ControllerProviderInterface
             $game->setInitiative($game->getInitiative()+1);
             $game->setSubPhase('RollEvent') ;
             $game->resetAllIsDone() ;
+            $game->log(_('Initiative #%1$d') , 'alert' , array($game->getInitiative()) ) ;
+
         }
     }
 }
