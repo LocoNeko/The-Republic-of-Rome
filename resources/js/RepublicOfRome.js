@@ -16,7 +16,8 @@ function getReady(phase , subPhase)
      */
 
     /**
-     * SUBMIT WITH VERB
+     * SUBMIT WITH VERB - The main submit function
+     * -
      */
     $('.submitWithVerb').click(function(e)
     {
@@ -26,7 +27,6 @@ function getReady(phase , subPhase)
         /*
          * If this is on a card, add the card's data-json to this one
          * Otherwise, collect all values with a global-postable class
-         * TO DO : not all global-postable are done
          */
         if (card.length > 0)
         {
@@ -35,7 +35,7 @@ function getReady(phase , subPhase)
         else
         {
             // Collect all global-postable, put them in the json
-            $('.global-postable , .persuasionAddedBribe').each(function(i, obj) {
+            $('.global-postable').each(function(i, obj) {
                 json[obj.name] = obj.value ;
             });
         }
@@ -122,8 +122,8 @@ function getReady(phase , subPhase)
                 if (typeof dataJsonFrom !== typeof undefined && dataJsonFrom !== false && dataJsonFrom.length>0)
                 {
                     json.from = JSON.parse(dataJsonFrom);
+                    json['verb'] = json.from.verb ;
                 }
-                json['verb'] = ui.draggable.attr('verb') ;
 
                 // json from the droppable ("to")
                 json.to = JSON.parse($(event.target).attr('data-json')) ;

@@ -1,7 +1,7 @@
 <?php
 namespace Presenters ;
 
-class GamePresenterNew
+class GamePresenter
 {
     public $user_id ;
     public $game_id;

@@ -19,7 +19,7 @@
 
     {# HEADER : CURRENT HRAO, ORDER OF PLAY , CURRENT PHASE & SUBPHASE #}
 
-    {% embed 'BoardElements/Header_new.twig' %}
+    {% embed 'BoardElements/Header.twig' %}
     {% endembed %}
 
     {# THE CURRENT PHASE'S TEMPLATE #}
@@ -31,19 +31,19 @@
     {# YOUR PARTY #}
 
     <h3>Your Party</h3>
-    {% embed 'BoardElements/Party_new.twig' with {'party' : view.yourParty} %}
+    {% embed 'BoardElements/Party.twig' with {'party' : view.yourParty} %}
     {% endembed %}
 
     {# YOUR HAND #}
 
-    {% embed 'BoardElements/Deck_new.twig' with {'deck' : view.yourParty.hand } %}
+    {% embed 'BoardElements/Deck.twig' with {'deck' : view.yourParty.hand } %}
     {% endembed %}
 
     {# OTHER PARTIES #}
 
     <h3>Other Parties</h3>
     {% for party in view.otherParties %}
-        {% embed 'BoardElements/Party_new.twig' with {'party' : party } %}
+        {% embed 'BoardElements/Party.twig' with {'party' : party } %}
         {% endembed %}
     {% endfor %}
 
@@ -51,18 +51,18 @@
     
     {# FORUM #}
 
-    {% embed 'BoardElements/Deck_new.twig' with {'deck' : view.game.deck['forum'] } %}
+    {% embed 'BoardElements/Deck.twig' with {'deck' : view.game.deck['forum'] } %}
     {% endembed %}
 
     {# CURIA #}
 
-    {% embed 'BoardElements/Deck_new.twig' with {'deck' : view.game.deck['curia'] } %}
+    {% embed 'BoardElements/Deck.twig' with {'deck' : view.game.deck['curia'] } %}
     {% endembed %}
 
     {# WARS  #}
 
     {% for warName in view.game.warDecksNames %}
-        {% embed 'BoardElements/Deck_new.twig' with {'deck' : view.game.deck[warName] } %}
+        {% embed 'BoardElements/Deck.twig' with {'deck' : view.game.deck[warName] } %}
         {% endembed %}
     {% endfor %}
 

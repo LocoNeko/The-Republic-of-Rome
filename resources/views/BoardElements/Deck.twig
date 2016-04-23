@@ -2,7 +2,7 @@
 {% if deck.nbOfCards > 0 %}
     <div class="row">
         {% for card in deck.cards %}
-            {% embed "BoardElements/Card_new.twig" with { 'card': card } %}
+            {% embed "BoardElements/Card.twig" with { 'card': card } %}
             {% endembed %}
         {% endfor %}
     </div>

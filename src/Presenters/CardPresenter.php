@@ -235,7 +235,6 @@ class CardPresenter
 
     /**
      * Adds a menu item to the menu for this card
-     * Menu items behave like a 'submitWithVerb' element
      * @param array $item
      */
     public function addMenuItem($item)

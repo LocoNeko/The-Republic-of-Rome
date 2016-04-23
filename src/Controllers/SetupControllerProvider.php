@@ -32,7 +32,7 @@ class SetupControllerProvider implements ControllerProviderInterface
 
                 $view = new \Presenters\SetupPhasePresenter($game , $user_id) ;
 
-                return $app['twig']->render('BoardElements/Main_new.twig', array(
+                return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'InGameLayout.twig' ,
                     'view' => $view
                 ));

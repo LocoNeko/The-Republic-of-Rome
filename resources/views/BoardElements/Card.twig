@@ -68,7 +68,7 @@
             </a>
             <div id="CardsControlledBy_{{card.getAttribute('card_id')}}" class="row collapse sprite-modal">
                 {% for controlledCard in card.controlledCards %}
-                    {% embed "BoardElements/Card_new.twig" with { 'card': controlledCard } %}
+                    {% embed "BoardElements/Card.twig" with { 'card': controlledCard } %}
                     {% endembed %}
                 {% endfor %}
             </div>

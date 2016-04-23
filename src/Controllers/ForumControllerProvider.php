@@ -32,7 +32,7 @@ class ForumControllerProvider implements ControllerProviderInterface
 
                 $view = new \Presenters\ForumPhasePresenter($game , $user_id) ;
 
-                return $app['twig']->render('BoardElements/Main_new.twig', array(
+                return $app['twig']->render('BoardElements/Main.twig', array(
                         'layout_template' => 'InGameLayout.twig' ,
                         'view' => $view
                 ));

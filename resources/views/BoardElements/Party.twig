@@ -24,7 +24,7 @@
 <br>
 <div class="row">
 {% for senator in party.senators %}
-    {% embed "BoardElements/Card_new.twig" with { 'card': senator } %}
+    {% embed "BoardElements/Card.twig" with { 'card': senator } %}
     {% endembed %}
 {% endfor %}
 </div>
