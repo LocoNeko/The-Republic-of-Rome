@@ -144,7 +144,7 @@ class Game
 
     /**
      * @param string $scenario
-     * @throws Exception
+     * @throws \Exception
      */
     public function setScenario($scenario)
     {
@@ -157,7 +157,7 @@ class Game
 
     /**
      * @param string $phase
-     * @throws Exception
+     * @throws \Exception
      */
     public function setPhase($phase)
     {

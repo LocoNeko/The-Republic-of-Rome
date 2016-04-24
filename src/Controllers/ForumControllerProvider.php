@@ -1240,7 +1240,68 @@ class ForumControllerProvider implements ControllerProviderInterface
     {
         if ($game->getInitiative()==6)
         {
-            $game->log(_('TO DO - Put Rome in Order')) ;
+            $game->log(_('Putting Rome in Order') , 'alert') ;
+            // Major corruption markers
+            foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'hasOfficeInRome') as $senator)
+            {
+                $senator->setMajor(TRUE) ;
+                $game->log(_('%1$s held a major office and gets a major corruption marker.') , 'log' , array($senator->getName()));
+            }
+            // Ruin tax farmers
+            foreach ($game->getFilteredCards(array('preciseType' => 'Conflict')) as $conflict)
+            {
+                if ($conflict->checkCauses('tax farmer') && ($conflict->getLocation()['name']=='unprosecutedWars' || $conflict->getLocation()['name']=='activeWars'))
+                {
+                    $roll=$game->rollOneDie(0);
+                    $ruinMessage = _('%1$s causes the ruin of a random Tax Farmer. A %2$s is rolled : ') ;
+                    $ruinedConcession = $game->getFilteredCards(array('name'=>'TAX FARMER '.$roll))->first() ;
+                    $ruinedConcessionLocation = $ruinedConcession->getLocation() ;
+                    if ($ruinedConcessionLocation['type'] == 'game' && $ruinedConcessionLocation['name'] == 'curia')
+                    {
+                        $ruinMessage.=_('No effect as this tax farmer is already in the curia.') ;
+                    }
+                    elseif ($ruinedConcessionLocation['type'] == 'game' && $ruinedConcessionLocation['name'] == 'forum')
+                    {
+                        $ruinMessage.=_('the ruined tax farmer is removed from the forum and placed in the curia.') ;
+                        $ruinedConcessionLocation['deck'] -> getFirstCardByProperty('id' , $ruinedConcession->getId() , $game->getDeck('curia')) ;
+                    }
+                    elseif ($ruinedConcessionLocation['type'] == 'card')
+                    {
+                        $ruinMessage.=_('the ruined tax farmer is removed from %3$s and placed in the curia.') ;
+                        $ruinedConcessionLocation['deck'] -> getFirstCardByProperty('id' , $ruinedConcession->getId() , $game->getDeck('curia')) ;
+                    }
+                    else
+                    {
+                        $ruinMessage.=_('No effect as this card is not in play.') ;
+                    }
+                    $game->log($ruinMessage , 'log' , array($conflict->getName() , $roll)) ;
+                }
+            }
+            // Curia deaths & revival
+            if ($game->getDeck('curia')->getNumberOfCards()>0)
+            {
+                $game->log(_('Rolling for cards in the Curia') , 'alert') ;
+                foreach ($game->getDeck('curia')->getCards() as $card)
+                {
+                    $roll=$game->rollOneDie(-1);
+                    if ($roll<5)
+                    {
+                        $ruinMessage=_('the card stays in the Curia.') ;
+                    }
+                    elseif ($card->getPreciseType()=='Concession' || $card->getIsSenatorOrStatesman())
+                    {
+                        $game->getDeck('curia')->getFirstCardByProperty('id' , $card->getId() , $game->getDeck('forum')) ;
+                        $ruinMessage=_('it comes back to the Forum.') ;
+                    }
+                    elseif ($card->getPreciseType()=='Leader')
+                    {
+                        $game->getDeck('curia')->getFirstCardByProperty('id' , $card->getId() , $game->getDeck('discard')) ;
+                        $ruinMessage=_('he is discarded.') ;
+                    }
+                    $game->log(_('%1$s : A %2$d%3$s is rolled, %4$s') , 'log' , array($card->getName() , $roll , $game->getEvilOmensMessage(-1) , $ruinMessage));
+                }
+            }
+            //$game->setPhase('Population');
         }
         else
         {

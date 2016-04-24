@@ -128,5 +128,14 @@ class Conflict extends Card
             }
         }
     }
-    
+
+    /**
+     * Returns TRUE if the $effect was found among Conflict->causes
+     * @param string $effect
+     */
+    public function checkCauses($effect)
+    {
+        $list = explode(',' , $this->getCauses()) ;
+        return in_array($effect , $list) ;
+    }
 }
