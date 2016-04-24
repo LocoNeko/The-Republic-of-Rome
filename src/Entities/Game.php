@@ -1472,7 +1472,7 @@ class Game
     public function whoseTurn()
     {
         // FORUM phase - whoseTurn depends on the initiative
-        if ($this->getPhase()=='forum')
+        if ($this->getPhase()=='Forum')
         {
             // If the current initiative is <= nbPlayers, we don't need to bid. Initiative number X belongs to player number X in the order of play
             if ($this->getInitiative() <= $this->getNumberOfPlayers())

@@ -123,6 +123,12 @@ class CardPresenter
                     'classes' => array('sprite' , 'sprite-position-corrupt' , 'sprite-Marker_Corrupt')
                 ) ;
             }
+            if ($card->getMajor())
+            {
+                $this->elements[] = array (
+                    'classes' => array('sprite' , 'sprite-position-Major' , 'sprite-Marker_Major')
+                ) ;
+            }
             if ($card->getPriorConsul())
             {
                 $this->elements[] = array (

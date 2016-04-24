@@ -79,7 +79,7 @@ class GamePresenter
             array_push($result , array (
                 'user_id' => $party->getUser_id() ,
                 'name' => $party->getName() ,
-                'playingNow' => ($party->getUser_id() == $game->whoseTurn()->getUser_id())
+                'playingNow' => ($game->whoseTurn()!==FALSE && ($party->getUser_id() == $game->whoseTurn()->getUser_id()) )
             ));
         }
         $partyOfHRAO = $game->getHRAO()->getLocation()['value'] ;

@@ -39,7 +39,7 @@
             <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.getAttribute('card_id')}}" data-toggle="dropdown" aria-expanded="true" style="margin-bottom: -20px;">
                 <span class="glyphicon glyphicon-collapse-down" aria-hidden="true" style="font-size: 1.5em;"></span>
             </button>
-            <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.getAttribute('card_id')}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px;">
+            <ul class="sprite-position-topright dropdown-menu sprite-modal" role="menu" aria-labelledby="cardMenu_{{card.getAttribute('card_id')}}">
                 {% for menuItem in card.menu %}
                     <li role="presentation">
                        <button
@@ -63,15 +63,17 @@
     #}
     {% if (card.controlledCards|default([])|length > 0) and (card.getAttribute('card_id') is defined) %}
         <div class="sprite-position-topleft">
-            <a href="#CardsControlledBy_{{card.getAttribute('card_id')}}" class="btn btn-default" data-toggle="collapse">
-                <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+            <a href="#CardsControlledBy_{{card.getAttribute('card_id')}}" class="btn btn-default" data-toggle="collapse" style="margin-bottom: -15px;">
+                <span class="glyphicon glyphicon-plus" aria-hidden="true" ></span>
             </a>
-            <div id="CardsControlledBy_{{card.getAttribute('card_id')}}" class="row collapse sprite-modal">
+            <ul class="row collapse sprite-modal" id="CardsControlledBy_{{card.getAttribute('card_id')}}" >
                 {% for controlledCard in card.controlledCards %}
-                    {% embed "BoardElements/Card.twig" with { 'card': controlledCard } %}
-                    {% endembed %}
+                    <li role="presentation">
+                        {% embed "BoardElements/Card.twig" with { 'card': controlledCard } %}
+                        {% endembed %}
+                    </li>
                 {% endfor %}
-            </div>
+            </ul>
         </div>
 
     {% endif %}

@@ -64,7 +64,14 @@ class SetupPhasePresenter
         // Leader already picked, waiting for others
         elseif ($game->getSubPhase() == 'PickLeaders')
         {
-            $this->header['description'] = _('You have set your party\'s leader and are currently waiting for other parties to do the same');
+            $this->header['description'] = _('You have set your party\'s leader and are currently waiting for :');
+            foreach ($game->getParties() as $party)
+            {
+                if ($party->getUser_id()!==$user_id && $party->getLeader() === NULL)
+                {
+                    $this->header['list'][] = $party->getName() ;
+                }
+            }
         }
         elseif ($game->getSubPhase() == 'PlayCards')
         {

@@ -5,8 +5,14 @@
 }
 
 .sprite-modal {
-    position: absolute;
+    position: absolute ;
     z-index : 500 ;
+    list-style: outside none none ;
+    padding-left: 0px ;
+    margin-left: -30px ;
+    background: transparent ;
+    border: 0 ;
+    box-shadow: 0px 0px 0px ;
 }
 
 /*
@@ -390,7 +396,7 @@
 
 .sprite-position-POP {
     position: absolute;
-    left: 25px;
+    left: 34px;
     top: 197px;
 }
 
@@ -422,6 +428,14 @@
     position: absolute;
     left: 250px;
     top: 120px;
+}
+
+.sprite-position-Major {
+    position: absolute;
+    left: 127px;
+    top: 82px;
+    z-index: 5;
+    opacity: .8;
 }
 
 .sprite-position-PriorConsul {
