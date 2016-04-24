@@ -95,7 +95,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-            ->bind('verb_forumInitiativeBidPass');
+        ->bind('verb_forumInitiativeBidPass');
 
         /*
         * POST target
@@ -1301,7 +1301,23 @@ class ForumControllerProvider implements ControllerProviderInterface
                     $game->log(_('%1$s : A %2$d%3$s is rolled, %4$s') , 'log' , array($card->getName() , $roll , $game->getEvilOmensMessage(-1) , $ruinMessage));
                 }
             }
-            //$game->setPhase('Population');
+            $game->setPhase('Population');
+            // Unprosecuted Wars & drought unrest
+            $warUnrest = $game->getDeck('unprosecutedWars')->getNumberOfCards() ;
+            $droughtUnrest = $game->getEventProperty('name' , 'drought') ;
+            $game->changeUnrest($warUnrest + $droughtUnrest) ;
+            if ($warUnrest === 0 && $droughtUnrest === 0)
+            {
+                $game->log(_('There are no changes in unrest from unprosecuted wars or drought this turn ')) ;
+            }
+            elseif ($droughtUnrest>0)
+            {
+                $game->log(_('Unrest increases by %1$d from drought%2$s') , 'log' , array($droughtUnrest , ($warUnrest>0 ? sprintf(_(' and %3$d from unprosecuted wars') , $warUnrest) : ''))) ;
+            }
+            else
+            {
+                $game->log(_('Unrest increases by %1$d from unprosecuted wars') , 'log' , array($warUnrest)) ;
+            }
         }
         else
         {

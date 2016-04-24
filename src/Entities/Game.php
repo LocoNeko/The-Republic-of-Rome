@@ -59,6 +59,9 @@ class Game
     /** @Column(type="array") @var array */
     protected $landBillsTable = array() ;
 
+    /** @Column(type="array" , nullable=true) @var array */
+    protected $populationTable = array() ;
+
     /** @Column(type="integer") @var int */
     protected $unrest ;
     
@@ -174,6 +177,11 @@ class Game
     {
         $this->subPhase = $subPhase ;
         $this->log(_('Sub Phase : %1$s.') , 'alert' , array($subPhase) ) ;
+    }
+
+    public function updatePopulationTable($key , $value)
+    {
+        $this->populationTable[$key] = $value ;
     }
 
     public function __construct()
@@ -352,6 +360,11 @@ class Game
             }
         }
         return TRUE ;
+    }
+
+    public function getPopulationEffects($key)
+    {
+        return $this->populationTable[$key] ;
     }
 
     public function changeUnrest($value)
@@ -1573,6 +1586,7 @@ class Game
                 );
                 // Events with an immediate effect
                 $level = $this->events[$eventNumber]['level'] ;
+                // TO DO : Implement "Mob" event from the Population speech phase
                 switch ($eventNumber)
                 {
                     // Epidemic

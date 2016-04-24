@@ -112,12 +112,13 @@
     });
 
     // Routes base paths : 'Lobby' or a specific {phase}
-    $app->mount($app['BASE_URL'].'/Lobby'    , new Controllers\LobbyControllerProvider($app) );
-    $app->mount($app['BASE_URL'].'/Setup'    , new Controllers\SetupControllerProvider($app) );
-    $app->mount($app['BASE_URL'].'/Mortality', new Controllers\MortalityControllerProvider($app) );
-    $app->mount($app['BASE_URL'].'/Revenue'  , new Controllers\RevenueControllerProvider($app) );
-    $app->mount($app['BASE_URL'].'/Forum'    , new Controllers\ForumControllerProvider($app) );
-    
+    $app->mount($app['BASE_URL'].'/Lobby'      , new Controllers\LobbyControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Setup'      , new Controllers\SetupControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Mortality'  , new Controllers\MortalityControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Revenue'    , new Controllers\RevenueControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Forum'      , new Controllers\ForumControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Population' , new Controllers\PopulationControllerProvider($app) );
+
     /**
      * 
      * @param type $app

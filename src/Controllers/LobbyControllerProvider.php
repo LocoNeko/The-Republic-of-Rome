@@ -594,17 +594,16 @@ class LobbyControllerProvider implements ControllerProviderInterface
      * @param \Entities\Game $game
      * @throws Exception
      */
-    public function createPopulationTable($game) {
+    public function createPopulationTable($game) 
+    {
         $filePointer = fopen(dirname(__FILE__).'/../../resources/tables/populationTable.csv', 'r');
-        if (!$filePointer) {
+        if (!$filePointer) 
+        {
             throw new Exception(_('Could not open the Population table file'));
         }
-        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) {
-            $game->populationTable[$data[0]] = array();
-            $effects = explode(',', $data[1]);
-            foreach($effects as $effect) {
-                array_push($game->populationTable[$data[0]] , $effect);
-            }
+        while (($data = fgetcsv($filePointer, 0, ";")) !== FALSE) 
+        {
+            $game->updatePopulationTable($data[0] , $data[1]) ;
         }
         fclose($filePointer);
     }
