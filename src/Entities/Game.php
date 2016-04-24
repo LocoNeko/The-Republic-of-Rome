@@ -59,7 +59,7 @@ class Game
     /** @Column(type="array") @var array */
     protected $landBillsTable = array() ;
 
-    /** @Column(type="array" , nullable=true) @var array */
+    /** @Column(type="array") @var array */
     protected $populationTable = array() ;
 
     /** @Column(type="integer") @var int */
@@ -79,10 +79,14 @@ class Game
     // A Game has many legions
     /** @OneToMany(targetEntity="Legion", mappedBy="game", cascade={"persist"} ) **/
     private $legions ;
-    
+
     // A Game has many fleets
     /** @OneToMany(targetEntity="Fleet", mappedBy="game", cascade={"persist"} ) **/
     private $fleets ;
+
+    // A Game has many proposals
+    /** @OneToMany(targetEntity="Proposal", mappedBy="game", cascade={"persist"} ) **/
+    private $proposals ;
 
     // A Game has many messages
     /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist"} ) **/
@@ -194,6 +198,7 @@ class Game
         $this->decks = new ArrayCollection();
         $this->legions = new ArrayCollection();
         $this->fleets = new ArrayCollection();
+        $this->proposals = new ArrayCollection();
         $this->messages = new ArrayCollection();
         foreach (self::$VALID_DECKS as $deckName)
         {
@@ -225,6 +230,7 @@ class Game
     public function getDecks() { return $this->decks ; }
     public function getLegions() { return $this->legions; }
     public function getFleets() { return $this->fleets; }
+    public function getProposals() { return $this->proposals; }
     public function getMessages() { return $this->messages; }
     public function getTimezone() { return $this->timezone ; }
     public function getCurrentBidder() { return $this->currentBidder; }
