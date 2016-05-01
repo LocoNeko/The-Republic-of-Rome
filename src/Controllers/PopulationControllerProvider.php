@@ -98,8 +98,8 @@ class PopulationControllerProvider implements ControllerProviderInterface
                         }
                     }
                 }
-                //$game->setPhase('Senate') ;
-                //$game->setSubPhase('Consuls') ;
+                $game->setPhase('Senate') ;
+                $game->setSubPhase('Consuls') ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);

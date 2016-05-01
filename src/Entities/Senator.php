@@ -244,9 +244,13 @@ class Senator extends Card
                     
                 // Holding an office & in Rome
                 case 'hasOfficeInRome' :
-                    return ( in_array($this->getOffice() , \Entities\Senator::$VALID_OFFICES )&& $this->inRome() ) ;
+                    return ( in_array($this->getOffice() , \Entities\Senator::$VALID_OFFICES ) && $this->inRome() ) ;
 
-                // In a party, in Rome, not the Censor
+                // Possible Consuls : In a party, in Rome, no office except Censor or MoH
+                case 'possibleConsul' :
+                    return ( (in_array($this->getOffice() , array('Censor' , 'Master of Horse')) || $this->getOffice() == NULL )&& ($this->getDeck()->getInParty() != NULL) ) ;
+
+                // Possible prosecutors : In a party, in Rome, not the Censor
                 case 'possibleProsecutor' :
                     return ( ($this->getOffice() != 'Censor') && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
                     
@@ -257,7 +261,7 @@ class Senator extends Card
                     
                 // In a party & either Rome Consul, Field Consul or Dictator
                 case 'possibleCommanders' :
-                    return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul' , 'Dictator')) && ($this->getDeck()->getInParty() != NULL) ) ;
+                    return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul' , 'Dictator')) && ($this->getDeck()->getInParty() != NULL) && $this->inRome()) ;
                     
                 // In a party, in Rome, & hasn't been assassination target yet
                 case 'assassinationTarget' :

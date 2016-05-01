@@ -26,11 +26,6 @@
         - (optional) style : Can be btn-default , btn-primary , btn-success , btn-info , btn-warning (default), btn-danger , btn-link
     #}
     <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
-    {#
-    <form class='form-inline json-submit' user_id='{{action['user_id']}}' verb='{{action['verb']}}'>
-        <button type="submit" class="btn btn-warning {{action['disabled']|default(FALSE) ? 'disabled' : ''}}">{{action['text']}}</button>
-    </form>
-    #}
 {% elseif action['type']=='select' %}
     {#
         A select has :
@@ -46,6 +41,10 @@
                 </option>
             {% endfor %}
         </select>
+    </div>
+{% elseif action['type']=='cardSlot' %}
+    <div class="sprite-CardSlot droppable">
+        {{action['description']}}
     </div>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">

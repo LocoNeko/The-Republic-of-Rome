@@ -88,8 +88,8 @@ function getReady(phase , subPhase)
      */
     $('.draggable').each(function() {
         $(this).draggable({
-            zIndex: 500,
-            scroll:true,
+            zIndex: 999,
+            scroll: true,
             start: function (event, ui) {
                $(this).data("startingScrollTop",window.pageYOffset);
             },
@@ -98,7 +98,8 @@ function getReady(phase , subPhase)
                ui.position.top -= st;
             },
             cursor: 'move' ,
-            helper: 'clone'
+            helper: 'clone' ,
+            refreshPositions: true
         });
     });
 
@@ -109,7 +110,6 @@ function getReady(phase , subPhase)
      * - The verb always comes from the draggable
      * - The data-json of the droppable is added in a 'to' object in the json
      * - Finally : submit
-     * TO DO : The draggable could have an action, for example to generate a slider 
      */
     $('.droppable').each( function() {
         $(this).droppable( {
@@ -125,8 +125,12 @@ function getReady(phase , subPhase)
                     json['verb'] = json.from.verb ;
                 }
 
-                // json from the droppable ("to")
-                json.to = JSON.parse($(event.target).attr('data-json')) ;
+                // json from the droppable ("to"), if any
+                var dataJsonTo = $(event.target).attr('data-json')
+                if (typeof dataJsonTo !== typeof undefined && dataJsonTo !== false && dataJsonTo.length>0)
+                {
+                    json.to = JSON.parse(dataJsonTo) ;
+                }
 
                 // Is there an action (slider, fixedAmount...) on the draggable ?
                 if (typeof dataJsonFrom !== typeof undefined && dataJsonFrom !== false && dataJsonFrom.length>0 && json.from.action)
@@ -156,7 +160,7 @@ function getReady(phase , subPhase)
     });
 
     /**
-     * Popovers for Statesman information when hovering on a Sentor's name
+     * Popovers for Statesman information when hovering on a Senator's name
      */
     $('.sprite-position-name').popover();
 
@@ -196,7 +200,7 @@ function handleAction(json , actionData)
         }
         else
         {
-            alert("ERROR - Wrong action (should be 'slider')");
+            alert("ERROR - Wrong action (should be 'slider' , 'fixedAmount' or 'noSubmit')");
         }
 }
 

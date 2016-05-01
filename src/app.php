@@ -118,6 +118,7 @@
     $app->mount($app['BASE_URL'].'/Revenue'    , new Controllers\RevenueControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Forum'      , new Controllers\ForumControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Population' , new Controllers\PopulationControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Senate'     , new Controllers\SenateControllerProvider($app) );
 
     /**
      * 

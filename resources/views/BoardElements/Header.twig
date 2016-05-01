@@ -53,8 +53,12 @@
 {# Header : Action (optional) #}
 
 {% if view.header['actions']|default([])|length > 0 %}
-    {% for action in view.header['actions'] %}
-        {% embed 'BoardElements/ActionToken.twig' with {'action': action}%}
-        {% endembed %}
-    {% endfor %}
+    <div class="row">
+        {% for action in view.header['actions'] %}
+            <div class="col-md-6">
+                {% embed 'BoardElements/ActionToken.twig' with {'action': action}%}
+                {% endembed %}
+            </div>
+        {% endfor %}
+    </div>
 {% endif %}
