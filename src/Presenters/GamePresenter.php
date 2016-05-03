@@ -41,7 +41,8 @@ class GamePresenter
                 $this->legionsDescription['Rome'].=$legion->getName().',';
             }
         }
-        $this->HRAO_name = $this->displayContextualName($game->getHRAO()->getFullName() , $game->getParties()) ;
+        $this->partiesNames = $game->getPartiesNames() ;
+        $this->HRAO_name = $this->displayContextualName($game->getHRAO()->getFullName()) ;
         $this->orderOfPlay = $this->getOrderOfPlay($game, $user_id) ;
         foreach ($game->getDecks() as $deck)
         {
@@ -61,7 +62,6 @@ class GamePresenter
             }
         }
         $this->messages = $game->getAllMessages($user_id);
-        $this->partiesNames = $game->getPartiesNames() ;
         $this->variants = $game->getVariants() ;
     }
 
@@ -95,18 +95,16 @@ class GamePresenter
 
     /**
      * @param string $input
-     * @param arrayCollection $parties
      * @return string
      */
-    public function displayContextualName($input , $parties)
+    public function displayContextualName($input)
     {
         $output = $input ;
-        foreach($parties as $party) 
+        foreach($this->partiesNames as $party_userId => $partyName) 
         {
-            $party_userId = $party->getUser_id() ;
             if (strpos($output, '[['.$party_userId.']]') !==FALSE) 
             {
-                $output = str_replace('[['.$party_userId.']]' , ( ($party_userId==$this->user_id) ? _('you') : $party->getUserName() ) , $output);
+                $output = str_replace('[['.$party_userId.']]' , ( ($party_userId==$this->user_id) ? _('you') : $partyName ) , $output);
             }
         }
         return $output ;

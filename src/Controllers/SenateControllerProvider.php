@@ -34,7 +34,9 @@ class SenateControllerProvider implements ControllerProviderInterface
                     'layout_template' => 'InGameLayout.twig',
                     'view' => $view
                 ));
-            } catch (\Exception $exception) {
+            }
+            catch (\Exception $exception)
+            {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect('/');
             }

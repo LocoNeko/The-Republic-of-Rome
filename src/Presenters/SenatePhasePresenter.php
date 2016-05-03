@@ -2,6 +2,7 @@
 namespace Presenters ;
 
 use Doctrine\Common\Collections\ArrayCollection;
+// TO DO : Beginning of Senate phase - Initialise free tribunes of all senators
 
 class SenatePhasePresenter
 {
@@ -13,7 +14,7 @@ class SenatePhasePresenter
     public $header = [];
     public $interface = [];
     public $sliders = [];
-
+    
     /**
      * @param \Entities\Game $game
      * @param int $user_id
@@ -25,20 +26,26 @@ class SenatePhasePresenter
          */
         $this->user_id = $user_id;
         $this->game = new \Presenters\GamePresenter($game, $user_id);
-        foreach ($game->getParties() as $party) {
-            if ($party->getUser_id() == $user_id) {
+        foreach ($game->getParties() as $party)
+        {
+            if ($party->getUser_id() == $user_id) 
+            {
                 $this->yourParty = new \Presenters\PartyPresenter($party, $user_id);
-            } else {
+            }
+            else
+            {
                 $this->otherParties[$party->getUser_id()] = new \Presenters\PartyPresenter($party, $user_id);
             }
         }
+        
         /**
          * Phase Header
          */
         $this->header['list'] = array();
         $this->header['actions'] = array();
         $this->header['description'] = _('Senate') ;
-        if ($game->getPhase() != 'Senate') {
+        if ($game->getPhase() != 'Senate') 
+        {
             $this->header['description'] .= _('ERROR - Wrong phase');
         }
         else
@@ -51,58 +58,73 @@ class SenatePhasePresenter
             {
                 $this->header['description'] .= _(' - Proposal underway');
             }
+            
             /**
              * No proposal underway
+             * - Check if the user can make a proposal
+             * - This will bring up the 'senateMakeProposal' interface
+             * - In case he can't, this will bring up a waiting screen
              */
             else
             {
                 $this->header['description'] .= _(' - No proposal underway') ;
-                //Returns all required content
-                $content = $this->getRequiredContent($game) ;
-                foreach ($content as $key => $value)
+                $listProposalHow = $this->getProposalHow($game) ; 
+                
+                /**
+                * This user has at least one way of making a proposal
+                **/
+                if (count($listProposalHow)>0)
                 {
+                    // Bring up the senateMakeProposal interface
+                    $this->interface['name'] = 'senateMakeProposal';
+                    
                     /**
-                     * Description of what must be chosen
-                     */
-                    if ($key == 'description' )
+                    * How the Proposal is made : : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , FREE TRIBUNE FROM X , TRIBUNE CARD
+                    **/
+                    $this->interface['listProposalHow'] =  array (
+                        'type' => 'select' ,
+                        'items' => array()
+                    ) ;
+                    foreach ($listProposalHow as $proposalHow)
                     {
-                        foreach ($value as $line)
-                        {
-                            $this->header['list'][] = $line ;
-                        }
+                        $this->interface['listProposalHow']['items'][] = array (
+                            'description' => $proposalHow
+                        );
                     }
-                    elseif ($key == 'items' )
-                    {
-                        foreach ($value as $item)
-                        {
-                            //$item['description']
-                            //$item['type'] ;
-                            //$item['values'] ;
-                            if ($item['type']=='senator')
-                            {
-                                $this->addClassToCards(
-                                    array(
-                                        array ('type'=>'class' , 'name' =>'draggable') ,
-                                        array ('type'=>'attribute' , 'name' =>'action' , 'value' => array("noSubmit") )
-                                    ) ,
-                                    $item['values']
-                                ) ;
-                                $this->header['actions'][] = array(
-                                    'type' => 'cardSlot' ,
-                                    'description' => $item['description']
-                                ) ;
-                            }
-                        }
-                        $this->header['actions'][] = array(
-                            'type' => 'button' ,
-                            'verb' => 'youpla' ,
-                            'text' => 'Youpli'
-                        ) ;
-                    }
+                    $this->interface['senateMakeProposal'] = array (
+                        'type' => 'button' ,
+                        'disabled' => TRUE ,
+                        'verb' => 'senateMakeProposal' ,
+                        'text' => _('MAKE PROPOSAL')
+                    ) ;
+
+                    /**
+                    * The proposal's content, specific to the subPhase. This should include :
+                    * - A description in the header
+                    * - An interface proposalType
+                    **/
+                    
+                    $this->setContent($game) ;
+                }
+                
+                /**
+                * This user cannot make a proposal at this point in time
+                **/
+                else
+                {
+                    $this->header['list'] = array (
+                        _('You have no way to make a proposal at the moment') ,
+                        _('Waiting for player who do')
+                    ) ;
                 }
             }
         }
     }
+    
+    /**
+    * Function to add classes and attributes to cards
+    * Not used at the moment, as proposals will be done by drop-downs
+    **/
     
     public function addClassToCards($toAdd , $cardsToApplyItTo)
     {
@@ -130,7 +152,7 @@ class SenatePhasePresenter
             $allCards->add($senator) ;
         }
         /**
-         * Goes through the collection and checks if
+         * Goes through the collection and checks if the target card's ID matches one of the cardsToApplyItTo
          */
         foreach ($allCards as $card)
         {
@@ -155,36 +177,144 @@ class SenatePhasePresenter
     }
 
     /**
-     * Returns what is needed to create the content of this proposal
+     * Sets the senateMakeProposal interface based on the subPhase :
+     * Consuls , DictatorAppointment , Prosecutions ...
      * @param \Entities\Game $game
      * @return array
      */
-    public static function getRequiredContent($game)
+    public function setContent($game)
     {
+        /**
+        * Consuls
+        */
         if ($game->getSubPhase()=='Consuls')
         {
-            return array
+            $this->header['list'] = array (
+                _('Consuls Election') ,
+                _('You must select a pair of Senators') ,
+                _('Only Senators aligned in Rome can be proposed') ,
+                _('Among officials, only the Censor and Master of Horse can be proposed') ,
+                _('Already rejected pairs cannot be proposed again')
+            ) ;
+            $this->interface['proposalType']= 'Consuls' ;
+            $possibleValues = array() ;
+            foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleConsul') as $senator)
+            {
+                $possibleValues[] = array (
+                    'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'senatorID' => $senator->getSenatorID()
+                ) ;
+            }
+            $this->interface['items']= array
             (
-                'description' => array (
-                    _('You must select a pair of Senators') ,
-                    _('Only Senators aligned in Rome can be proposed') ,
-                    _('The only possible candidates already holding an office are the Censor and Master of Horse') ,
-                    _('Already rejected pairs cannot be proposed again')
+                array (
+                    'description' => _('First Senator') ,
+                    'list' => array (
+                        'type' => 'select' ,
+                        'class' => 'First Senator',
+                        'items' => $possibleValues 
+                    )
                 ) ,
-                'items' => array
-                (
-                    array (
-                        'type' => 'senator' ,
-                        'description' => 'First Senator'  ,
-                        'values' => $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleConsul')
-                    ) ,
-                    array (
-                        'type' => 'senator' ,
-                        'description' => 'Second Senator'  ,
-                        'values' => $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleConsul')
+                array (
+                    'description' => _('Second Senator') ,
+                    'list' => array (
+                        'type' => 'select' ,
+                        'class' => 'Second Senator',
+                        'items' => $possibleValues 
                     )
                 )
             ) ;
         }
     }
+    
+    /**
+     * Returns an array of how the current user can make a proposal : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , FREE TRIBUNE FROM X , TRIBUNE CARD
+     * @param \Entities\Game $game
+     * @return array
+     */
+    public function getProposalHow($game)
+    {
+    // President
+    // Prosecutions : The Censor can propose
+    // Dictator appointment : Only consuls can appoint
+    // Tribune Cards
+    // Free tribunes from Satesmen
+        $result = array() ;
+        /**
+        * Censor during prosecutions
+        * This is exculsive (will be the only result returned)
+        **/
+        if ($game->getSubPhase() == 'Prosecutions')
+        {
+            $searchResult = $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'isCensor') ;
+            if (count($searchResult)==1 && $searchResult->first()->getUser_id() == $this->user_id)
+            {
+                return array('CENSOR');
+            }
+            else
+            {
+                return array() ;
+            }
+        }
+        /**
+        * Consuls appointing a Dictator
+        * This is exculsive (will be the only result returned)
+        **/
+        if ($game->getSubPhase() == 'DictatorAppointment')
+        {
+            $searchResult = $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'canAppointDictator') ;
+            if (count($searchResult)==1 && $searchResult->first()->getUser_id() == $this->user_id)
+            {
+                return array('DICTATOR APPOINTMENT');
+            }
+            else
+            {
+                return array() ;
+            }
+        }
+        /**
+        * Other means of proposals : President, tribune card, free tribune
+        * This is not exclusive (several results can be returned)
+        **/
+        if ($game->getHRAO(TRUE)->getLocation()['value']->getUser_id() == $this->user_id)
+        {
+            $result[] = 'PRESIDENT' ;
+        }
+        $result = array_merge($result, $this->getFreeTribunes($game->getParty($this->user_id))) ;
+        $result = array_merge($result, $this->getCardTribunes($game->getParty($this->user_id))) ;
+        return $result ;
+    }
+    
+    /**
+    * Returns a list of free tribunes provided by Satesmen special abilities
+    **/
+    public function getFreeTribunes($party)
+    {
+        $result = array() ;
+        foreach ($party->getSenators()->getCards() as $senator)
+        {
+            if ($senator->getFreeTribune() == 1)
+            {
+                $result[] = 'FREE TRIBUNE FROM '.$senator->getName() ;
+            }
+        }
+        return $result ;
+    }
+
+    /**
+    * Returns a list of tribune cards for this party
+    **/
+    public function getCardTribunes($party)
+    {
+        $result = array() ;
+        foreach ($party->getHand()->getCards() as $card)
+        {
+            if ($card->getName()=='TRIBUNE')
+            {
+                $result[] = 'TRIBUNE CARD' ;
+            }
+        }
+        return $result ;
+    }
+
 }
