@@ -8,11 +8,11 @@
 #}
 <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
     <tbody>
-        {% for item in view.interface['items'] %}
-            <tr>
+        <tr>
+            {% for item in view.interface['items'] %}
                 <td class="success">{{item['description']}}</td>
                 <td>{% embed 'BoardElements/ActionToken.twig' with {'action': item['list']}%}{% endembed %}</td>
-            </tr>
-        {% endfor %}
+            {% endfor %}
+        </tr>
     </tbody>
 </table>
