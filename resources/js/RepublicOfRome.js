@@ -171,6 +171,10 @@ function getReady(phase , subPhase)
     {
         prepareForumPersuasion() ;
     }
+    if (phase==='Senate' && subPhase==='Governors')
+    {
+        prepareSenateGovernors() ;
+    }
 }
 
 /*
@@ -393,4 +397,30 @@ function persuasionUpdateCounterBribe()
     {
         $("[verb='persuasionCounterBribe']").addClass('disabled');
     }
+}
+
+/*
+ * ========================= SENATE =========================
+ */
+
+function prepareSenateGovernors()
+{
+    $('.senateGovernorsWrapper').each(function() 
+    {
+        var $wrapper = $('.senateGovernorsMultiFields', this);
+        // Adding a block
+        $(".senateGovernorsAddField", $(this)).click(function() {
+            var $trToClone = $(this).closest('.senateGovernorsField');
+            var $clone = $trToClone.clone();
+            $trToClone.after($clone);
+            // Clear display (default should be '-')
+            $clone.find('.global-postable').val('-') ;
+        });
+    
+        // Removing a block
+        $('.senateGovernorsField .senateGovernorsRemoveField', $wrapper).click(function() {
+            if ($('.senateGovernorsField', $wrapper).length > 1)
+            $(this).parent('.senateGovernorsField').remove();
+        });
+    });
 }

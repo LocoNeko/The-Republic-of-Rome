@@ -1,6 +1,6 @@
 {#
     Consuls Proposal
-    - Should get a view.interface['items'] array made of 2 items :
+    - Should get a view.interface['senators'] array made of 2 items :
     - array (
         'description' => _('First Senator') or _('Second Senator')
         'list' => an actionToken-ready 'select' with a list of Senators in the form array ('description' => 'XXX' , 'senatorID' => YYY )
@@ -9,9 +9,9 @@
 <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
     <tbody>
         <tr>
-            {% for item in view.interface['items'] %}
-                <td class="success">{{item['description']}}</td>
-                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': item['list']}%}{% endembed %}</td>
+            {% for senator in view.interface['senators'] %}
+                <td class="success">{{senator['description']}}</td>
+                <td>{% embed 'BoardElements/ActionToken.twig' with {'action': senator['list']}%}{% endembed %}</td>
             {% endfor %}
         </tr>
     </tbody>

@@ -216,12 +216,23 @@ class CardPresenter
      * @param string $name The value's name (key)
      * @param mixed $value The value itself
      */
-    public function addAttribute($name , $value)
-    {
-        $json = json_decode($this->data_json , TRUE) ;
-        $json[$name] = $value ;
-        $this->data_json = json_encode($json) ;
-    }
+	public function addAttribute($name , $value , $mergeArray = FALSE)
+	{
+	    $json = json_decode($this->data_json , TRUE) ;
+	    if ($mergeArray)
+	    {
+		if (!isset ($json[$name]))
+		{
+		    $json[$name] = array() ;
+		}
+		$json[$name][] = $value ;
+	    }
+	    else
+	    {
+		$json[$name] = $value ;
+	    }
+	    $this->data_json = json_encode($json) ;
+	}
 
     /**
      * Returns the attribute named $name for this card
