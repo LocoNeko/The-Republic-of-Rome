@@ -227,60 +227,74 @@ class Senator extends Card
      * @param string $criteria TRUE | 'alignedInRome' | a deck name
      * @return boolean
      */
-    public function checkCriteria($criteria)
-    {
-        if ($criteria===TRUE)
-        {
-            return TRUE ;
-        }
-        else
-        {
-            switch($criteria) 
-            {
-                
-                // In a party & in Rome
-                case 'alignedInRome' :
-                    return ( ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
-                    
-                // Holding an office & in Rome
-                case 'hasOfficeInRome' :
-                    return ( in_array($this->getOffice() , \Entities\Senator::$VALID_OFFICES ) && $this->inRome() ) ;
+	public function checkCriteria($criteria)
+	{
+	    if ($criteria===TRUE)
+	    {
+		return TRUE ;
+	    }
+	    else
+	    {
+		switch($criteria) 
+		{
 
-                // Possible Consuls : In a party, in Rome, no office except Censor or MoH
-                case 'possibleConsul' :
-                    return ( (in_array($this->getOffice() , array('Censor' , 'Master of Horse')) || $this->getOffice() == NULL )&& ($this->getDeck()->getInParty() != NULL) ) ;
+		    // In a party & in Rome
+		    case 'alignedInRome' :
+		        return ( ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
 
-		// Possible Censor
-		case 'possibleCensor' :
-		    return $this->getPriorConsul() ;
+		    // Holding an office & in Rome
+		    case 'hasOfficeInRome' :
+		        return ( in_array($this->getOffice() , \Entities\Senator::$VALID_OFFICES ) && $this->inRome() ) ;
+		        
+		    // Possible Consuls : In a party, in Rome, no office except Censor or MoH
+		    case 'possibleConsul' :
+		        return ( (in_array($this->getOffice() , array('Censor' , 'Master of Horse')) || $this->getOffice() == NULL )&& ($this->getDeck()->getInParty() != NULL) ) ;
+		        
+		    // Possible Censor
+		    case 'possibleCensor' :
+		        return $this->getPriorConsul() ;
+		        
+		    // Possible prosecutors : In a party, in Rome, not the Censor
+		    case 'possibleProsecutor' :
+		        return ( ($this->getOffice() != 'Censor') && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
 
-                // Possible prosecutors : In a party, in Rome, not the Censor
-                case 'possibleProsecutor' :
-                    return ( ($this->getOffice() != 'Censor') && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
-                    
-                // In a Party, in Rome, not an Official except Censor
-                case 'possibleDictator' :
-                case 'possibleMastersOfHorse' :
-                    return ( ($this->getOffice() === 'Censor' || $this->getOffice() === NULL) && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
-                    
-                // In a party & either Rome Consul, Field Consul or Dictator
-                case 'possibleCommanders' :
-                    return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul' , 'Dictator')) && ($this->getDeck()->getInParty() != NULL) && $this->inRome()) ;
-                    
-                // In a party, in Rome, & hasn't been assassination target yet
-                case 'assassinationTarget' :
-                    return ( ($this->getDeck()->getInParty() != NULL) && !($this->getDeck()->getInParty()->getAssassinationTarget()) && $this->inRome() ) ;
-                    
-                case 'isStatesman' :
-                    return ($this->getPreciseType()=='Statesman') ;
-                    
-                // In the Game's deck with the name $criteria
-                default : 
-                    $location = $this->getLocation() ;
-                    return ( ($location['type'] == 'game') && ($location['name'] == $criteria ) ) ;
-            }
-        }
-    }
+		    // In a Party, in Rome, not an Official except Censor
+		    case 'possibleDictator' :
+		    case 'possibleMastersOfHorse' :
+		        return ( ($this->getOffice() === 'Censor' || $this->getOffice() === NULL) && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
+
+		    // In a party & either Rome Consul, Field Consul or Dictator
+		    case 'possibleCommanders' :
+		        return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul' , 'Dictator')) && ($this->getDeck()->getInParty() != NULL) && $this->inRome()) ;
+
+		    // Proconsul
+		    case 'isProconsul' :
+		        if ($this->hasControlledCards())
+		        {
+		            foreach ($this->getCardsControlled() as $card)
+		            {
+		                if ($card->getPreciseType()=='Conflict')
+		                {
+		                    return TRUE ;
+		                }
+		            }
+		        }
+		        return FALSE ;
+		        
+		    // In a party, in Rome, & hasn't been assassination target yet
+		    case 'assassinationTarget' :
+		        return ( ($this->getDeck()->getInParty() != NULL) && !($this->getDeck()->getInParty()->getAssassinationTarget()) && $this->inRome() ) ;
+
+		    case 'isStatesman' :
+		        return ($this->getPreciseType()=='Statesman') ;
+
+		    // In the Game's deck with the name $criteria
+		    default : 
+		        $location = $this->getLocation() ;
+		        return ( ($location['type'] == 'game') && ($location['name'] == $criteria ) ) ;
+		}
+	    }
+	}
     
     public function inRome()
     {

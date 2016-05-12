@@ -1,0 +1,29 @@
+{#
+    Prosecutions Proposal
+    - Should get view.interface['senators'] & view.interface['provinces'] arrays :
+    - view.interface['senators'] array (
+        'description' => _('Senator')
+        'list' => an actionToken-ready 'select' with a list of Senators in the form of an array ('description' => 'XXX' , 'senatorID' => YYY )
+    )
+    - view.interface['provinces'] array (
+        'description' => _('Province')
+        'list' => an actionToken-ready 'select' with a list of Provinces in the form of an array ('description' => 'XXX' , 'recall' => TRUE|FALSE , 'cardID' => YYY )
+    )
+    - The following classes are used to dynamically add and remove fields :
+    senateGovernorsWrapper , senateGovernorsMultiFields , senateGovernorsField , senateGovernorsRemoveField , senateGovernorsAddField
+#}
+Jumped to 'Governors' for testing purposes only
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+    <tbody class="dynamicSectionsWrapper">
+        <tr class="dynamicSection">
+            <td class="success">{{view.interface['senators']['description']}}</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senators']['list']}%}{% endembed %}</td>
+            <td class="success">{{view.interface['provinces']['description']}}</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['provinces']['list']}%}{% endembed %}</td>
+            <td><button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button></td>
+        </tr>
+        <tr class="dynamicSectionLast">
+            <td colspan="5"><button type="button" class="btn btn-success dynamicSectionAddButton"><span class="glyphicon glyphicon-plus"></button></td>
+        </tr>
+    </tbody>
+</table>

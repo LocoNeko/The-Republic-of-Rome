@@ -1,8 +1,6 @@
 <?php
 namespace Presenters ;
-
 use Doctrine\Common\Collections\ArrayCollection;
-
 // TO DO : Beginning of Senate phase - Initialise free tribunes of all senators
 class SenatePhasePresenter
 {
@@ -228,14 +226,12 @@ class SenatePhasePresenter
             $this->interface['proposalType']= 'Censor' ;
             $this->interface['senators']= array
             (
-                array (
-                    'description' => _('Senator') ,
-                    'list' => array (
-                        'type' => 'select' ,
-                        'class' => 'Senator',
-                        'items' => $this->getListOfCandidates($game) 
-                    )
-                )
+		    'description' => _('Senator') ,
+		    'list' => array (
+		        'type' => 'select' ,
+		        'class' => 'Senator',
+		        'items' => $this->getListOfCandidates($game) 
+		    )
             ) ;
         }
         /**
@@ -251,14 +247,12 @@ class SenatePhasePresenter
             $this->interface['proposalType']= 'Prosecutions' ;
             $this->interface['prosecutions']= array
             (
-                array (
                     'description' => _('Senator') ,
                     'list' => array (
                         'type' => 'select' ,
                         'class' => 'Senator',
                         'items' => $this->getListOfCandidates($game)
                     )
-                )
             ) ;
         }
         /**
@@ -273,25 +267,21 @@ class SenatePhasePresenter
             $this->interface['proposalType']= 'Governors' ;
             $this->interface['senators']= array
             (
-                array (
                     'description' => _('Senator') ,
                     'list' => array (
                         'type' => 'select' ,
                         'class' => 'Senator',
                         'items' => $this->getListOfCandidates($game)
                     )
-                )
             ) ;
             $this->interface['provinces']= array
             (
-                array (
                     'description' => _('Province') ,
                     'list' => array (
                         'type' => 'select' ,
                         'class' => 'Province',
                         'items' => $this->getListOfAvailableCards($game)
                     )
-                )
             ) ;
         }
         /**
@@ -303,7 +293,133 @@ class SenatePhasePresenter
                 _('Other business') ,
                 _('You must first choose a type of proposal')
             ) ;
+	    // This interface just has a drop down list otherBusinessList (defined at the end of this section)
             $this->interface['proposalType']= 'OtherBusiness' ;
+            $availableOtherBusiness = array () ;
+            
+            /**
+             * Create a collection of all cards from game decks & parties
+             * Hands not included
+             */
+            $allCards = new ArrayCollection() ;
+            $allSenators  = new ArrayCollection() ;
+            foreach ($this->game->deck as $deck)
+            {
+                foreach ($deck->cards as $card)
+                {
+                    if ($card->preciseType == 'Senator')
+                    {
+                        $allSenators->add($card) ;
+                    }
+                    else
+                    {
+                        // only add concessions if they are in the forum
+                        if ($card->preciseType !== 'Concession' || $deck->name==='forum')
+                        {
+                            $allCards->add($card) ;
+                        }
+                    }
+                }
+            }
+            foreach ($this->otherParties as $party)
+            {
+                foreach ($party->senators as $senator)
+                {
+                    $allSenators->add($senator) ;
+                }
+            }
+            foreach ($this->yourParty->senators as $senator)
+            {
+                $allSenators->add($senator) ;
+            }
+            
+            /**
+            * adds element to the 'otherBusiness' attribute array of each cardPresenter based on criteria
+            * - For Senators cardPresenter
+            **/
+            foreach ($allSenators as $senator)
+            {
+                // Go through controlled cards and add them to $allCards except :
+                // - Senators, which represents the family of a Statesman and is not needed)
+                // - Concessions, which are already assigned if we find them in a Senator->controlledCards
+                foreach($senator->controlledCards as $subCard)
+                {
+                    if ($card->preciseType !== 'Senator' && $card->preciseType !== 'Concession')
+                    {
+                        $allCards->add($card) ;
+                    }
+                }
+                $senatorModel = $game->getFilteredCards(array('senatorID' => $senator->getAttribute('senatorID')))->first();
+                
+                // Concession holder , Land bill sponsor & co-sponsor
+                if ($senatorModel->checkCriteria('alignedInRome'))
+                {
+                    $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
+                    $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'concession' , _('Assign concessions') ) ;
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
+                }
+                
+                // Possible commander
+                if ($senatorModel->checkCriteria('possibleCommanders'))
+                {
+                    $senator->addAttribute('otherBusiness' , 'commander' , TRUE);
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commander' , _('Send Forces') ) ;
+                }
+                
+                // Proconsul : can be recalled, can be reinforced
+                if ($senatorModel->checkCriteria('isProconsul'))
+                {
+                    $senator->addAttribute('otherBusiness' , 'commanderRecall' , TRUE);
+                    $senator->addAttribute('otherBusiness' , 'reinforcement' , TRUE);
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commanderRecall' , _('Recall ProConsul') ) ;
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'reinforcement' , _('Reinforce ProConsul') ) ;
+                }
+                // TO DO : 'senatorsForPontifex' , 'senatorsForPontifexRecall' , 'senatorsForPriest' , 'senatorsForPriestRecall' , 'senatorsForConsulForLife'
+            }
+
+            /**
+            * adds element to the 'otherBusiness' attribute array of each cardPresenter based on criteria
+            * - For normal cards cardPresenter
+            **/
+            foreach ($allCards as $card)
+            {
+                $cardModel = $game->getFilteredCards(array('cardID' => $card->id))->first();
+                if ($card->preciseType==='Concession')
+                {
+                    $card->addAttribute('otherBusiness' , 'concession' , TRUE);
+                }
+                elseif ($card->preciseType==='Conflict')
+                {
+                    $card->addAttribute('otherBusiness' , 'commander' , TRUE);
+                }
+            }
+	    
+	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'recruit' , _('Recruit Forces') ) ;
+	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'disband' , _('Disband Forces') ) ;
+	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
+
+  	    // TO DO : Prepare data for legions : Commander, reinforcement, recruit, disband , garrison
+	    // Fleets : how many in Rome, in the pool, with a commander ->addAttribute('fleets' , X)
+	    // Regular legions : how many in Rome, in the pool, with a commander ->addAttribute('regulars' , X)
+	    // Veteran legion : for each - its allegiance & if it's in Rome or with a commander ->addAttribute('veterans' , X , TRUE) where X is the allegiance
+
+	    /**
+            * Finally set the main drop-down of the interface to show a list of otherBusiness that are available. This is determined by having at least one card checked TRUE in the loop above
+	    **/
+	    $this->interface['otherBusinessList']= array
+            (
+                array (
+                    'description' => _('Proposal type') ,
+                    'list' => array (
+                        'type' => 'select' ,
+                        'class' => 'otherBusinessList',
+                        'items' => $availableOtherBusiness
+                    )
+                )
+            ) ;
+
+
         }
     }
     
@@ -380,6 +496,7 @@ class SenatePhasePresenter
         }
         return $result ;
     }
+    
     /**
     * Returns a list of tribune cards for this party
     **/
@@ -447,7 +564,6 @@ class SenatePhasePresenter
                 'description' => _('-') ,
                 'senatorID' => NULL
             ) ;
-
             // TO DO - add 'possibleGovernor' to Senator->checkCriteria() :
             // case 'possibleGovernor' :
             //     return ( $this->inRome() && $this->getOffice()===NULL) ;
@@ -459,106 +575,12 @@ class SenatePhasePresenter
                 ) ;
             }
         }
-        elseif ($game->getSubPhase() == 'OtherBusiness')
-        {
-/*
-            // Since proposals can be made in any order, all potential data must be passed to the Front End :
-            $result['senatorsForConcessions'] = array() ; 
-            $result['senatorsForLandBill'] = array() ; 
-            $result['senatorsForCommander'] = array() ;
-            $result['senatorsForRecall'] = array() ;
-            $result['senatorsForReinforcement'] = array() ;
-            $result['senatorsForPontifex'] = array() ;
-            $result['senatorsForPontifexRecall'] = array() ;
-            $result['senatorsForPriest'] = array() ;
-            $result['senatorsForPriestRecall'] = array() ;
-            $result['senatorsForConsulForLife'] = array() ;
-            foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE)) as $senator)
-            {
-                if ($senator->checkCriteria('alignedInRome'))
-                {
-                    $result['senatorsForConcessions'][] = array ( 'description' => $this->game->displayContextualName($senator->getFullName()) , 'senatorID' => $senator->getSenatorID() ) ;
-                    $result['senatorsForLandBill'][] = array ( 'description' => $this->game->displayContextualName($senator->getFullName()) , 'senatorID' => $senator->getSenatorID() ) ;
-                }
-                if ($senator->checkCriteria('possibleCommanders'))
-                {
-                    $result['senatorsForCommander'][] = array ( 'description' => $this->game->displayContextualName($senator->getFullName()) , 'senatorID' => $senator->getSenatorID() ) ;
-                }
-                // TO DO : add isCommander to Senator->checkCriteria() :
-                // should check if the senator has a conflict in his controlled cards :
-                // if ($this->hasControlledCards())
-                // {
-                //    foreach ($this->getCardsControlled() as $card)
-                //    {
-                //        if ($card->getPreciseType() === 'Conflict')
-                //        {
-                //            return TRUE ;
-                //        }        
-                //    }
-                // }
-                // return FALSE ;
-                if ($senator->checkCriteria('isCommander'))
-                {
-                    $result['senatorsForRecall'][] = array ( 'description' => $this->game->displayContextualName($senator->getFullName()) , 'senatorID' => $senator->getSenatorID() ) ;
-                    $result['senatorsForReinforcement'][] = array ( 'description' => $this->game->displayContextualName($senator->getFullName()) , 'senatorID' => $senator->getSenatorID() ) ;
-                }
-                // TO DO : 'senatorsForPontifex' , 'senatorsForPontifexRecall' , 'senatorsForPriest' , 'senatorsForPriestRecall' , 'senatorsForConsulForLife'
-            }
-*/
-	/**
-     * Create a collection of all cards from game decks & parties
-     * Hands and not included
-     */
-	    $allCards = new ArrayCollection() ;
-	    $allSenators  = new ArrayCollection() ;
-	    foreach ($this->game->deck as $deck)
-	    {
-		foreach ($deck->cards as $card)
-		{
-		    // TO DO : Check whether it's a SenatorPresenter or CardPresenter
-		    $allCards->add($card) ;
-		}
-	    }
-	    foreach ($this->otherParties as $party)
-	    {
-		foreach ($party->senators as $senator)
-		{
-		    $allSenators->add($senator) ;
-		}
-	    }
-	    foreach ($this->yourParty->senators as $senator)
-	    {
-		$allSenators->add($senator) ;
-	    }
-	    foreach ($allSenators as $senator)
-	    {
-		// TO DO : go through controlled cards and add them to $allCards (except for Senators, which represents the family of a Statesman and is not needed)
-		$senatorModel = $game->getFilteredCards(array('senatorID' => $senator->getAttribute('senatorID')))->first();
-		// Concession holder
-		// Land bill sponsor & co-sponsor
-		if ($senatorModel->checkCriteria('alignedInRome'))
-		{
-		    $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
-		    $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
-		}
-		// Possible commander
-		if ($senatorModel->checkCriteria('possibleCommanders'))
-		{
-		    $senator->addAttribute('otherBusiness' , 'commander' , TRUE);
-		}
-	    }
-	    /**
-	     * Goes through the collection and checks if the target card's ID matches one of the cardsToApplyItTo
-	     */
-	    foreach ($allCards as $card)
-	    {
-		$cardModel = $game->getFilteredCards(array('cardID' => $card->id))->first();
-		// concessions in the forum should get : otherBusiness[] = 'concession'
-	    }
-        }
         return $result ;
     }
     
+    /**
+    * List of available Province Cards for Governors proposals
+    **/
     public function getListOfAvailableCards($game)
     {
         $result = array() ;
@@ -586,21 +608,28 @@ class SenatePhasePresenter
                 ) ;
             }
         }
-        elseif ($game->getSubPhase() == 'OtherBusiness')
-        {
-            // Since proposals can be made in any order, all potential data must be passed to the Front End :
-            // - List of Concessions
-            foreach ($game->getDeck('forum')->getCards() as $card)
-            {
-                if ($card->getPreciseType()==='Concession' && !$card->getFlipped())
-                {
-                    $result[] = array ('description' => $card->getName() , 'cardID' => $card->getId()) ;
-                }
-            }
-            // Should not be cards, could be put in 'getListOfLandBill' & 'getListOfForces' :
-            // - Land bills , Land bills repeal , Forces to recruit & disband , Forces to be sent & recalled from garrison
-            // TO DO
-        }
         return $result ;
     }
+
+    /**
+    * Taken out of setContent (otherBusiness section) for readibility's sake
+    * This function adds an available other busines to the current list if it wasn't there already
+    **/
+    public function addAvailableOtherBusiness($current , $description , $value )
+    {
+	$result = $current ;
+	foreach ($current as $business)
+	{
+	    if (isset($business['description']) && $business['description']== $description)
+	    {
+		break ;
+	    }
+	    $result[] = array (
+		'description' => $description ,
+		'value' => $value
+	    ) ;
+	}
+	return $result ;
+    }
 }
+

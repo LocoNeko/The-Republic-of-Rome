@@ -1,0 +1,19 @@
+{#
+    Other Business Proposal :
+    - First show a drop-down list of all possible types of proposals
+#}
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+    <tbody>
+        <tr>
+            <td class="success">
+                {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['otherBusinessList']}%}
+                {% endembed %}
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div class='otherBusinessWrapper'>
+    <div class='otherBusinessSection' id='otherBusinessConsuls'>
+    </div>
+</div>
+//CSS : .otherBusinessSection { display:none }

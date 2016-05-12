@@ -1,5 +1,5 @@
 // Connecting to the socket.io server :
-// - The socket.io server is connected to a URL given as an attribute to the HTML tag 
+// - The socket.io server is connected to a URL given as an attribute to the HTML tag
 // - The 'Update' event triggers a reloading of the window if the realms are the same (a gameId or "Lobby")
 var socket = io.connect($("html").attr('ws_client'));
 socket.on('Update', function(realm) {
@@ -31,7 +31,7 @@ function getReady(phase , subPhase)
         if (card.length > 0)
         {
             $.extend(json , JSON.parse(card.attr('data-json'))) ;
-        }       
+        }
         else
         {
             // Collect all global-postable, put them in the json
@@ -39,19 +39,19 @@ function getReady(phase , subPhase)
                 json[obj.name] = obj.value ;
             });
         }
-        
+
         // Get the verb from the button, put it in the json as well
         json['verb'] = $(this).attr('verb') ;
 
         // Store the json data in the 'data-json' attribute of the body
         $(document.body).attr('data-json' , JSON.stringify(json)) ;
-        
+
         /*
          *  Finally, check if the button's json-data as an action (slider, fixedAmount...)
          *  - Sliders bypass the normal submit
          *  - fixedAmount add the amount to the json and submit it
          */
-        
+
         var actionData = $(this).attr('data-json');
         if (typeof actionData !== typeof undefined && actionData !== false)
         {
@@ -62,7 +62,7 @@ function getReady(phase , subPhase)
             submitJSON(json) ;
         }
     });
-    
+
     /**
      * SUBMIT SLIDER
      * - Get the current json data from the data-json attribute in the body
@@ -81,7 +81,7 @@ function getReady(phase , subPhase)
         submitJSON(json) ;
     });
 
-    /* 
+    /*
      * DRAGGABLE
      * - Applies to all elements with the .draggable class
      * - Draggable with a clone as a helper
@@ -116,7 +116,7 @@ function getReady(phase , subPhase)
             drop: function ( event, ui ) {
                 // The json from the body
                 var json = JSON.parse($(document.body).attr('data-json')) ;
-                
+
                 // json from the draggable ("from"), if any
                 var dataJsonFrom = ui.draggable.attr('data-json');
                 if (typeof dataJsonFrom !== typeof undefined && dataJsonFrom !== false && dataJsonFrom.length>0)
@@ -146,8 +146,8 @@ function getReady(phase , subPhase)
             }
         });
     });
-    
-    
+
+
     /**
      *  Popover for Rome Current State
      */
@@ -171,9 +171,14 @@ function getReady(phase , subPhase)
     {
         prepareForumPersuasion() ;
     }
-    if (phase==='Senate' && subPhase==='Governors')
+    else if (phase==='Senate' && subPhase==='Governors')
     {
-        prepareSenateGovernors() ;
+        prepareDynamicSection() ;
+    }
+    else if (phase==='Senate' && subPhase==='otherBusiness')
+    {
+        prepareDynamicSection() ;
+        prepareSenateOtherBusiness() ;
     }
 }
 
@@ -185,7 +190,7 @@ function getReady(phase , subPhase)
  * If there was some actionData passed (slider, fixedAmount...) handle it :
  * - slider : display the corresponding modal slider
  * - fixedAmount : add it to the json and submit
- * - Otherwise : ERROR 
+ * - Otherwise : ERROR
  * @param {json} json
  * @param {json} actionData
  * @returns {mixed}
@@ -231,7 +236,7 @@ function submitJSON(json)
        } ,
        "json"
     );
-  
+
 }
 
 /**
@@ -403,24 +408,61 @@ function persuasionUpdateCounterBribe()
  * ========================= SENATE =========================
  */
 
-function prepareSenateGovernors()
+function prepareSenateOtherBusiness()
 {
-    $('.senateGovernorsWrapper').each(function() 
+    // TO DO : The Twig template for otherBusiness must have a wrapper <div> of class .otherBusinessWrapperwith all showable/hideable sections.
+    // The wrapper's class is otherBusinessWrapper
+
+    // Remove global-postable class from all children within the wrapper
+    $('.otherBusinessWrapper').find('.global-postable').removeClass('global-postable') ;
+
+    // Hide all divs within the wrapper
+    $('.otherBusinessWrapper').children().hide() ;
+
+    // Depending on the item selected (type of otherBusiness), display the relevant section of the twig template
+    // Populate said template inputs (drop-downs, radio buttons, etc) with data gathered from the json-data of each cards
+    $('otherBusinessList').on('change', function()
     {
-        var $wrapper = $('.senateGovernorsMultiFields', this);
-        // Adding a block
-        $(".senateGovernorsAddField", $(this)).click(function() {
-            var $trToClone = $(this).closest('.senateGovernorsField');
-            var $clone = $trToClone.clone();
-            $trToClone.after($clone);
-            // Clear display (default should be '-')
-            $clone.find('.global-postable').val('-') ;
-        });
-    
-        // Removing a block
-        $('.senateGovernorsField .senateGovernorsRemoveField', $wrapper).click(function() {
-            if ($('.senateGovernorsField', $wrapper).length > 1)
-            $(this).parent('.senateGovernorsField').remove();
-        });
+        var $selectedValue = $(this).val();
+        //    $('.otherBusinessWrapper').children().each(){ // OR SIMPLY :
+        $('.otherBusinessSection').each()
+        {
+            // If this otherBusinessSection has an id equal to the drop-down's select value, show it, otherwise hide it
+            if ($selectedValue == $(this).attr('id'))
+            {
+                $(this).show();
+                senateOtherBusinessPopulateSection($selectedValue);
+            }
+            else
+            {
+                $(this).hide();
+            }
+        }
     });
+}
+
+function prepareDynamicSection()
+{
+    $('.dynamicSectionAddButton').click(function () {
+        var $boxToClone = $('.dynamicSection:first', '.dynamicSectionsWrapper');
+        var $clonedBox = $boxToClone.clone();
+        $clonedBox.find('.dynamicSectionRemoveButton').removeClass('disabled');
+        //$('.dynamicSectionsWrapper').last().append($clonedBox);
+        $('.dynamicSectionLast').before($clonedBox);
+        //alert ('There are now '+$('.dynamicSectionsWrapper').children().length+' boxes');
+    });
+
+    $('.dynamicSectionsWrapper').on('click', '.dynamicSectionRemoveButton', function (e) {
+        if ($('.dynamicSection', '.dynamicSectionsWrapper').length > 1)
+        {
+            $(this).closest('.dynamicSection').fadeOut();
+        }
+    });
+}
+
+// This function goes through all data-json of all cards and populates otherBusinessSection accordingly
+// The relevant otherBusinessSection to populate is determined by $otherBusinessType
+function senateOtherBusinessPopulateSection($otherBusinessType)
+{
+
 }
