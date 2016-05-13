@@ -464,5 +464,41 @@ function prepareDynamicSection()
 // The relevant otherBusinessSection to populate is determined by $otherBusinessType
 function senateOtherBusinessPopulateSection($otherBusinessType)
 {
+    // Go through all Senators
+    $('.sprite-Senator').each(function(i) {
+        // Get the JSON data from the Senator Card and retrieve what is necessary : name, senatorID, list of otherBusiness
+        var $json = $(this).data('json') ;
+        var $senatorName = $json.name ;
+        var $senatorID = $json.senatorID ;
+        var $otherBusinessList = $json.otherBusiness ;
+        // If the $otherBusinessType is in this Senator's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
+        if ($.inArray($otherBusinessType , $otherBusinessList)) 
+        {
+            // TO DO : Add IDs to the selects in each otherBusinessSections.
+            // IDs have the format : #otherBusinessSenatorSelect{$otherBusinessType}
+            $('#otherBusinessSenatorSelect' + $otherBusinessType).append($("<option></option>").attr("value",$senatorID).text($senatorName));
+        }
+    });
 
+    // For concession and commander proposals, we need the cards as well, not just senators
+    if ($otherBusinessType=='concession' || $otherBusinessType=='commander')
+    {
+        // Go through all Cards
+        $('.sprite-Card').each(function(i) {
+            // Get the JSON data from the Card and retrieve what is necessary : name, cardID, list of otherBusiness
+            var $json = $(this).data('json') ;
+            var $cardName = $json.name ;
+            var $cardID = $json.cardID ;
+            var $otherBusinessList = $json.otherBusiness ;
+            // If the $otherBusinessType is in this Card's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
+            if ($.inArray($otherBusinessType , $otherBusinessList)) 
+            {
+                // TO DO : Add IDs to the selects in each otherBusinessSections.
+                // IDs have the format : #otherBusinessCardSelect{$otherBusinessType}
+                $('#otherBusinessCardSelect' + $otherBusinessType).append($("<option></option>").attr("value",$cardID).text($cardName));
+            }
+        });
+    
+    }
+    // Finally, we will need extra info for LandBills, Fleets, and Legions
 }
