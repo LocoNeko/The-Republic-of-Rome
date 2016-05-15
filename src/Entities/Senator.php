@@ -271,7 +271,7 @@ class Senator extends Card
 		    case 'isProconsul' :
 		        if ($this->hasControlledCards())
 		        {
-		            foreach ($this->getCardsControlled() as $card)
+		            foreach ($this->getCardsControlled()->getCards() as $card)
 		            {
 		                if ($card->getPreciseType()=='Conflict')
 		                {

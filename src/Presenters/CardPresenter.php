@@ -42,6 +42,7 @@ class CardPresenter
          * - Attribute card_id
          */
         $this->addAttribute('card_id', $card->getId()) ; 
+        $this->addAttribute('name', $card->getName()) ; 
         
         /**
          * Senator or Statesman
@@ -51,8 +52,17 @@ class CardPresenter
         {
             /** @var \Entities\Senator $card */
             $this->classes[] = 'sprite-Senator' ;
+            /**
+             * Add attributes to the card :
+             * - name , SenatorID
+             * - optionally : office
+             */
             $this->addAttribute('name', $card->getName()) ;
             $this->addAttribute('senatorID', $card->getSenatorID()) ;
+            if ($card->getOffice()!=NULL)
+            {
+                $this->addAttribute('office', $card->getOffice()) ;
+            }
             $this->elements[] = array (
                 'classes' => array(
                     'sprite-position-name' ,

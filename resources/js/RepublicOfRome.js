@@ -175,7 +175,7 @@ function getReady(phase , subPhase)
     {
         prepareDynamicSection() ;
     }
-    else if (phase==='Senate' && subPhase==='otherBusiness')
+    else if (phase==='Senate' && subPhase==='OtherBusiness')
     {
         prepareDynamicSection() ;
         prepareSenateOtherBusiness() ;
@@ -421,12 +421,11 @@ function prepareSenateOtherBusiness()
 
     // Depending on the item selected (type of otherBusiness), display the relevant section of the twig template
     // Populate said template inputs (drop-downs, radio buttons, etc) with data gathered from the json-data of each cards
-    $('otherBusinessList').on('change', function()
+    $('.otherBusinessList').on('change', function()
     {
         var $selectedValue = $(this).val();
         //    $('.otherBusinessWrapper').children().each(){ // OR SIMPLY :
-        $('.otherBusinessSection').each()
-        {
+        $('.otherBusinessSection').each(function(i){
             // If this otherBusinessSection has an id equal to the drop-down's select value, show it, otherwise hide it
             if ($selectedValue == $(this).attr('id'))
             {
@@ -437,7 +436,7 @@ function prepareSenateOtherBusiness()
             {
                 $(this).hide();
             }
-        }
+        });
     });
 }
 
@@ -464,6 +463,7 @@ function prepareDynamicSection()
 // The relevant otherBusinessSection to populate is determined by $otherBusinessType
 function senateOtherBusinessPopulateSection($otherBusinessType)
 {
+    $('#otherBusinessSenatorSelect' + $otherBusinessType).find('option').remove() ;
     // Go through all Senators
     $('.sprite-Senator').each(function(i) {
         // Get the JSON data from the Senator Card and retrieve what is necessary : name, senatorID, list of otherBusiness
@@ -472,14 +472,18 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         var $senatorID = $json.senatorID ;
         var $otherBusinessList = $json.otherBusiness ;
         // If the $otherBusinessType is in this Senator's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
-        if ($.inArray($otherBusinessType , $otherBusinessList)) 
+        if ($.inArray($otherBusinessType , $otherBusinessList) > -1) 
         {
-            // TO DO : Add IDs to the selects in each otherBusinessSections.
-            // IDs have the format : #otherBusinessSenatorSelect{$otherBusinessType}
+            if ($otherBusinessType=='commander')
+            {
+                $senatorName+=' ('+$json.office+')';
+            }
+            // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessSenatorSelect{$otherBusinessType}
             $('#otherBusinessSenatorSelect' + $otherBusinessType).append($("<option></option>").attr("value",$senatorID).text($senatorName));
         }
     });
 
+    $('#otherBusinessCardSelect' + $otherBusinessType).find('option').remove() ;
     // For concession and commander proposals, we need the cards as well, not just senators
     if ($otherBusinessType=='concession' || $otherBusinessType=='commander')
     {
@@ -488,14 +492,13 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             // Get the JSON data from the Card and retrieve what is necessary : name, cardID, list of otherBusiness
             var $json = $(this).data('json') ;
             var $cardName = $json.name ;
-            var $cardID = $json.cardID ;
+            var $card_id = $json.card_id ;
             var $otherBusinessList = $json.otherBusiness ;
             // If the $otherBusinessType is in this Card's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
-            if ($.inArray($otherBusinessType , $otherBusinessList)) 
+            if ($.inArray($otherBusinessType , $otherBusinessList) > -1) 
             {
-                // TO DO : Add IDs to the selects in each otherBusinessSections.
-                // IDs have the format : #otherBusinessCardSelect{$otherBusinessType}
-                $('#otherBusinessCardSelect' + $otherBusinessType).append($("<option></option>").attr("value",$cardID).text($cardName));
+                // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessCardSelect{$otherBusinessType}
+                $('#otherBusinessCardSelect' + $otherBusinessType).append($("<option></option>").attr("value",$card_id).text($cardName));
             }
         });
     

@@ -5,15 +5,114 @@
 <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
     <tbody>
         <tr>
-            <td class="success">
-                {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['otherBusinessList']}%}
-                {% endembed %}
-            </td>
+            <td class="success">{{view.interface['otherBusinessList']['description']}}</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['otherBusinessList']['list']}%}{% endembed %}</td>
         </tr>
     </tbody>
 </table>
 <div class='otherBusinessWrapper'>
-    <div class='otherBusinessSection' id='otherBusinessConsuls'>
-    </div>
+    
+    <table id='concession' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Concession interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='landBill' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Land Bill interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='commander' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success">Send</td>
+                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable"></select></td>
+            </tr>
+            <tr>
+                <td class="success">To fight</td>
+                <td><select id="otherBusinessCardSelectcommander" class="form-control global-postable"></select></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='commanderRecall' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Commander recall interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='reinforcement' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Reinforcement interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='recruit' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Recruit interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='disband' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Disband interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table id='garrison' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Send garrisons interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
-//CSS : .otherBusinessSection { display:none }

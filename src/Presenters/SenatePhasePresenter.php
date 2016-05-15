@@ -247,12 +247,12 @@ class SenatePhasePresenter
             $this->interface['proposalType']= 'Prosecutions' ;
             $this->interface['prosecutions']= array
             (
-                    'description' => _('Senator') ,
-                    'list' => array (
-                        'type' => 'select' ,
-                        'class' => 'Senator',
-                        'items' => $this->getListOfCandidates($game)
-                    )
+                'description' => _('Senator') ,
+                'list' => array (
+                    'type' => 'select' ,
+                    'class' => 'Senator',
+                    'items' => $this->getListOfCandidates($game)
+                )
             ) ;
         }
         /**
@@ -267,21 +267,21 @@ class SenatePhasePresenter
             $this->interface['proposalType']= 'Governors' ;
             $this->interface['senators']= array
             (
-                    'description' => _('Senator') ,
-                    'list' => array (
-                        'type' => 'select' ,
-                        'class' => 'Senator',
-                        'items' => $this->getListOfCandidates($game)
-                    )
+                'description' => _('Senator') ,
+                'list' => array (
+                    'type' => 'select' ,
+                    'class' => 'Senator',
+                    'items' => $this->getListOfCandidates($game)
+                )
             ) ;
             $this->interface['provinces']= array
             (
-                    'description' => _('Province') ,
-                    'list' => array (
-                        'type' => 'select' ,
-                        'class' => 'Province',
-                        'items' => $this->getListOfAvailableCards($game)
-                    )
+                'description' => _('Province') ,
+                'list' => array (
+                    'type' => 'select' ,
+                    'class' => 'Province',
+                    'items' => $this->getListOfAvailableCards($game)
+                )
             ) ;
         }
         /**
@@ -296,6 +296,7 @@ class SenatePhasePresenter
 	    // This interface just has a drop down list otherBusinessList (defined at the end of this section)
             $this->interface['proposalType']= 'OtherBusiness' ;
             $availableOtherBusiness = array () ;
+            $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'NONE' , _('-') ) ;
             
             /**
              * Create a collection of all cards from game decks & parties
@@ -307,16 +308,20 @@ class SenatePhasePresenter
             {
                 foreach ($deck->cards as $card)
                 {
-                    if ($card->preciseType == 'Senator')
+                    if (!in_array($deck->name , array ('unplayedProvinces' , 'drawDeck' , 'discard')))
                     {
-                        $allSenators->add($card) ;
-                    }
-                    else
-                    {
-                        // only add concessions if they are in the forum
-                        if ($card->preciseType !== 'Concession' || $deck->name==='forum')
+                        error_log($deck->name);
+                        if ($card->preciseType == 'Senator')
                         {
-                            $allCards->add($card) ;
+                            $allSenators->add($card) ;
+                        }
+                        else
+                        {
+                            // only add concessions if they are in the forum
+                            if ($card->preciseType !== 'Concession' || $deck->name==='forum')
+                            {
+                                $allCards->add($card) ;
+                            }
                         }
                     }
                 }
@@ -356,7 +361,6 @@ class SenatePhasePresenter
                 {
                     $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
                     $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
-		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'concession' , _('Assign concessions') ) ;
 		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
                 }
                 
@@ -388,16 +392,21 @@ class SenatePhasePresenter
                 if ($card->preciseType==='Concession')
                 {
                     $card->addAttribute('otherBusiness' , 'concession' , TRUE);
+                    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'concession' , _('Assign concessions') ) ;
                 }
                 elseif ($card->preciseType==='Conflict')
                 {
                     $card->addAttribute('otherBusiness' , 'commander' , TRUE);
                 }
+                elseif ($card->preciseType==='Province')
+                {
+                    $card->addAttribute('otherBusiness' , 'garrison' , TRUE);
+        	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
+                }
             }
 	    
 	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'recruit' , _('Recruit Forces') ) ;
 	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'disband' , _('Disband Forces') ) ;
-	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
 
   	    // TO DO : Prepare data for legions : Commander, reinforcement, recruit, disband , garrison
 	    // Fleets : how many in Rome, in the pool, with a commander ->addAttribute('fleets' , X)
@@ -409,17 +418,13 @@ class SenatePhasePresenter
 	    **/
 	    $this->interface['otherBusinessList']= array
             (
-                array (
-                    'description' => _('Proposal type') ,
-                    'list' => array (
-                        'type' => 'select' ,
-                        'class' => 'otherBusinessList',
-                        'items' => $availableOtherBusiness
-                    )
+                'description' => _('Proposal type') ,
+                'list' => array (
+                    'type' => 'select' ,
+                    'class' => 'otherBusinessList',
+                    'items' => $availableOtherBusiness
                 )
             ) ;
-
-
         }
     }
     
@@ -615,15 +620,11 @@ class SenatePhasePresenter
     * Taken out of setContent (otherBusiness section) for readibility's sake
     * This function adds an available other busines to the current list if it wasn't there already
     **/
-    public function addAvailableOtherBusiness($current , $description , $value )
+    public function addAvailableOtherBusiness($current , $value , $description)
     {
 	$result = $current ;
-	foreach ($current as $business)
-	{
-	    if (isset($business['description']) && $business['description']== $description)
-	    {
-		break ;
-	    }
+        if (!in_array(array('description' => $description ,'value' => $value) , $current))
+        {
 	    $result[] = array (
 		'description' => $description ,
 		'value' => $value
