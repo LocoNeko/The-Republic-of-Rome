@@ -30,9 +30,17 @@ class SenateControllerProvider implements ControllerProviderInterface
                 
                 // TO DO : For testing purposes
                 $game->setSubPhase('OtherBusiness');
-
-                $view = new \Presenters\SenatePhasePresenter($game, $user_id);
-
+                
+                try
+                {
+                    $view = new \Presenters\SenatePhasePresenter($game, $user_id);
+                }
+                catch (\Exception $exception) 
+                {
+                    $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                    return $app->redirect('/');
+                }
+                
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'InGameLayout.twig',
                     'view' => $view

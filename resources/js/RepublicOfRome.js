@@ -463,6 +463,8 @@ function prepareDynamicSection()
 // The relevant otherBusinessSection to populate is determined by $otherBusinessType
 function senateOtherBusinessPopulateSection($otherBusinessType)
 {
+	var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
+
     $('#otherBusinessSenatorSelect' + $otherBusinessType).find('option').remove() ;
     // Go through all Senators
     $('.sprite-Senator').each(function(i) {
@@ -503,5 +505,17 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         });
     
     }
+    
     // Finally, we will need extra info for LandBills, Fleets, and Legions
+    if ($otherBusinessType=='landBill')
+    {
+        var possibleLandBills  = jsonOtherBusiness.landBill ;
+        for(var item in possibleLandBills)
+        {
+            $('#otherBusinessLandBillSelect').append($("<option></option>")
+                .attr("level",possibleLandBills[item].level)
+                .attr("sign",possibleLandBills[item].sign)
+                .text(possibleLandBills[item].description));
+        }
+    }
 }

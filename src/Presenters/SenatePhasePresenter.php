@@ -1,6 +1,7 @@
 <?php
 namespace Presenters ;
 use Doctrine\Common\Collections\ArrayCollection;
+
 // TO DO : Beginning of Senate phase - Initialise free tribunes of all senators
 class SenatePhasePresenter
 {
@@ -12,6 +13,7 @@ class SenatePhasePresenter
     public $header = [];
     public $interface = [];
     public $sliders = [];
+    public $data_json ;
     
     /**
      * @param \Entities\Game $game
@@ -308,9 +310,9 @@ class SenatePhasePresenter
             {
                 foreach ($deck->cards as $card)
                 {
+					// Do not look at cards in the unplayedProvinces, drawDeck, and discard decks
                     if (!in_array($deck->name , array ('unplayedProvinces' , 'drawDeck' , 'discard')))
                     {
-                        error_log($deck->name);
                         if ($card->preciseType == 'Senator')
                         {
                             $allSenators->add($card) ;
@@ -337,6 +339,35 @@ class SenatePhasePresenter
             {
                 $allSenators->add($senator) ;
             }
+
+            /**
+             * Fleets
+             * - addAttribute to this Presenter's json array 'fleet' ['canBeRecruited'] and ['canBeDisbanded']
+             */
+            /*
+            $fleets_canBeRecruited = 0 ;
+            $fleets_canBeDisbanded = 0 ;
+            $fleetsOnCards = array() ;
+            foreach($game->getFleets() as $fleet) 
+            {
+                $fleets_canBeRecruited += ($fleet->canBeRecruited() ? 1 : 0) ;
+                $fleets_canBeDisbanded += ($fleet->canBeDisbanded() ? 1 : 0) ;
+                // TO DO : if the fleet has a cardLocation(), store the cardID in an array.
+                $card = $fleet->getCardLocation() ;
+                if ($card!==NULL)
+                {
+                    if (!isset($fleetsOnCards[$card->getId()]))
+                    {
+                            $fleetsOnCards[$card->getId()] = 1 ;
+                    }
+                    else
+                    {
+                            $fleetsOnCards[$card->getId()]++ ;
+                    }
+                }
+            }
+            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'canBeDisbanded'=>$fleets_canBeDisbanded) , TRUE) ;
+            */
             
             /**
             * adds element to the 'otherBusiness' attribute array of each cardPresenter based on criteria
@@ -376,12 +407,19 @@ class SenatePhasePresenter
                 {
                     $senator->addAttribute('otherBusiness' , 'commanderRecall' , TRUE);
                     $senator->addAttribute('otherBusiness' , 'reinforcement' , TRUE);
-		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commanderRecall' , _('Recall ProConsul') ) ;
-		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'reinforcement' , _('Reinforce ProConsul') ) ;
+					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commanderRecall' , _('Recall ProConsul') ) ;
+					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'reinforcement' , _('Reinforce ProConsul') ) ;
                 }
                 // TO DO : 'senatorsForPontifex' , 'senatorsForPontifexRecall' , 'senatorsForPriest' , 'senatorsForPriestRecall' , 'senatorsForConsulForLife'
+                
+                // Fleets : add the number of fleets that accompany this Senator, if any
+                /*
+                if (isset($fleetsOnCards[$senatorModel->getId()]))
+                {
+                    $senator->addAttribute('otherBusiness' , array('fleets' => $fleetsOnCards[$senatorModel->getId()]) , TRUE) ;
+                }
+                 */
             }
-
             /**
             * adds element to the 'otherBusiness' attribute array of each cardPresenter based on criteria
             * - For normal cards cardPresenter
@@ -401,18 +439,36 @@ class SenatePhasePresenter
                 elseif ($card->preciseType==='Province')
                 {
                     $card->addAttribute('otherBusiness' , 'garrison' , TRUE);
-        	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
+					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
                 }
             }
 	    
 	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'recruit' , _('Recruit Forces') ) ;
 	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'disband' , _('Disband Forces') ) ;
+	    
+	    // Put all non-Senator & non-Card  data into a data-json json array in the otherBusinessWrapper div
 
+	    /**
+	     * Land Bills
+	     */
+	    foreach($game->getLandBillsTable() as $level=>$details) 
+	    {
+                // A law can be repealed
+                if ((int)$details['inPlay']>0)
+                {
+                    $this->addAttribute('landBill' , array('sign'=>'-' , 'level'=>$level , 'description' => sprintf(_('Repeal Level %1$d law') , $level)) , TRUE) ;
+                }
+                // A law can be added
+                if ((int)$details['inPlay']<=(3-$level) )
+                {
+                    $this->addAttribute('landBill' , array('sign'=>'+' , 'level'=>$level ,  'description' => sprintf(_('Pass Level %1$d law') , $level)) ,TRUE) ;
+                }
+            }
+		
   	    // TO DO : Prepare data for legions : Commander, reinforcement, recruit, disband , garrison
 	    // Fleets : how many in Rome, in the pool, with a commander ->addAttribute('fleets' , X)
 	    // Regular legions : how many in Rome, in the pool, with a commander ->addAttribute('regulars' , X)
 	    // Veteran legion : for each - its allegiance & if it's in Rome or with a commander ->addAttribute('veterans' , X , TRUE) where X is the allegiance
-
 	    /**
             * Finally set the main drop-down of the interface to show a list of otherBusiness that are available. This is determined by having at least one card checked TRUE in the loop above
 	    **/
@@ -615,7 +671,6 @@ class SenatePhasePresenter
         }
         return $result ;
     }
-
     /**
     * Taken out of setContent (otherBusiness section) for readibility's sake
     * This function adds an available other busines to the current list if it wasn't there already
@@ -632,5 +687,27 @@ class SenatePhasePresenter
 	}
 	return $result ;
     }
+    
+    /**
+     * Adds a json value {"name" : "value"} to this data_json
+     * @param string $name The value's name (key)
+     * @param mixed $value The value itself
+     */
+	public function addAttribute($name , $value , $mergeArray = FALSE)
+	{
+	    $json = json_decode($this->data_json , TRUE) ;
+	    if ($mergeArray)
+	    {
+		if (!isset ($json[$name]))
+		{
+		    $json[$name] = array() ;
+		}
+		$json[$name][] = $value ;
+	    }
+	    else
+	    {
+		$json[$name] = $value ;
+	    }
+	    $this->data_json = json_encode($json) ;
+	}
 }
-

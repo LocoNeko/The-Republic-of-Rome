@@ -10,7 +10,7 @@
         </tr>
     </tbody>
 </table>
-<div class='otherBusinessWrapper'>
+<div class='otherBusinessWrapper' data-json='{{view.data_json}}'>
     
     <table id='concession' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
         <tbody>
@@ -28,12 +28,16 @@
     <table id='landBill' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
         <tbody>
             <tr>
-                <td class="success"></td>
-                <td>Land Bill interface</td>
+                <td class="success">Land bill type</td>
+                <td><select id="otherBusinessLandBillSelect" class="form-control global-postable"></select></td>
             </tr>
             <tr>
-                <td class="success"></td>
-                <td>TO DO</td>
+                <td class="success">Sponsor</td>
+                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Co-sponsor</td>
+                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable"></select></td>
             </tr>
         </tbody>
     </table>
