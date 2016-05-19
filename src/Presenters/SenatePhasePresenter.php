@@ -444,6 +444,7 @@ class SenatePhasePresenter
              */
             $regulars_canBeRecruited = 0 ;
             $regulars_canBeDisbanded = 0 ;
+            $regulars_inRome = 0 ;
             $regularsOnCards = array() ;
             $veterans = array() ;
             // Regular legions : how many in Rome, in the pool, with a commander ->addAttribute('regulars' , X)
@@ -456,6 +457,8 @@ class SenatePhasePresenter
                 {
                     $regulars_canBeRecruited += ($legion->canBeRecruited() ? 1 : 0) ;
                     $regulars_canBeDisbanded += ($legion->canBeDisbanded() ? 1 : 0) ;
+                    $regulars_inRome += ($legion->isRegularInRome() ? 1 : 0) ;
+                    
                     if ($card!==NULL)
                     {
                         $cardId = $card->getId() ;
@@ -480,7 +483,15 @@ class SenatePhasePresenter
                     ) ;
                 }
             } 
-            $this->addAttribute('legions' , array('regularCanBeRecruited'=>$regulars_canBeRecruited , 'regularCanBeDisbanded'=>$regulars_canBeDisbanded , 'veterans' => $veterans) , TRUE) ;
+            $this->addAttribute('legions' , 
+                array (
+                    'regularsCanBeRecruited'=>$regulars_canBeRecruited ,
+                    'regularsCanBeDisbanded'=>$regulars_canBeDisbanded ,
+                    'regularsInRome'=>$regulars_inRome ,
+                    'veterans' => $veterans
+                ) ,
+                TRUE
+            ) ;
 
 	    /**
 	     * Land Bills

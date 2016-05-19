@@ -13,17 +13,17 @@
 <div class='otherBusinessWrapper' data-json='{{view.data_json}}'>
     
     <table id='concession' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
-		<tbody class="dynamicSectionsWrapper">
-			<tr class="dynamicSection">
+        <tbody class="dynamicSectionsWrapper">
+            <tr class="dynamicSection">
                 <td class="success">Give</td>
                 <td><select id="otherBusinessCardSelectconcession" class="form-control global-postable"></select></td>
                 <td class="success">To</td>
                 <td><select id="otherBusinessSenatorSelectconcession" class="form-control global-postable"></select></td>
-				<td><button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button></td>
+                <td><button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button></td>
             </tr>
-			<tr class="dynamicSectionLast">
-				<td colspan="5"><button type="button" class="btn btn-success dynamicSectionAddButton"><span class="glyphicon glyphicon-plus"></button></td>
-			</tr> 
+            <tr class="dynamicSectionLast">
+                <td colspan="5"><button type="button" class="btn btn-success dynamicSectionAddButton"><span class="glyphicon glyphicon-plus"></button></td>
+            </tr> 
          </tbody>
     </table>
     
@@ -55,8 +55,20 @@
                 <td><select id="otherBusinessCardSelectcommander" class="form-control global-postable"></select></td>
             </tr>
             <tr>
-                <td class="success">With</td>
-                <td>TO DO : FORCES</td>
+                <td class="success" colspan="2">With the following forces</td>
+            </tr>
+            <tr>
+                <td class="success">Fleets</td>
+                <td><select id="otherBusinessFleetsSelectcommander" class="form-control global-postable"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Regular legions</td>
+                <td><select id="otherBusinessRegularsSelectcommander" class="form-control global-postable"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Veteran legions</td>
+                <td id="otherBusinessVeteransCheckboxescommander">
+                </td>
             </tr>
         </tbody>
     </table>
