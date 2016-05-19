@@ -462,7 +462,7 @@ function prepareDynamicSection()
 // The relevant otherBusinessSection to populate is determined by $otherBusinessType
 function senateOtherBusinessPopulateSection($otherBusinessType)
 {
-	var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
+    var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
 
     $('#otherBusinessSenatorSelect' + $otherBusinessType).find('option').remove() ;
     // Go through all Senators
@@ -518,11 +518,39 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
                 .text(possibleLandBills[item].description));
         }
     }
+    
     if ($otherBusinessType=='recruit')
     {
         var fleetsData  = jsonOtherBusiness.fleets ;
         $.each( fleetsData, function( key, value ) {
             alert( "Fleet data - " + key + ": " + value );
+        });
+    }
+    
+    if ($otherBusinessType=='commander' || $otherBusinessType=='garrison')
+    {
+        var legionsData  = jsonOtherBusiness.legions ;
+        $.each( legionsData, function( key, value ) {
+            // Regulars in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of regulars
+            if (key=='regularsInRome')
+            {
+                for (i = 0; i < value ; i++) 
+                {
+                    $('#otherBusinessRegularsSelectcommander').append( $("<option></option>").text(i) );
+                }
+            }
+            // Appending checkboxes for sending specific Veteran legions
+            else if (key=='veterans')
+            {
+                $.each( value, function( legionID, legionData) {
+                    // Only Veterans currently in Rome can be sent
+                    if (legionData['otherLocation'] == 'Rome')
+                    {
+                        // TO DO : The title will not be helpful. It should say "Loyal to X"
+                        $('<label class="checkbox-inline" title="'+legionData['loyalTo']+'"><input type="checkbox" id="'+legionID+'">'+legionData['name']+'</label>').appendTo('#otherBusinessVeteransCheckboxescommander') ;
+                    }
+                });
+            }
         });
     }
 }

@@ -97,6 +97,11 @@ class Legion
         return ($this->getOtherLocation()== 'Rome' || $this->getOtherLocation() == 'Released') ;
     }
     
+    public function isRegularInRome()
+    {
+        return ($this->getOtherLocation()== 'Rome') ;
+    }
+    
     /**
      * Returns the senatorID of the Senator the legion is loyal to or 0 if it's not loyal to any Senator
      * @return string|NULL 
