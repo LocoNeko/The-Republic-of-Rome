@@ -1,7 +1,6 @@
 <?php
 namespace Presenters ;
 use Doctrine\Common\Collections\ArrayCollection;
-
 // TO DO : Beginning of Senate phase - Initialise free tribunes of all senators
 class SenatePhasePresenter
 {
@@ -295,14 +294,14 @@ class SenatePhasePresenter
                 _('Other business') ,
                 _('You must first choose a type of proposal')
             ) ;
-	    // This interface just has a drop down list otherBusinessList (defined at the end of this section)
+			// This interface just has a drop down list otherBusinessList (defined at the end of this section)
             $this->interface['proposalType']= 'OtherBusiness' ;
             $availableOtherBusiness = array () ;
             $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'NONE' , _('-') ) ;
             
             /**
              * Create a collection of all cards from game decks & parties
-             * Hands not included
+             * Hands , unplayedProvinces, drawDeck, and discard decks not included
              */
             $allCards = new ArrayCollection() ;
             $allSenators  = new ArrayCollection() ;
@@ -341,35 +340,6 @@ class SenatePhasePresenter
             }
 
             /**
-             * Fleets
-             * - addAttribute to this Presenter's json array 'fleet' ['canBeRecruited'] and ['canBeDisbanded']
-             */
-            /*
-            $fleets_canBeRecruited = 0 ;
-            $fleets_canBeDisbanded = 0 ;
-            $fleetsOnCards = array() ;
-            foreach($game->getFleets() as $fleet) 
-            {
-                $fleets_canBeRecruited += ($fleet->canBeRecruited() ? 1 : 0) ;
-                $fleets_canBeDisbanded += ($fleet->canBeDisbanded() ? 1 : 0) ;
-                // TO DO : if the fleet has a cardLocation(), store the cardID in an array.
-                $card = $fleet->getCardLocation() ;
-                if ($card!==NULL)
-                {
-                    if (!isset($fleetsOnCards[$card->getId()]))
-                    {
-                            $fleetsOnCards[$card->getId()] = 1 ;
-                    }
-                    else
-                    {
-                            $fleetsOnCards[$card->getId()]++ ;
-                    }
-                }
-            }
-            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'canBeDisbanded'=>$fleets_canBeDisbanded) , TRUE) ;
-            */
-            
-            /**
             * adds element to the 'otherBusiness' attribute array of each cardPresenter based on criteria
             * - For Senators cardPresenter
             **/
@@ -392,14 +362,14 @@ class SenatePhasePresenter
                 {
                     $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
                     $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
-		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
+					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
                 }
                 
                 // Possible commander
                 if ($senatorModel->checkCriteria('possibleCommanders'))
                 {
                     $senator->addAttribute('otherBusiness' , 'commander' , TRUE);
-		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commander' , _('Send Forces') ) ;
+					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commander' , _('Send Forces') ) ;
                 }
                 
                 // Proconsul : can be recalled, can be reinforced
@@ -410,15 +380,8 @@ class SenatePhasePresenter
 					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commanderRecall' , _('Recall ProConsul') ) ;
 					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'reinforcement' , _('Reinforce ProConsul') ) ;
                 }
+
                 // TO DO : 'senatorsForPontifex' , 'senatorsForPontifexRecall' , 'senatorsForPriest' , 'senatorsForPriestRecall' , 'senatorsForConsulForLife'
-                
-                // Fleets : add the number of fleets that accompany this Senator, if any
-                /*
-                if (isset($fleetsOnCards[$senatorModel->getId()]))
-                {
-                    $senator->addAttribute('otherBusiness' , array('fleets' => $fleetsOnCards[$senatorModel->getId()]) , TRUE) ;
-                }
-                 */
             }
             /**
             * adds element to the 'otherBusiness' attribute array of each cardPresenter based on criteria
@@ -446,7 +409,80 @@ class SenatePhasePresenter
 	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'recruit' , _('Recruit Forces') ) ;
 	    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'disband' , _('Disband Forces') ) ;
 	    
-	    // Put all non-Senator & non-Card  data into a data-json json array in the otherBusinessWrapper div
+	    // Put all non-Senator & non-Card data into a data-json json array in the otherBusinessWrapper div
+            
+            /**
+             * Fleets
+             * - addAttribute to this Presenter's json array 'fleet' ['canBeRecruited'] and ['canBeDisbanded']
+             */
+            $fleets_canBeRecruited = 0 ;
+            $fleets_canBeDisbanded = 0 ;
+            $fleetsOnCards = array() ;
+            foreach($game->getFleets() as $fleet) 
+            {
+                $fleets_canBeRecruited += ($fleet->canBeRecruited() ? 1 : 0) ;
+                $fleets_canBeDisbanded += ($fleet->canBeDisbanded() ? 1 : 0) ;
+                // If the fleet has a cardLocation(), add 1 to the $fleetsOnCards array with this cardID as key
+                $card = $fleet->getCardLocation() ;
+                if ($card!==NULL)
+                {
+                    $cardId = $card->getId() ;
+                    if (array_key_exists ( $cardId , $fleetsOnCards ))
+                    {
+                        $fleetsOnCards[$cardId]++ ;
+                    }
+                    else
+                    {
+                        $fleetsOnCards[$cardId] = 1 ;
+                    }
+                }
+            }
+            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'canBeDisbanded'=>$fleets_canBeDisbanded , 'onCards' => $fleetsOnCards) , TRUE) ;
+
+            /**
+             * Legions
+             */
+            $regulars_canBeRecruited = 0 ;
+            $regulars_canBeDisbanded = 0 ;
+            $regularsOnCards = array() ;
+            $veterans = array() ;
+            // Regular legions : how many in Rome, in the pool, with a commander ->addAttribute('regulars' , X)
+            // Veteran legion : for each - its allegiance & if it's in Rome or with a commander (X , Location) where X is the allegiance
+            foreach($game->getLegions() as $legion)
+            {
+                $card = $legion->getCardLocation() ;
+                // regular
+                if (!$legion->getVeteran())
+                {
+                    $regulars_canBeRecruited += ($legion->canBeRecruited() ? 1 : 0) ;
+                    $regulars_canBeDisbanded += ($legion->canBeDisbanded() ? 1 : 0) ;
+                    if ($card!==NULL)
+                    {
+                        $cardId = $card->getId() ;
+                        if (array_key_exists ( $cardId , $regularsOnCards ))
+                        {
+                            $regularsOnCards[$cardId]++ ;
+                        }
+                        else
+                        {
+                            $regularsOnCards[$cardId] = 1 ;
+                        }
+                    }
+                }
+                // veteran
+                else
+                {
+                    // TO DO : Legion->getLoyalToSenatorID()
+                    // TO DO : Legion->getCardLocationCardId()
+                    $veterans[$legion->getId()] = array (
+                        'name' => getName() ,
+                        'loyalTo' => getLoyalToSenatorID() ,
+                        'otherLocation' => getOtherLocation() ,
+                        'cardLocation' => getCardLocationCardId()
+                    ) ;
+                }
+            } 
+            $this->addAttribute('legions' , array('regularCanBeRecruited'=>$regulars_canBeRecruited , 'regularCanBeDisbanded'=>$regulars_canBeDisbanded , 'veterans' => $veterans) , TRUE) ;
 
 	    /**
 	     * Land Bills
@@ -464,11 +500,7 @@ class SenatePhasePresenter
                     $this->addAttribute('landBill' , array('sign'=>'+' , 'level'=>$level ,  'description' => sprintf(_('Pass Level %1$d law') , $level)) ,TRUE) ;
                 }
             }
-		
-  	    // TO DO : Prepare data for legions : Commander, reinforcement, recruit, disband , garrison
-	    // Fleets : how many in Rome, in the pool, with a commander ->addAttribute('fleets' , X)
-	    // Regular legions : how many in Rome, in the pool, with a commander ->addAttribute('regulars' , X)
-	    // Veteran legion : for each - its allegiance & if it's in Rome or with a commander ->addAttribute('veterans' , X , TRUE) where X is the allegiance
+
 	    /**
             * Finally set the main drop-down of the interface to show a list of otherBusiness that are available. This is determined by having at least one card checked TRUE in the loop above
 	    **/
@@ -544,6 +576,7 @@ class SenatePhasePresenter
     
     /**
     * Returns a list of free tribunes provided by Satesmen special abilities
+    * @param \Entities\Party $party
     **/
     public function getFreeTribunes($party)
     {
@@ -560,6 +593,7 @@ class SenatePhasePresenter
     
     /**
     * Returns a list of tribune cards for this party
+    * @param \Entities\Party $party
     **/
     public function getCardTribunes($party)
     {
@@ -574,6 +608,11 @@ class SenatePhasePresenter
         return $result ;
     }
     
+    /**
+     * Returns a list of Senator candidates for a specific proposal
+     * @param \Entities\Game $game
+     * @return array An array of candidates with values in the format array('description' , 'senatorID')
+     */
     public function getListOfCandidates($game)
     {
         $result = array() ;
@@ -603,7 +642,8 @@ class SenatePhasePresenter
         {
             foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'alignedInRome') as $senator)
             {
-                $possibleProsecutions = $senator->getPossibleProsecutions() ;
+				// TO DO : Remove the function from the Senator entity
+                $possibleProsecutions = $this->getPossibleCorruptions($senator) ;
                 if (count($possibleProsecutions)>0)
                 {
                     foreach ($possibleProsecutions as $possibleProsecution) 
@@ -641,6 +681,7 @@ class SenatePhasePresenter
     
     /**
     * List of available Province Cards for Governors proposals
+    * @param \Entities\Game $game
     **/
     public function getListOfAvailableCards($game)
     {
@@ -671,10 +712,15 @@ class SenatePhasePresenter
         }
         return $result ;
     }
+    
     /**
     * Taken out of setContent (otherBusiness section) for readibility's sake
     * This function adds an available other busines to the current list if it wasn't there already
-    **/
+     * @param array $current The current list of other business
+     * @param string $value The key to insert in the list
+     * @param string $description The description for that key 
+     * @return array An updated list
+     */
     public function addAvailableOtherBusiness($current , $value , $description)
     {
 	$result = $current ;
@@ -692,22 +738,66 @@ class SenatePhasePresenter
      * Adds a json value {"name" : "value"} to this data_json
      * @param string $name The value's name (key)
      * @param mixed $value The value itself
+     * @param boolean $mergeArray whthere or not to consider $name to be an array in which $value must be inserted
      */
-	public function addAttribute($name , $value , $mergeArray = FALSE)
-	{
-	    $json = json_decode($this->data_json , TRUE) ;
-	    if ($mergeArray)
-	    {
-		if (!isset ($json[$name]))
-		{
-		    $json[$name] = array() ;
-		}
-		$json[$name][] = $value ;
-	    }
-	    else
-	    {
-		$json[$name] = $value ;
-	    }
-	    $this->data_json = json_encode($json) ;
-	}
+    public function addAttribute($name , $value , $mergeArray = FALSE)
+    {
+        $json = json_decode($this->data_json , TRUE) ;
+        // Merging  $value into the array $json[$name]
+        if ($mergeArray)
+        {
+            if (array_key_exists ( $name , $json ))
+            {
+                $json[$name] = array() ;
+            }
+            $json[$name][] = $value ;
+        }
+        else
+        {
+            $json[$name] = $value ;
+        }
+        $this->data_json = json_encode($json) ;
+    }
+	
+    /**
+    * returns an array of possible prosecutions for this Senator:
+    * 'prosecutionType' => 'Major' | 'Minor' , 'description'
+    * @param \Entities\Senator $game
+    **/
+    public function getPossibleCorruptions($senator)
+    {
+        $result = array() ;
+        if ($senator->getOffice() == 'Censor')
+        {
+            return array() ;
+        }
+        if ($senator->getMajor())
+        {
+            $result[] = array (
+                'prosecutionType' => 'Major' ,
+                'description' => sprintf(_('Major prosecution of %1$s for holding an office') , $senator->getFullName())
+            ) ;
+        }
+        if ($senator->getCorrupt())
+        {
+            $result[] = array (
+                'prosecutionType' => 'Minor' ,
+                'description' => sprintf(_('Minor prosecution of %1$s for taking provincial spoils') , $senator->getFullName())
+            ) ;
+        }
+        if ($senator->hasControlledCards())
+        {
+            foreach($senator->getCardsControlled() as $card)
+            {
+                if ($card->getCorrupt())
+                {
+                    $result[] = array (
+                        'prosecutionType' => 'Minor' ,
+                        'description' => sprintf(_('Minor prosecution of %1$s for profiting from %2$s') , $senator->getFullName() , $card->getName())
+                    ) ;
+                }
+            }
+        }
+        return $result ;
+    }
 }

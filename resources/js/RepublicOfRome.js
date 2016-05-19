@@ -446,7 +446,6 @@ function prepareDynamicSection()
         var $boxToClone = $('.dynamicSection:first', '.dynamicSectionsWrapper');
         var $clonedBox = $boxToClone.clone();
         $clonedBox.find('.dynamicSectionRemoveButton').removeClass('disabled');
-        //$('.dynamicSectionsWrapper').last().append($clonedBox);
         $('.dynamicSectionLast').before($clonedBox);
         //alert ('There are now '+$('.dynamicSectionsWrapper').children().length+' boxes');
     });
@@ -512,10 +511,18 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         var possibleLandBills  = jsonOtherBusiness.landBill ;
         for(var item in possibleLandBills)
         {
-            $('#otherBusinessLandBillSelect').append($("<option></option>")
+            $('#otherBusinessLandBillSelect')
+                .append($("<option></option>")
                 .attr("level",possibleLandBills[item].level)
                 .attr("sign",possibleLandBills[item].sign)
                 .text(possibleLandBills[item].description));
         }
+    }
+    if ($otherBusinessType=='recruit')
+    {
+        var fleetsData  = jsonOtherBusiness.fleets ;
+        $.each( fleetsData, function( key, value ) {
+            alert( "Fleet data - " + key + ": " + value );
+        });
     }
 }

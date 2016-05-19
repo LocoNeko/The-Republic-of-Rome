@@ -513,45 +513,4 @@ class Senator extends Card
         }
         return $result ;
     }
-    
-    /**
-    * returns an array of possible prosecutions for this Senator:
-    * 'prosecutionType' => 'Major' | 'Minor' , 'description'
-    **/
-    public function getPossibleCorruptions()
-    {
-        $result = array() ;
-        if ($this->getOffice() == 'Censor')
-        {
-            return array() ;
-        }
-        if ($this->getMajor())
-        {
-            $result[] = array (
-                'prosecutionType' => 'Major' ,
-                'description' => sprintf(_('Major prosecution of %1$s for holding an office') , $this->getFullName())
-            ) ;
-        }
-        if ($this->getCorrupt())
-        {
-            $result[] = array (
-                'prosecutionType' => 'Minor' ,
-                'description' => sprintf(_('Minor prosecution of %1$s for taking provincial spoils') , $this->getFullName())
-            ) ;
-        }
-        if ($this->hasControlledCards())
-        {
-            foreach($this->getCardsControlled() as $card)
-            {
-                if ($card->getCorrupt())
-                {
-                    $result[] = array (
-                        'prosecutionType' => 'Minor' ,
-                        'description' => sprintf(_('Minor prosecution of %1$s for profiting from %2$s') , $this->getFullName() , $card->getName())
-                    ) ;
-                }
-            }
-        }
-        return $result ;
-    }
 }

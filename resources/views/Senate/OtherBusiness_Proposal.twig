@@ -13,16 +13,18 @@
 <div class='otherBusinessWrapper' data-json='{{view.data_json}}'>
     
     <table id='concession' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
-        <tbody>
-            <tr>
-                <td class="success"></td>
-                <td>Concession interface</td>
+		<tbody class="dynamicSectionsWrapper">
+			<tr class="dynamicSection">
+                <td class="success">Give</td>
+                <td><select id="otherBusinessCardSelectconcession" class="form-control global-postable"></select></td>
+                <td class="success">To</td>
+                <td><select id="otherBusinessSenatorSelectconcession" class="form-control global-postable"></select></td>
+				<td><button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button></td>
             </tr>
-            <tr>
-                <td class="success"></td>
-                <td>TO DO</td>
-            </tr>
-        </tbody>
+			<tr class="dynamicSectionLast">
+				<td colspan="5"><button type="button" class="btn btn-success dynamicSectionAddButton"><span class="glyphicon glyphicon-plus"></button></td>
+			</tr> 
+         </tbody>
     </table>
     
     <table id='landBill' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
@@ -52,18 +54,18 @@
                 <td class="success">To fight</td>
                 <td><select id="otherBusinessCardSelectcommander" class="form-control global-postable"></select></td>
             </tr>
+            <tr>
+                <td class="success">With</td>
+                <td>TO DO : FORCES</td>
+            </tr>
         </tbody>
     </table>
     
     <table id='commanderRecall' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
         <tbody>
             <tr>
-                <td class="success"></td>
-                <td>Commander recall interface</td>
-            </tr>
-            <tr>
-                <td class="success"></td>
-                <td>TO DO</td>
+                <td class="success">Recall</td>
+                <td><select id="otherBusinessSenatorSelectcommanderRecall" class="form-control global-postable"></select></td>
             </tr>
         </tbody>
     </table>
