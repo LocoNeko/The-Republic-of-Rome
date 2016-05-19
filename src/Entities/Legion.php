@@ -97,6 +97,27 @@ class Legion
         return ($this->getOtherLocation()== 'Rome' || $this->getOtherLocation() == 'Released') ;
     }
     
+    /**
+     * Returns the senatorID of the Senator the legion is loyal to or 0 if it's not loyal to any Senator
+     * @return string|NULL 
+     */
+    public function getLoyalToSenatorID()
+    {
+        $senator = $this->getLoyalTo() ;
+        return ($senator === '' ? 0 : $senator->getSenatorID()) ;
+    }
+    
+    /**
+     * Returns the card Id of the Card the legion is located on or 0 if it's not located on a card
+     * @return string|NULL 
+     */
+    public function getCardLocationCardId()
+    {
+        $card = $this->getCardLocation() ;
+        return ($card === '' ? 0 : $card->getId()) ;
+
+    }
+    
     public function recruit()
     {
         $this->setOtherLocation('Rome') ;

@@ -267,6 +267,10 @@ class Senator extends Card
 		    case 'possibleCommanders' :
 		        return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul' , 'Dictator')) && ($this->getDeck()->getInParty() != NULL) && $this->inRome()) ;
 
+		    // In Rome, not necessarily in a party, no office
+		    case 'possibleGovernor' :
+                        return ( $this->inRome() && $this->getOffice()===NULL) ;
+
 		    // Proconsul
 		    case 'isProconsul' :
 		        if ($this->hasControlledCards())

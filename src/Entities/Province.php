@@ -138,5 +138,13 @@ class Province extends Card
             $this->mandate+=(int)$delta ;
         }
     }
-
+    
+    /**
+     * Checks whether or not the Province is in the 'unplayedProvinces'. Returns FALSE if it is.
+     * @return boolean
+     */
+    public function getIsProvinceInPlay()
+    {
+        return ($this->getDeck()->getName() !== 'unplayedProvinces') ;
+    }
 }

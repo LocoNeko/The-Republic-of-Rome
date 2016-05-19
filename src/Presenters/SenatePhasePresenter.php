@@ -362,14 +362,14 @@ class SenatePhasePresenter
                 {
                     $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
                     $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
-					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
+                    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
                 }
                 
                 // Possible commander
                 if ($senatorModel->checkCriteria('possibleCommanders'))
                 {
                     $senator->addAttribute('otherBusiness' , 'commander' , TRUE);
-					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commander' , _('Send Forces') ) ;
+                    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commander' , _('Send Forces') ) ;
                 }
                 
                 // Proconsul : can be recalled, can be reinforced
@@ -377,8 +377,8 @@ class SenatePhasePresenter
                 {
                     $senator->addAttribute('otherBusiness' , 'commanderRecall' , TRUE);
                     $senator->addAttribute('otherBusiness' , 'reinforcement' , TRUE);
-					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commanderRecall' , _('Recall ProConsul') ) ;
-					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'reinforcement' , _('Reinforce ProConsul') ) ;
+                    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'commanderRecall' , _('Recall ProConsul') ) ;
+                    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'reinforcement' , _('Reinforce ProConsul') ) ;
                 }
 
                 // TO DO : 'senatorsForPontifex' , 'senatorsForPontifexRecall' , 'senatorsForPriest' , 'senatorsForPriestRecall' , 'senatorsForConsulForLife'
@@ -472,13 +472,11 @@ class SenatePhasePresenter
                 // veteran
                 else
                 {
-                    // TO DO : Legion->getLoyalToSenatorID()
-                    // TO DO : Legion->getCardLocationCardId()
                     $veterans[$legion->getId()] = array (
-                        'name' => getName() ,
-                        'loyalTo' => getLoyalToSenatorID() ,
-                        'otherLocation' => getOtherLocation() ,
-                        'cardLocation' => getCardLocationCardId()
+                        'name' => $legion->getName() ,
+                        'loyalTo' => $legion->getLoyalToSenatorID() ,
+                        'otherLocation' => $legion->getOtherLocation() ,
+                        'cardLocation' => $legion->getCardLocationCardId()
                     ) ;
                 }
             } 
@@ -642,7 +640,6 @@ class SenatePhasePresenter
         {
             foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'alignedInRome') as $senator)
             {
-				// TO DO : Remove the function from the Senator entity
                 $possibleProsecutions = $this->getPossibleCorruptions($senator) ;
                 if (count($possibleProsecutions)>0)
                 {
@@ -665,9 +662,6 @@ class SenatePhasePresenter
                 'description' => _('-') ,
                 'senatorID' => NULL
             ) ;
-            // TO DO - add 'possibleGovernor' to Senator->checkCriteria() :
-            // case 'possibleGovernor' :
-            //     return ( $this->inRome() && $this->getOffice()===NULL) ;
             foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleGovernor') as $senator)
             {
                 $result[] = array (
@@ -694,11 +688,6 @@ class SenatePhasePresenter
                 'recall' => FALSE ,
                 'cardID' => NULL
             ) ;
-            // TO DO  - Add to Province :
-            // public function getIsProvinceInPlay()
-            // {
-            //    return ($this->getDeck()->getName() !== 'unplayedProvinces') ;
-            // }
             foreach ($game->getFilteredCards(array('preciseType' => 'Province' , 'isProvinceInPlay' => TRUE)) as $province)
             {
                 // If the card is not in the Forum, this is a recall
