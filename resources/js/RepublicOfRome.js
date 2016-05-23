@@ -529,6 +529,20 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
     
     if ($otherBusinessType=='commander' || $otherBusinessType=='garrison')
     {
+        // Fleets : drop down
+        var fleetsData  = jsonOtherBusiness.fleets ;
+        $.each( fleetsData, function( key, value ) {
+            // Fleets in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of fleets
+            if (key=='inRome')
+            {
+                for (i = 0; i < value ; i++) 
+                {
+                    $('#otherBusinessFleetsSelectcommander').append( $("<option></option>").text(i) );
+                }
+            }
+        });
+
+        // Legions : regulars (drop down) and veterans (check boxes)
         var legionsData  = jsonOtherBusiness.legions ;
         $.each( legionsData, function( key, value ) {
             // Regulars in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of regulars

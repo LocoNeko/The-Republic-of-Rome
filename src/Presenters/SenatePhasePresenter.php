@@ -416,12 +416,12 @@ class SenatePhasePresenter
              * - addAttribute to this Presenter's json array 'fleet' ['canBeRecruited'] and ['canBeDisbanded']
              */
             $fleets_canBeRecruited = 0 ;
-            $fleets_canBeDisbanded = 0 ;
+            $fleets_inRome = 0 ;
             $fleetsOnCards = array() ;
             foreach($game->getFleets() as $fleet) 
             {
                 $fleets_canBeRecruited += ($fleet->canBeRecruited() ? 1 : 0) ;
-                $fleets_canBeDisbanded += ($fleet->canBeDisbanded() ? 1 : 0) ;
+                $fleets_inRome += ($fleet->inRome() ? 1 : 0) ;
                 // If the fleet has a cardLocation(), add 1 to the $fleetsOnCards array with this cardID as key
                 $card = $fleet->getCardLocation() ;
                 if ($card!==NULL)
@@ -437,7 +437,7 @@ class SenatePhasePresenter
                     }
                 }
             }
-            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'canBeDisbanded'=>$fleets_canBeDisbanded , 'onCards' => $fleetsOnCards) , TRUE) ;
+            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'inRome'=>$fleets_inRome , 'onCards' => $fleetsOnCards)) ;
 
             /**
              * Legions
@@ -489,8 +489,7 @@ class SenatePhasePresenter
                     'regularsCanBeDisbanded'=>$regulars_canBeDisbanded ,
                     'regularsInRome'=>$regulars_inRome ,
                     'veterans' => $veterans
-                ) ,
-                TRUE
+                )
             ) ;
 
 	    /**

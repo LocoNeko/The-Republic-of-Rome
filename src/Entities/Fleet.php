@@ -79,7 +79,7 @@ class Fleet
         return ($this->getOtherLocation() == 'Pool') ;
     }
 
-    public function canBeDisbanded()
+    public function inRome()
     {
         return ($this->getOtherLocation()== 'Rome') ;
     }
