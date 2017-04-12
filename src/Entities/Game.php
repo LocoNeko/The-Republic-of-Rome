@@ -838,7 +838,7 @@ class Game
                 $family->resetSenator() ;
                 // The family was the party's leader
                 if ($party->getLeader()->getSenatorID() == $family->getSenatorID()) { $party->setLeader($statesman); }
-                $familyMessage=_(' He has the Family and puts it under the Statesman.');
+                $familyMessage=_(' {You have,He has} the Family and {put,puts} it under the Statesman.');
                 
             // The Family was found in the forum - Play the Statesman and make him control the Family
             }
