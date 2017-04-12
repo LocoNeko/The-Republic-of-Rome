@@ -845,8 +845,7 @@ class Game
             elseif (($familyLocation['type']=='game') && ($familyLocation['name']=='forum') ) 
             {
                 $this->getDeck('forum')->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
-                $familyMessage=_(' He takes the Family from the forum and puts it under the Statesman.');
-
+                $familyMessage=_(' {You take,He takes} the Family from the forum and {put,puts} it under the Statesman.');
             }
             // Move any card controlled by the Family on the Statesman
             if ($family->hasControlledCards())
