@@ -90,6 +90,10 @@ class Party
     public function setBid($bid) { $this->bid = $bid; }
     public function setBidWith($bidWith) {
         $this->bidWith = $bidWith ;
+        foreach($this->getSenators()->getCards() as $senator) 
+        {
+            $senator->setBiddingFor(NULL) ;
+        }
         $bidWith->setBiddingFor($this) ;
     }
 
