@@ -498,6 +498,7 @@ class SenatePhasePresenter
 	     */
 	    foreach($game->getLandBillsTable() as $level=>$details) 
 	    {
+                $this->addAttribute('Level '.$level,1) ;
                 // A law can be repealed
                 if ((int)$details['inPlay']>0)
                 {
