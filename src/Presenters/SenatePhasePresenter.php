@@ -362,8 +362,7 @@ class SenatePhasePresenter
                 if ($senatorModel->checkCriteria('alignedInRome'))
                 {
                     $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
-                    $senator->addAttribute('otherBusiness' , 'landBillSponsor' , TRUE);
-                    $senator->addAttribute('otherBusiness' , 'landBillCoSponsor' , TRUE);
+                    $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
                     $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
                 }
                 
