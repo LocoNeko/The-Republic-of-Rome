@@ -499,14 +499,14 @@ class SenatePhasePresenter
 	    foreach($game->getLandBillsTable() as $level=>$details) 
 	    {
                 // A law can be repealed
-                if ((int)$details['inPlay']>=0)
+                if ((int)$details['inPlay']>0)
                 {
                     $this->addAttribute('landBill' , array('sign'=>'-' , 'level'=>$level , 'description' => sprintf(_('Repeal Level %1$d law') , $level)) , TRUE) ;
                 }
                 // A law can be added
-                if ((int)$details['inPlay']<=(3-$level) )
+                if ((int)$details['inPlay']<=(3-(int)$level) )
                 {
-                    $this->addAttribute('landBill' , array('sign'=>'+' , 'level'=>$level ,  'description' => sprintf(_('Pass Level %1$d law') , $level)) ,TRUE) ;
+                    $this->addAttribute('landBill' , array('sign'=>'+' , 'level'=>$level , 'description' => sprintf(_('Pass Level %1$d law') , $level)) ,TRUE) ;
                 }
             }
 
