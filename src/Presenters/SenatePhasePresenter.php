@@ -294,7 +294,8 @@ class SenatePhasePresenter
                 _('Other business') ,
                 _('You must first choose a type of proposal')
             ) ;
-			// This interface just has a drop down list otherBusinessList (defined at the end of this section)
+            
+            // This interface just has a drop down list otherBusinessList (defined at the end of this section)
             $this->interface['proposalType']= 'OtherBusiness' ;
             $availableOtherBusiness = array () ;
             $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'NONE' , _('-') ) ;
@@ -361,7 +362,8 @@ class SenatePhasePresenter
                 if ($senatorModel->checkCriteria('alignedInRome'))
                 {
                     $senator->addAttribute('otherBusiness' , 'concession' , TRUE);
-                    $senator->addAttribute('otherBusiness' , 'landBill' , TRUE);
+                    $senator->addAttribute('otherBusiness' , 'landBillSponsor' , TRUE);
+                    $senator->addAttribute('otherBusiness' , 'landBillCoSponsor' , TRUE);
                     $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'landBill' , _('Sponsor Land bills')) ;
                 }
                 

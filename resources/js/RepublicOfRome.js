@@ -537,7 +537,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             {
                 for (i = 0; i < value ; i++) 
                 {
-                    $('#otherBusinessFleetsSelectcommander').append( $("<option></option>").text(i) );
+                    $('#otherBusinessFleetsSelect').append( $("<option></option>").text(i) );
                 }
             }
         });
@@ -550,7 +550,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             {
                 for (i = 0; i < value ; i++) 
                 {
-                    $('#otherBusinessRegularsSelectcommander').append( $("<option></option>").text(i) );
+                    $('#otherBusinessRegularsSelect').append( $("<option></option>").text(i) );
                 }
             }
             // Appending checkboxes for sending specific Veteran legions
@@ -561,7 +561,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
                     if (legionData['otherLocation'] == 'Rome')
                     {
                         // TO DO : The title will not be helpful. It should say "Loyal to X"
-                        $('<label class="checkbox-inline" title="'+legionData['loyalTo']+'"><input type="checkbox" id="'+legionID+'">'+legionData['name']+'</label>').appendTo('#otherBusinessVeteransCheckboxescommander') ;
+                        $('<label class="checkbox-inline" title="'+legionData['loyalTo']+'"><input type="checkbox" id="'+legionID+'">'+legionData['name']+'</label>').appendTo('#otherBusinessVeteransCheckboxes') ;
                     }
                 });
             }
