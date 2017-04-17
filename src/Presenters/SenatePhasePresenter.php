@@ -498,7 +498,6 @@ class SenatePhasePresenter
 	     */
 	    foreach($game->getLandBillsTable() as $level=>$details) 
 	    {
-                $this->addAttribute('Level '.$level,1) ;
                 // A law can be repealed
                 if ((int)$details['inPlay']>0)
                 {
@@ -747,7 +746,7 @@ class SenatePhasePresenter
         // Merging  $value into the array $json[$name]
         if ($mergeArray)
         {
-            if (array_key_exists ( $name , $json ))
+            if (!isset ($json[$name]))
             {
                 $json[$name] = array() ;
             }
@@ -759,7 +758,7 @@ class SenatePhasePresenter
         }
         $this->data_json = json_encode($json) ;
     }
-	
+    
     /**
     * returns an array of possible prosecutions for this Senator:
     * 'prosecutionType' => 'Major' | 'Minor' , 'description'
