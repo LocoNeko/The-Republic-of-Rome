@@ -480,7 +480,10 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
                 $senatorName+=' ('+$json.office+')';
             }
             // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessSenatorSelect{$otherBusinessType}
-            $('#otherBusinessSenatorSelect' + $otherBusinessType).append($("<option></option>").attr("value",$senatorID).text($senatorName));
+            // Go through all Senator Selectors with this otherBusinessType. There can be more than one in some cases (Land bill sponsor & co sponsor)
+            $('#otherBusinessSenatorSelect' + $otherBusinessType).each(function(i) {
+                $(this).append($("<option></option>").attr("value",$senatorID).text($senatorName));
+            });
         }
     });
 
