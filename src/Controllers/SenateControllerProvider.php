@@ -27,11 +27,11 @@ class SenateControllerProvider implements ControllerProviderInterface
 
                 //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
                 $game->getParty($user_id)->setLastUpdateToNow();
+		
+		// TO DO : For testing purposes
+		$game->setSubPhase('OtherBusiness');          
                 
-                // TO DO : For testing purposes
-                $game->setSubPhase('OtherBusiness');
-                
-                try
+		try
                 {
                     $view = new \Presenters\SenatePhasePresenter($game, $user_id);
                 }
