@@ -360,7 +360,7 @@ class SenatePhasePresenter
                 $senatorModel = $game->getFilteredCards(array('senatorID' => $senator->getAttribute('senatorID')))->first();
 
                 // The full contextual name is not readily available normally. Let's add it to the senator card's json
-                $senator->addAttribute('fullName' , $this->game->displayContextualName($senator->getFullName()));
+                $senator->addAttribute('fullName' , $this->game->displayContextualName($senatorModel->getFullName()));
                 
                 // Concession holder , Land bill sponsor & co-sponsor
                 if ($senatorModel->checkCriteria('alignedInRome'))
