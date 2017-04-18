@@ -465,6 +465,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
     var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
 
     $('#otherBusinessSenatorSelect' + $otherBusinessType).find('option').remove() ;
+    
     // Go through all Senators
     $('.sprite-Senator').each(function(i, senator) {
         // Get the JSON data from the Senator Card and retrieve what is necessary : name, senatorID, list of otherBusiness
@@ -482,12 +483,13 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessSenatorSelect{$otherBusinessType}
             // Go through all Senator Selectors with this otherBusinessType. There can be more than one in some cases (Land bill sponsor & co sponsor)
             $('#otherBusinessSenatorSelect' + $otherBusinessType).each(function(i , select) {
-                $(select).append($("<option></option>").attr("value",$senatorID).text($senatorName));
+                $(select).append($("<option></option>").attr("value" , $senatorID).text($senatorName));
             });
         }
     });
 
     $('#otherBusinessCardSelect' + $otherBusinessType).find('option').remove() ;
+    
     // For concession and commander proposals, we need the cards as well, not just senators
     if ($otherBusinessType=='concession' || $otherBusinessType=='commander')
     {
@@ -514,7 +516,6 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         var possibleLandBills  = jsonOtherBusiness.landBill ;
         for(var item in possibleLandBills)
         {
-            alert("Land bill level " + possibleLandBills[item].level);
             $('#otherBusinessLandBillSelect')
                 .append($("<option></option>")
                 .attr("level",possibleLandBills[item].level)
