@@ -471,6 +471,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         // Get the JSON data from the Senator Card and retrieve what is necessary : name, senatorID, list of otherBusiness
         var $json = $(senator).data('json') ;
         var $senatorName = $json.name ;
+        var $senatorFullName = $json.fullName ;
         var $senatorID = $json.senatorID ;
         var $otherBusinessList = $json.otherBusiness ;
         // If the $otherBusinessType is in this Senator's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
@@ -478,12 +479,13 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         {
             if ($otherBusinessType=='commander')
             {
+                // TO DO : convert to senatorFullName
                 $senatorName+=' ('+$json.office+')';
             }
             // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessSenatorSelect{$otherBusinessType}
             // Go through all Senator Selectors with this otherBusinessType class. There can be more than one in some cases (Land bill sponsor & co sponsor)
             $('.otherBusinessSenatorSelect' + $otherBusinessType).each(function(i , select) {
-                $(select).append($("<option></option>").attr("value" , $senatorID).text($senatorName));
+                $(select).append($("<option></option>").attr("value" , $senatorID).text($senatorFullName));
             });
         }
     });

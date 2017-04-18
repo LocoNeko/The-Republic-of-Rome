@@ -346,6 +346,7 @@ class SenatePhasePresenter
             **/
             foreach ($allSenators as $senator)
             {
+
                 // Go through controlled cards and add them to $allCards except :
                 // - Senators, which represents the family of a Statesman and is not needed)
                 // - Concessions, which are already assigned if we find them in a Senator->controlledCards
@@ -357,6 +358,9 @@ class SenatePhasePresenter
                     }
                 }
                 $senatorModel = $game->getFilteredCards(array('senatorID' => $senator->getAttribute('senatorID')))->first();
+
+                // The full contextual name is not readily available normally. Let's add it to the senator card's json
+                $senator->addAttribute('fullName' , $this->game->displayContextualName($senator->getFullName()));
                 
                 // Concession holder , Land bill sponsor & co-sponsor
                 if ($senatorModel->checkCriteria('alignedInRome'))
