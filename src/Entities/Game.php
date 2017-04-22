@@ -579,7 +579,7 @@ class Game
         $result=array() ;
         foreach($this->getParties() as $party)
         {
-            $result[$party->getUser_id()] = $party->getFullName() ;
+            $result[$party->getUser_id()] = $party->getName() ;
         }
         return $result ;
     }
