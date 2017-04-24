@@ -352,14 +352,15 @@ class SenatePhasePresenter
                 // - Concessions, which are already assigned if we find them in a Senator->controlledCards
                 foreach($senator->controlledCards as $subCard)
                 {
-                    if ($card->preciseType !== 'Senator' && $card->preciseType !== 'Concession')
+                    if ($subCard->preciseType !== 'Senator' && $subCard->preciseType !== 'Concession')
                     {
-                        $allCards->add($card) ;
+                        $allCards->add($subCard) ;
                     }
                 }
                 $senatorModel = $game->getFilteredCards(array('senatorID' => $senator->getAttribute('senatorID')))->first();
 
                 // The full contextual name is not readily available normally. Let's add it to the senator card's json
+                //$senator->addAttribute('fullName' , $this->game->displayContextualName($senatorModel->getFullName()));
                 $senator->addAttribute('fullName' , $this->game->displayContextualName($senatorModel->getFullName()));
                 
                 // Concession holder , Land bill sponsor & co-sponsor
@@ -403,11 +404,12 @@ class SenatePhasePresenter
                 elseif ($card->preciseType==='Conflict')
                 {
                     $card->addAttribute('otherBusiness' , 'commander' , TRUE);
+                    $card->addAttribute('deck' , $card->location['name']);
                 }
                 elseif ($card->preciseType==='Province')
                 {
                     $card->addAttribute('otherBusiness' , 'garrison' , TRUE);
-					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
                 }
             }
 	    
@@ -442,7 +444,7 @@ class SenatePhasePresenter
                     }
                 }
             }
-            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'inRome'=>$fleets_inRome , 'onCards' => $fleetsOnCards)) ;
+            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'inRome'=>$fleets_inRome , 'onCards' => $fleetsOnCards , 'cost' => $game->getUnitCost('Fleet'))) ;
 
             /**
              * Legions
@@ -493,7 +495,8 @@ class SenatePhasePresenter
                     'regularsCanBeRecruited'=>$regulars_canBeRecruited ,
                     'regularsCanBeDisbanded'=>$regulars_canBeDisbanded ,
                     'regularsInRome'=>$regulars_inRome ,
-                    'veterans' => $veterans
+                    'veterans' => $veterans ,
+                    'cost' => $game->getUnitCost('Legion')
                 )
             ) ;
 

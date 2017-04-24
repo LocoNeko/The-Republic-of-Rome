@@ -10,6 +10,7 @@ class CardPresenter
     private $user_id ;
     public $preciseType ;
     public $id ;
+    public $location ;
     public $classes;
     public $attributes ;
     public $data_json ;
@@ -27,6 +28,7 @@ class CardPresenter
         $this->user_id = $user_id ;
         $this->preciseType = $card->getPreciseType() ;
         $this->id = $card->getId() ;
+        $this->location = $card->getLocation() ;
         /*
          * What we need to display the card :
          */

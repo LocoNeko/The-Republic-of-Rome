@@ -438,6 +438,19 @@ function prepareSenateOtherBusiness()
             }
         });
     });
+    
+    var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
+
+    // Recruit : Dynamically display total cost of forces
+    $('#otherBusinessRecruitTotal').val('0 T.') ;
+    $('.otherBusinessRecruit').on('change', function()
+    {
+        $('#otherBusinessRecruitTotal').val(
+            jsonOtherBusiness.legions['cost'] * parseInt($('#otherBusinessRecruitRegularsSelect').val()) +
+            jsonOtherBusiness.fleets['cost']  * parseInt($('#otherBusinessRecruitFleetsSelect').val())   +
+            ' T.' 
+        ) ;
+    });
 }
 
 function prepareDynamicSection()
@@ -479,8 +492,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         {
             if ($otherBusinessType=='commander')
             {
-                // TO DO : convert to senatorFullName
-                $senatorName+=' ('+$json.office+')';
+                $senatorFullName+=' ('+$json.office+')';
             }
             // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessSenatorSelect{$otherBusinessType}
             // Go through all Senator Selectors with this otherBusinessType class. There can be more than one in some cases (Land bill sponsor & co sponsor)
@@ -499,7 +511,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         $('.sprite-Card').each(function(i) {
             // Get the JSON data from the Card and retrieve what is necessary : name, cardID, list of otherBusiness
             var $json = $(this).data('json') ;
-            var $cardName = $json.name ;
+            var $cardName = $json.name+ ' ('+$json.deck+')' ;
             var $card_id = $json.card_id ;
             var $otherBusinessList = $json.otherBusiness ;
             // If the $otherBusinessType is in this Card's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
@@ -528,10 +540,14 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
     
     if ($otherBusinessType=='recruit')
     {
-        var fleetsData  = jsonOtherBusiness.fleets ;
-        $.each( fleetsData, function( key, value ) {
-            alert( "Fleet data - " + key + ": " + value );
-        });
+        for (i = 0; i <= jsonOtherBusiness.legions['regularsCanBeRecruited'] ; i++)
+        {
+            $('#otherBusinessRecruitRegularsSelect').append( $("<option></option>").text(i) );
+        }
+        for (i = 0; i <= jsonOtherBusiness.fleets['canBeRecruited'] ; i++)
+        {
+            $('#otherBusinessRecruitFleetsSelect').append( $("<option></option>").text(i) );
+        }
     }
     
     if ($otherBusinessType=='commander' || $otherBusinessType=='garrison')
@@ -542,7 +558,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             // Fleets in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of fleets
             if (key=='inRome')
             {
-                for (i = 0; i < value ; i++) 
+                for (i = 0; i <= value ; i++) 
                 {
                     $('#otherBusinessFleetsSelect').append( $("<option></option>").text(i) );
                 }
@@ -555,7 +571,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             // Regulars in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of regulars
             if (key=='regularsInRome')
             {
-                for (i = 0; i < value ; i++) 
+                for (i = 0; i <= value ; i++) 
                 {
                     $('#otherBusinessRegularsSelect').append( $("<option></option>").text(i) );
                 }

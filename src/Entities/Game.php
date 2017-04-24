@@ -572,14 +572,14 @@ class Game
     
     /**
      * Get all parties names
-     * @return array of [$user_id] => 'party name [user name]'
+     * @return array of [$user_id] => '[user name]'
      */
     public function getPartiesNames()
     {
         $result=array() ;
         foreach($this->getParties() as $party)
         {
-            $result[$party->getUser_id()] = $party->getName() ;
+            $result[$party->getUser_id()] = $party->getUserName() ;
         }
         return $result ;
     }
@@ -1690,4 +1690,28 @@ class Game
             }
         }
     }
+    
+    /**
+    * ----------------------------------------------------
+    * Senate
+    * ----------------------------------------------------
+    */
+
+    /**
+     * Given a string ('Legion'|'Fleet') returns the cost per unit
+     * @param string $type Legion|Fleet
+     * @return int
+     */
+    public function getUnitCost($type)
+    {
+        switch ($type)
+        {
+            case 'Legion' :
+            case 'Fleet' :
+                return 10 * ( 1 + $this->getEventProperty('name' , 'Manpower Shortage') ) ;
+            default :
+                return 0 ;
+        }
+    }
+
 }
