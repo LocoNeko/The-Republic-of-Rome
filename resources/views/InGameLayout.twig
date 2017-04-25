@@ -10,8 +10,8 @@
         #}
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
         <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/css/sprite.css">
-        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/css/general.css">
+        <link rel="stylesheet" type="text/css" href="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/css/sprite.css">
+        <link rel="stylesheet" type="text/css" href="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/css/general.css">
         <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
         {#
             JS - TO DO : put in one minified file 
@@ -24,7 +24,7 @@
         {#
             JS - RepublicOfRome.js file with all the app-specific functions
         #}
-        <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/RepublicOfRome.js"></script>
+        <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/RepublicOfRome.js"></script>
     </head>
     
     <body style="padding-bottom: 150px; height: 100%; overflow-y: hidden ;" data-json='{"user_id": "{{app.user.id}}"}'>

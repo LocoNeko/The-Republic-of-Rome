@@ -1,19 +1,19 @@
 <?php
-
     use Silex\Provider;
-    use Symfony\Component\HttpFoundation\Response;
-    use Doctrine\Common\Collections\ArrayCollection;
     use Symfony\Component\HttpFoundation\Request;
     use Symfony\Component\Debug\ErrorHandler;
     use Symfony\Component\Debug\ExceptionHandler;
-    
+    use Dflydev\Provider\DoctrineOrm\DoctrineOrmServiceProvider;
+   
+    $app = new Silex\Application() ; 
     $app->register(new Provider\ServiceControllerServiceProvider());
     $app->register(new Provider\SessionServiceProvider());
-    $app->register(new Provider\UrlGeneratorServiceProvider());
+    $app->register(new Provider\RoutingServiceProvider());
+    $app->register(new Provider\DoctrineServiceProvider());
+    $app->register(new Provider\SecurityServiceProvider());
+    $app->register(new Provider\RememberMeServiceProvider());
     $app->register(new Provider\TwigServiceProvider());
     $app->register(new Provider\SwiftmailerServiceProvider());
-    $app->register(new Provider\SecurityServiceProvider());
-    $app->register(new Provider\DoctrineServiceProvider());
     ErrorHandler::register();
     ExceptionHandler::register();
     
@@ -99,10 +99,89 @@
 
     /* Includes :
      * - Database connection
-     * - SimpleUser
      */
     require __DIR__.'/../src/appDatabase.php';
-    require __DIR__.'/../src/appSimpleUser.php';
+    
+    /**
+     * Simple user
+     */
+
+    $userServiceProvider = new SimpleUser\UserServiceProvider();
+    $app->register($userServiceProvider);
+
+    // Simple user - Firewalls
+    $app['security.firewalls'] = array(
+        'login' => array(
+            'pattern' => '^'.$app['BASE_URL'].'/user/login$',
+        ),
+        'register' => array(
+            'pattern' => '^'.$app['BASE_URL'].'/user/register$',
+        ),
+        'secured_area' => array(
+            'pattern' => '^.*$',
+            'anonymous' => false,
+            'remember_me' => array(),
+            'form' => array(
+                'login_path' => $app['BASE_URL'].'/user/login',
+                'check_path' => $app['BASE_URL'].'/user/login_check',
+            ),
+            'logout' => array(
+                'logout_path' => $app['BASE_URL'].'/user/logout',
+            ),
+            'users' => function($app) { return $app['user.manager']; },
+        ),
+    );
+
+    // Simple user - options
+    $app['user.options'] = array(
+        'templates' => array(
+            'layout' => '/layout.twig',
+            'register' => '/simpleuser/register.twig',
+            'register-confirmation-sent' => '/simpleuser/register-confirmation-sent.twig',
+            'login' => '/simpleuser/login.twig',
+            'login-confirmation-needed' => '/simpleuser/login-confirmation-needed.twig',
+            'forgot-password' => '/simpleuser/forgot-password.twig',
+            'reset-password' => '/simpleuser/reset-password.twig',
+            'view' => '/simpleuser/view.twig',
+            'edit' => '/simpleuser/edit.twig',
+            'list' => '/simpleuser/list.twig',
+        ),
+    );
+
+    /**
+     * Database
+     */
+    
+    // Connection to the database
+    $app['db.options'] = array(
+        'driver'   => 'pdo_mysql',
+        'dbname' => $config_php['MYSQL_DB'],
+        'host' => $config_php['MYSQL_HOST'],
+        'user' => $config_php['MYSQL_USER'],
+        'password' => $config_php['MYSQL_PASSWORD'],
+    );
+    
+      
+    // Create a simple "default" Doctrine ORM configuration for Annotations
+    $isDevMode = true;
+    
+    // obtaining the entity manager
+    //$config = Setup::createAnnotationMetadataConfiguration(array(__DIR__."/../src/Entities"), $isDevMode);
+    //$entityManager = EntityManager::create($app['db.options'], $config);
+    
+    // Doctrine ORM
+    $app->register(new DoctrineOrmServiceProvider , array(
+        "orm.proxies_dir" => __DIR__."/../src/Entities/Proxies",
+        "orm.em.options" => array(
+            "mappings" => array(
+                array(
+                    "type" => "annotation",
+                    "namespace" => "Entities",
+                    "path" => __DIR__."/../src/Entities",
+                ),
+            ),
+        ),
+    ));
 
     // The Welcome Page
     $app->get($app['BASE_URL'].'/', function () use ($app) {
@@ -110,6 +189,9 @@
             'layout_template' => 'layout.twig',
         ));
     });
+
+    // Mount SimpleUser routes.
+    $app->mount($app['BASE_URL'].'/user', $userServiceProvider);
 
     // Routes base paths : 'Lobby' or a specific {phase}
     $app->mount($app['BASE_URL'].'/Lobby'      , new Controllers\LobbyControllerProvider($app) );
@@ -192,6 +274,8 @@
         }
     });
     
+    $app->run() ;
+
     /*
     $app->error(function (\Exception $e, $code) {
         switch ($code) {
