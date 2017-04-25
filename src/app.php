@@ -98,6 +98,18 @@
     $app['twig.path'] = array(__DIR__.'/../resources/views/');
 
     /**
+     * Assets
+     */
+    
+    $app->register(new Provider\AssetServiceProvider() , array(
+        'assets.version' => 'v1',
+        'assets.version_format' => '%s?version=%s',
+        'assets.named_packages' => array(
+            'css' => array('version' => 'css2', 'base_path' => __DIR__.'/../resources/css/')
+        ),
+    ));
+    
+    /**
      * Simple user
      */
 
@@ -122,6 +134,7 @@
             ),
             'logout' => array(
                 'logout_path' => $app['BASE_URL'].'/user/logout',
+                 'invalidate_session' => false,
             ),
             'users' => function($app) { return $app['user.manager']; },
         ),
