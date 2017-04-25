@@ -97,11 +97,6 @@
     // Twig views path   
     $app['twig.path'] = array(__DIR__.'/../resources/views/');
 
-    /* Includes :
-     * - Database connection
-     */
-    require __DIR__.'/../src/appDatabase.php';
-    
     /**
      * Simple user
      */
