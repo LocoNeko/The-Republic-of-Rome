@@ -8,20 +8,20 @@
         {#
             CSS - TO DO : put in one minified file 
         #}
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
-        <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
-        {#<link rel="stylesheet" type="text/css" href="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/css/sprite.css">#}
+        <link rel="stylesheet" href="{{ asset('/css/bootstrap.css') }}">
+        <link rel="stylesheet" href="{{ asset('/css/jquery.dataTables.min.css') }}">
         <link rel="stylesheet" type="text/css" href="{{ asset('/css/sprite.css') }}">
-        <link rel="stylesheet" type="text/css" href="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/css/general.css">
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="{{ asset('/css/general.css') }}">
+        <link rel="stylesheet" href="{{ asset('/css/jquery-ui.css') }}">
+
         {#
             JS - TO DO : put in one minified file 
         #}
-        <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
-        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
-        <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="{{ asset('/js/socket.io-1.2.0.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('/js/jquery.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('/js/jquery-ui.min.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('/js/bootstrap.js') }}"></script>
+        <script type="text/javascript" src="{{ asset('/js/jquery.dataTables.min.js') }}"></script>
         {#
             JS - RepublicOfRome.js file with all the app-specific functions
         #}
