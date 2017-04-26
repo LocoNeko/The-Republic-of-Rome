@@ -105,8 +105,8 @@
         'assets.version' => 'v1',
         'assets.version_format' => '%s?version=%s',
         'assets.named_packages' => array(
-            'css' => array('version' => 'css2', 'base_path' => __DIR__.'/../resources/css/') ,
-            'js' => array('base_path' => __DIR__.'/../resources/js/')
+            'css' => array('version' => 'css2', 'base_path' => $app['BASE_URL'].'/css/') ,
+            'js' => array('base_path' => $app['BASE_URL'].'/js/')
         ),
     ));
     
