@@ -135,7 +135,7 @@
             ),
             'logout' => array(
                 'logout_path' => $app['BASE_URL'].'/user/logout',
-                 'invalidate_session' => false,
+                'target_url' => $app['BASE_URL'],
             ),
             'users' => function($app) { return $app['user.manager']; },
         ),
