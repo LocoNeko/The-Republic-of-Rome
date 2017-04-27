@@ -54,6 +54,44 @@ class SenateControllerProvider implements ControllerProviderInterface
         })
         ->bind('Senate');
 
+        /*
+        * POST target
+        * Verb : senateMakeProposal
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/senateMakeProposal', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->makeProposal($user_id , $game , $json_data);
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            }
+            catch (\Exception $exception)
+            {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+        ->bind('verb_senateMakeProposal');
+
         return $controllers;
+    }
+    
+    /**
+     * @param int $user_id
+     * @param \Entities\Game $game
+     * @param type $json_data
+     * @throws \Exception
+     */
+    public function makeProposal($user_id , $game , $json_data)
+    {
+        echo json_encode($json_data, JSON_PRETTY_PRINT);
+        //throw new \Exception(_('ERROR - The Proposal is wrong')) ;
     }
 }

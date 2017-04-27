@@ -69,7 +69,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-            ->bind('verb_forumInitiativeBid');
+        ->bind('verb_forumInitiativeBid');
 
         /*
         * POST target

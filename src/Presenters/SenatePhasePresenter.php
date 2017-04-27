@@ -89,7 +89,6 @@ class SenatePhasePresenter
                     ) ;
                     $this->interface['senateMakeProposal'] = array (
                         'type' => 'button' ,
-                        'disabled' => TRUE ,
                         'verb' => 'senateMakeProposal' ,
                         'text' => _('MAKE PROPOSAL')
                     ) ;
