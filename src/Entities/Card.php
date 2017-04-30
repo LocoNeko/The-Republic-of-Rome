@@ -32,7 +32,7 @@ abstract class Card
     protected $position ;
     
     // A Card can have a deck (of controlled cards)
-    /** @OneToOne(targetEntity="Deck", inversedBy="controlled_by", cascade={"persist"}) **/
+    /** @OneToOne(targetEntity="Deck", inversedBy="controlled_by" , cascade={"persist"}) **/
     private $cards_controlled ;
     
     // A Card can be the location of any number of Legions
@@ -44,7 +44,12 @@ abstract class Card
     private $withFleets ;
 
     // A Card can be part of any number of Proposals
-    /** @ManyToOne(targetEntity="Proposal", inversedBy="cards") **/
+    /** @ManyToMany(targetEntity="Proposal", inversedBy="cards" , cascade={"persist"})
+     *  @JoinTable(
+     *      name="card_proposal",
+     *      joinColumns={@JoinColumn(name="Card_internalId", referencedColumnName="internalId")},
+     *      inverseJoinColumns={@JoinColumn(name="Proposal_id", referencedColumnName="id")}
+     *  )**/
     private $partOfProposal ;
 
     public static function isValidType($type)
@@ -63,7 +68,7 @@ abstract class Card
     public function setDeck($deck) { $this->deck = $deck ; }
     public function setPosition($position) { $this->position = $position ; }
     public function setPreciseType($preciseType) { $this->preciseType = $preciseType ; }
-     
+
     public function getId() { return $this->id ; }
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
@@ -94,6 +99,7 @@ abstract class Card
         $this->setPreciseType($preciseType) ;
         $this->withLegions = new ArrayCollection() ;
         $this->withFleets = new ArrayCollection() ;
+        $this->partOfProposal = new ArrayCollection() ;
     }
     
     /**
@@ -317,4 +323,7 @@ abstract class Card
     {
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }    
+
+    public function setAsPartOfProposal($proposal) { $this->partOfProposal->add ($proposal); }
+
 }

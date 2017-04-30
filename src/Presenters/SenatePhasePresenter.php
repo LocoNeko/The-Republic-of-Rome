@@ -53,9 +53,12 @@ class SenatePhasePresenter
             /**
              * There is a proposal underway
              */
-            if ($currentProposal!==FALSE && $currentProposal->getOutcome()!=='underway')
+            if ($currentProposal!==FALSE && $currentProposal->getOutcome()=='underway')
             {
                 $this->header['description'] .= _(' - Proposal underway');
+                $this->header['list'] = array (
+                    $game->getProposals()->last()->getDescription()
+                );
                 // TO DO
             }
             

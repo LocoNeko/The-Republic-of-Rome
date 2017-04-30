@@ -1713,5 +1713,15 @@ class Game
                 return 0 ;
         }
     }
+    
+    /**
+     * Sets the latest proposal
+     * @param \Entities\Proposal $proposal
+     */
+    public function setNewProposal($proposal)
+    {
+        $index = $this->proposals->count() + 1 ; 
+        $this->proposals->set($index, $proposal) ;
+    }
 
 }

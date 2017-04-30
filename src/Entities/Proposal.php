@@ -14,7 +14,7 @@ class Proposal
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
 
-    /** @ManyToOne(targetEntity="Game", inversedBy="proposals") **/
+    /** @ManyToOne(targetEntity="Game", inversedBy="proposals" , cascade={"persist"}) **/
     private $game ;
 
     /** @Column(type="string") @var string */
@@ -28,11 +28,16 @@ class Proposal
     private $step ;
 
     // A Proposal can have many Cards
-    /** @OneToMany(targetEntity="Card", mappedBy="partOfProposal") **/
+    /** @ManyToMany(targetEntity="Card", mappedBy="partOfProposal" , cascade={"persist"})
+     *  @JoinTable(
+     *      name="proposal_card",
+     *      joinColumns={@JoinColumn(name="Proposal_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@JoinColumn(name="Card_internalId", referencedColumnName="internalId")}
+     *  )**/
     private $cards ;
 
     // A Proposal has a Party that proposed it
-    /** @ManyToOne(targetEntity="Party" , inversedBy="proposed") **/
+    /** @ManyToOne(targetEntity="Party" , inversedBy="proposed" , cascade={"persist"}) **/
     private $proposedBy ;
 
     /** @Column(type="string") @var string */
@@ -161,25 +166,10 @@ class Proposal
             } catch (Exception $ex) {
                 throw new \Exception(_('Senator doesn\'t exist or is not in Rome')) ;
             }
-            // ERROR - One of the Senator is already consul
-            if ($First_Senator->getOffice()=='Rome Consul')
-            {
-                throw new \Exception(_('First Senator is already Consul of Rome')) ;
-            }
-            if ($Second_Senator->getOffice()=='Rome Consul')
-            {
-                throw new \Exception(_('First Senator is already Consul of Rome')) ;
-            }
-            if ($First_Senator->getOffice()=='Field Consul')
-            {
-                throw new \Exception(_('First Senator is already Field Consul')) ;
-            }
-            if ($Second_Senator->getOffice()=='Field Consul')
-            {
-                throw new \Exception(_('First Senator is already Field Consul')) ;
-            }
             $this->cards->set('First Senator' , $First_Senator);
             $this->cards->set('Second Senator' , $Second_Senator);
+            $First_Senator->setAsPartOfProposal($this) ;
+            $Second_Senator->setAsPartOfProposal($this) ;
             // TO DO : Check already proposed pairs
         }        
         // TO DO : Check constraints of all other proposals
@@ -192,8 +182,10 @@ class Proposal
     {
         if ($this->type=='Consuls')
         {
-            $FirstSenatorName = $this->getCards()->get('First Senator')->getFullName() ;
-            $SecondSenatorName = $this->getCards()->get('Second Senator')->getFullName() ;
+            $this->getCards()->first() ;
+            $FirstSenatorName = $this->getCards()->current()->getFullName() ;
+            $this->getCards()->next() ;
+            $SecondSenatorName = $this->getCards()->current()->getFullName() ;
             return sprintf(_('%1$s is proposing %2$s and %3$s as Consuls.') , $this->proposedBy->getFullName() , $FirstSenatorName , $SecondSenatorName) ;
         }
         // TO DO : all other proposals

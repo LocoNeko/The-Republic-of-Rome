@@ -69,8 +69,10 @@ class SenateControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Proposal $proposal */
                 $proposal = $this->makeProposal($user_id , $game , $json_data);
                 $app['session']->getFlashBag()->add('info', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
-                $app['session']->getFlashBag()->add('info', $gamePresenter->displayContextualName($proposal->getDescription()));
+                //$app['session']->getFlashBag()->add('info', $gamePresenter->displayContextualName($proposal->getDescription()));
                 $app['session']->getFlashBag()->add('danger', _('TESTING - this doesnt go farther yet !'));
+                $game->setNewProposal($proposal) ;
+                $app['session']->getFlashBag()->add('danger', $game->getProposals()->last()->getCards()->count());
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
