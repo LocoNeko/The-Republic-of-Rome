@@ -64,13 +64,18 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $this->makeProposal($user_id , $game , $json_data);
+                /** @var \Presenters\GamePresenter $gamePresenter */
+                $gamePresenter = new \Presenters\GamePresenter($game , $user_id) ;
+                /** @var \Entities\Proposal $proposal */
+                $proposal = $this->makeProposal($user_id , $game , $json_data);
+                $app['session']->getFlashBag()->add('info', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
+                $app['session']->getFlashBag()->add('info', $gamePresenter->displayContextualName($proposal->getDescription()));
+                $app['session']->getFlashBag()->add('danger', _('TESTING - this doesnt go farther yet !'));
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
-            }
-            catch (\Exception $exception)
-            {
+            } catch (\Exception $exception) {
+                $app['session']->getFlashBag()->add('info', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
@@ -84,11 +89,21 @@ class SenateControllerProvider implements ControllerProviderInterface
      * @param int $user_id
      * @param \Entities\Game $game
      * @param type $json_data
+     * @return \Entities\Proposal
      * @throws \Exception
      */
     public function makeProposal($user_id , $game , $json_data)
     {
-        echo json_encode($json_data, JSON_PRETTY_PRINT);
-        //throw new \Exception(_('ERROR - The Proposal is wrong')) ;
+        // The proposal type is equal to the sub phase, except during otherbusiness in which case it's determined by ???
+        // TO DO : Find the json var that holds the type of otherBusiness proposal that is selected
+        $subPhase = $game->getSubPhase() ;
+        $proposalType = ( ($subPhase=='otherBusiness') ? $json_data['otherBusinessProposal'] : $game->getSubPhase() ) ;
+        try 
+        {
+            $proposal = new \Entities\Proposal($user_id , $proposalType , $game , $json_data) ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+        return $proposal ;
     }
 }

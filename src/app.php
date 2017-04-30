@@ -102,11 +102,11 @@
      */
     
     $app->register(new Provider\AssetServiceProvider() , array(
-        'assets.version' => 'v1',
+        'assets.version' => 'v2',
         'assets.version_format' => '%s?version=%s',
         'assets.named_packages' => array(
-            'css' => array('version' => 'css2', 'base_path' => $app['BASE_URL'].'/resources/css/') ,
-            'js' => array('base_path' => $app['BASE_URL'].'/resources/js/')
+            'css' => array('version' => 'css2' , 'base_path' => $app['BASE_URL'].'/resources/css/') ,
+            'js' => array('version' => 'v1' , 'base_path' => $app['BASE_URL'].'/resources/js/')
         ),
     ));
     

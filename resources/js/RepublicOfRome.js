@@ -38,11 +38,24 @@ function getReady(phase , subPhase)
             $('.global-postable').each(function(i, obj) {
                 json[obj.name] = obj.value ;
             });
+            // Also collect all sortable lists values as arrays
+            $('.sortable').each(function() {
+                json[$(this).attr('name')] = $(this).sortable('toArray' , { attribute: "user_id" }) ;
+            });
         }
 
         // Get the verb from the button, put it in the json as well
         json['verb'] = $(this).attr('verb') ;
 
+        // Senate - Add the ProposalHow (type & code) to the json
+        if (phase==='Senate')
+        {
+            proposalHow = {} ;
+            proposalHow["type"] = $('.senateMakeProposal option:selected').attr('type') ;
+            proposalHow["code"] = $('.senateMakeProposal option:selected').attr('code') ;
+            json['senateMakeProposal'] = proposalHow ;
+        }
+        
         // Store the json data in the 'data-json' attribute of the body
         $(document.body).attr('data-json' , JSON.stringify(json)) ;
 
@@ -147,7 +160,13 @@ function getReady(phase , subPhase)
         });
     });
 
-
+    /**
+     * Sortable lists
+     * 
+     */
+    $( '.sortable' ).sortable();
+    $( '.sortable' ).disableSelection();
+    
     /**
      *  Popover for Rome Current State
      */

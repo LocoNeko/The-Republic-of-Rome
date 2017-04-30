@@ -25,7 +25,7 @@
         {#
             JS - RepublicOfRome.js file with all the app-specific functions
         #}
-        <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/RepublicOfRome.js"></script>
+        <script type="text/javascript" src="{{ asset('RepublicOfRome.js' , 'js') }}"></script>
     </head>
     
     <body style="padding-bottom: 150px; height: 100%; overflow-y: hidden ;" data-json='{"user_id": "{{app.user.id}}"}'>

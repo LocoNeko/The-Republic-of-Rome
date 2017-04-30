@@ -56,6 +56,7 @@ class SenatePhasePresenter
             if ($currentProposal!==FALSE && $currentProposal->getOutcome()!=='underway')
             {
                 $this->header['description'] .= _(' - Proposal underway');
+                // TO DO
             }
             
             /**
@@ -84,8 +85,17 @@ class SenatePhasePresenter
                     * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
                     **/
                     $this->interface['listProposalHow'] =  array (
-                        'type' => 'select' ,
+                        'type'  => 'select' ,
+                        'class' => 'senateMakeProposal' ,
                         'items' => $listProposalHow
+                    ) ;
+                    /**
+                     * Voting order
+                     */
+                    $this->interface['listVotingOrder'] =  array (
+                        'type'  => 'sortable' ,
+                        'class' => 'senateListVotingOrder' ,
+                        'items' => $this->getVotingOrder($game)
                     ) ;
                     $this->interface['senateMakeProposal'] = array (
                         'type' => 'button' ,
@@ -588,6 +598,21 @@ class SenatePhasePresenter
         $result = array_merge($result, $this->getCardTribunes($game->getParty($this->user_id))) ;
         return $result ;
     }
+
+    /**
+     * Returns an array of parties in order of play
+     * @param \Entities\Game $game
+     * @return array {'user_id' , 'description'}
+     */
+    public function getVotingOrder($game)
+    {
+        $result = array() ;
+        foreach ($game->getOrderOfPlay() as $party)
+        {
+            $result[] = array('user_id' => $party->getUser_id() , 'description' => $party->getFullName());
+        }
+        return $result ;
+    }
     
     /**
     * Returns a list of free tribunes provided by Satesmen special abilities
@@ -637,6 +662,7 @@ class SenatePhasePresenter
             {
                 $result[] = array (
                     'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'value' => $senator->getSenatorID() ,
                     'senatorID' => $senator->getSenatorID()
                 );
             }
@@ -648,6 +674,7 @@ class SenatePhasePresenter
                 // TO DO : Check if the senator was not previously rejected in a proposal
                 $result[] = array (
                     'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'value' => $senator->getSenatorID() ,
                     'senatorID' => $senator->getSenatorID()
                 ) ;
             }
@@ -666,6 +693,7 @@ class SenatePhasePresenter
                         $result[] = array (
                             'prosecutionType' => $possibleProsecution['type'] ,
                             'description' => $possibleProsecution['description'] ,
+                            'value' => $senator->getSenatorID() ,
                             'senatorID' => $senator->getSenatorID()
                         ) ;
                     }
@@ -677,12 +705,14 @@ class SenatePhasePresenter
             // Add a "-" option linked to a NULL cardID, so no Senator is selected by default on a new drop down
             $result[] = array (
                 'description' => _('-') ,
+                'value' => NULL ,
                 'senatorID' => NULL
             ) ;
             foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleGovernor') as $senator)
             {
                 $result[] = array (
                     'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'value' => $senator->getSenatorID() ,
                     'senatorID' => $senator->getSenatorID()
                 ) ;
             }

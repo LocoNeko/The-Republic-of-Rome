@@ -16,6 +16,12 @@
             <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['listProposalHow']}%}{% endembed %}</td>
         </tr>
         <tr>
+            <td class="success" colspan="2">Voting order</td>
+        </tr>
+        <tr>
+            <td colspan="2">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['listVotingOrder']}%}{% endembed %}</td>
+        </tr>
+        <tr>
             <td colspan="2">
                 <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateMakeProposal']}%}{% endembed %}</div>
             </td>

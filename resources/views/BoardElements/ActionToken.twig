@@ -1,6 +1,6 @@
 {#
     Creates an action token from the action array
-    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'submitWithVerb' , 'select' , 'disabled input'
+    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'submitWithVerb' , 'select' , 'cardSlot' , 'disabled input'
 #}
 
 {% if action['type']=='icon' %}
@@ -44,6 +44,18 @@
     <div class="sprite-CardSlot droppable">
         {{action['description']}}
     </div>
+{% elseif action['type']=='sortable' %}
+    {#
+        A sortable has :
+        - a class (to plugin JavaScript functions)
+        - items : An array of items with 'attribute name' => 'attribute value'
+        - One of those must be 'description' => 'XXXX'
+    #}
+    <ul class="sortable" name="{{action['class']|default('')}}">
+        {% for item in action['items'] %}
+            <li {% for key, value in item %} {{key}}="{{value}}"{% endfor %} >{{item['description']|escape('html')}}</li>
+        {% endfor %}
+    </ul>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">
 {% endif %}

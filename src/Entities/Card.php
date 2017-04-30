@@ -43,6 +43,10 @@ abstract class Card
     /** @OneToMany(targetEntity="Fleet", mappedBy="cardLocation") **/
     private $withFleets ;
 
+    // A Card can be part of any number of Proposals
+    /** @ManyToOne(targetEntity="Proposal", inversedBy="cards") **/
+    private $partOfProposal ;
+
     public static function isValidType($type)
     {
         return in_array($type , self::$VALID_TYPES) ;
