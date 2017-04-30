@@ -43,15 +43,6 @@ abstract class Card
     /** @OneToMany(targetEntity="Fleet", mappedBy="cardLocation") **/
     private $withFleets ;
 
-    // A Card can be part of any number of Proposals
-    /** @ManyToMany(targetEntity="Proposal", inversedBy="cards" , cascade={"persist"})
-     *  @JoinTable(
-     *      name="card_proposal",
-     *      joinColumns={@JoinColumn(name="Card_internalId", referencedColumnName="internalId")},
-     *      inverseJoinColumns={@JoinColumn(name="Proposal_id", referencedColumnName="id")}
-     *  )**/
-    private $partOfProposal ;
-
     public static function isValidType($type)
     {
         return in_array($type , self::$VALID_TYPES) ;
@@ -99,7 +90,6 @@ abstract class Card
         $this->setPreciseType($preciseType) ;
         $this->withLegions = new ArrayCollection() ;
         $this->withFleets = new ArrayCollection() ;
-        $this->partOfProposal = new ArrayCollection() ;
     }
     
     /**
@@ -323,7 +313,5 @@ abstract class Card
     {
         return ($this->cards_controlled != NULL && count($this->cards_controlled->getCards())>0) ;
     }    
-
-    public function setAsPartOfProposal($proposal) { $this->partOfProposal->add ($proposal); }
 
 }
