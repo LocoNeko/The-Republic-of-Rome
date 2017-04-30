@@ -27,13 +27,11 @@ class Proposal
     /** @Column(type="integer") @var int */
     private $step ;
 
-    // A Proposal can have many Cards
-    /** @ManyToMany(targetEntity="Card", mappedBy="partOfProposal" , cascade={"persist"})
-     *  @JoinTable(
-     *      name="proposal_card",
-     *      joinColumns={@JoinColumn(name="Proposal_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@JoinColumn(name="Card_internalId", referencedColumnName="internalId")}
-     *  )**/
+    /**
+     * An array of cards id<br>
+     * keys are meanginful strings (like 'First Senator' , 'Prosecutor' ... )<br>
+     * values are card ids, <b>including</b> for Senators<br>
+     * @Column(type="array") @var array */
     private $cards ;
 
     // A Proposal has a Party that proposed it
@@ -68,7 +66,6 @@ class Proposal
      */
     public function __construct($user_id , $type , $game , $json_data)
     {
-        $this->cards = new ArrayCollection() ;
         $this->game = $game ;
 
         /**
@@ -166,12 +163,13 @@ class Proposal
             } catch (Exception $ex) {
                 throw new \Exception(_('Senator doesn\'t exist or is not in Rome')) ;
             }
-            $this->cards->set('First Senator' , $First_Senator);
-            $this->cards->set('Second Senator' , $Second_Senator);
-            $First_Senator->setAsPartOfProposal($this) ;
-            $Second_Senator->setAsPartOfProposal($this) ;
+            // REMINDER : the cards array is by card ids, NOT senator ids...
+            $this->cards = array ( 
+                'First Senator' => $First_Senator->getId() , 
+                'Second Senator' => $Second_Senator->getId() 
+            ) ;
             // TO DO : Check already proposed pairs
-        }        
+        }
         // TO DO : Check constraints of all other proposals
     }
     
@@ -182,10 +180,8 @@ class Proposal
     {
         if ($this->type=='Consuls')
         {
-            $this->getCards()->first() ;
-            $FirstSenatorName = $this->getCards()->current()->getFullName() ;
-            $this->getCards()->next() ;
-            $SecondSenatorName = $this->getCards()->current()->getFullName() ;
+            $FirstSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['First Senator']))->getFullName() ;
+            $SecondSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['Second Senator']))->getFullName() ;
             return sprintf(_('%1$s is proposing %2$s and %3$s as Consuls.') , $this->proposedBy->getFullName() , $FirstSenatorName , $SecondSenatorName) ;
         }
         // TO DO : all other proposals
