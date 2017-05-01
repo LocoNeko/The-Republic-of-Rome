@@ -161,6 +161,21 @@ function getReady(phase , subPhase)
     });
 
     /**
+     * TOGGLE
+     * - Every object with the toggle class gets an onClick event to set each button to its correct active/notActive state
+     */
+    $('.toggle').each( function() {
+        var toggle = $(this) ;
+        toggle.on("click", function(){    
+            var sel = $(this).data('title');
+            var tog = $(this).data('toggle');
+            $('#'+tog).prop('value', sel);
+            $('a[data-toggle="'+tog+'"]').not('[data-title="'+sel+'"]').removeClass('active').addClass('notActive');
+            $('a[data-toggle="'+tog+'"][data-title="'+sel+'"]').removeClass('notActive').addClass('active');
+        });
+    });
+    
+    /**
      * Sortable lists
      * 
      */

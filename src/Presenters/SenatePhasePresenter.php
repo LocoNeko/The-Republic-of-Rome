@@ -46,107 +46,125 @@ class SenatePhasePresenter
         $this->header['description'] = _('Senate') ;
         if ($game->getPhase() != 'Senate') 
         {
-            $this->header['description'] .= _('ERROR - Wrong phase');
+            throw new \Exception(_('ERROR - Wrong phase')) ;
         }
-        else
+        /* @var $currentProposal \Entities\Proposal  */
+        $currentProposal = $game->getProposals()->last() ;
+        /**
+         * There is a proposal underway
+         */
+        if ($currentProposal!==FALSE && $currentProposal->getOutcome()=='underway')
         {
-            /* @var $currentProposal \Entities\Proposal  */
-            $currentProposal = $game->getProposals()->last() ;
-            /**
-             * There is a proposal underway
-             */
-            if ($currentProposal!==FALSE && $currentProposal->getOutcome()=='underway')
+            $this->header['description'] .= _(' - Proposal underway');
+            $this->header['list'] = array (
+                $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id) ,
+                _('Voting order : ').$this->game->displayContextualName($currentProposal->getVotingOrder() , $user_id) 
+            );
+            try 
             {
-                $this->header['description'] .= _(' - Proposal underway');
-                $this->header['list'] = array (
-                    $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id) ,
-                    _('Voting order : ').$this->game->displayContextualName($currentProposal->getVotingOrder() , $user_id) 
-                );
-                try 
-                {
-                    $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
-                    $this->header['list'][] = print_r($votingOrWaiting, TRUE) ;
-                } catch (Exception $ex) {
-                    throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
-                }
-                if ($votingOrWaiting['state'] == 'voting')
-                {
-                    $this->header['list'][] = 'voting' ;
-                }
-                elseif ($votingOrWaiting['state'] == 'waiting')
-                {
-                    $this->header['list'][] = 'waiting' ;
-                }
-                else 
-                {
-                    throw new \Exception(_('WRONG VOTING STATE')) ;
-                }
-                    
+                $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
+            } catch (Exception $ex) {
+                throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
+            }
+            $this->header['list'][] = $votingOrWaiting['message'] ;
+            /**
+             * Waiting for another party to vote
+             */
+            if ($votingOrWaiting['state'] == 'waiting')
+            {
                 // TO DO
             }
-            
             /**
-             * No proposal underway
-             * - Check if the user can make a proposal
-             * - This will bring up the 'senateMakeProposal' interface
-             * - In case he can't, this will bring up a waiting screen
+             * Voting interface (I could check for 'state' == 'voting', but why should I ? exception has been caught before)
              */
             else
             {
-                $this->header['description'] .= _(' - No proposal underway') ;
-                $listProposalHow = $this->getProposalHow($game) ; 
-                
+               // TO DO
+                /* Must have : 
+                 * - All Senators in Rome with their names and votes : ORA , Knights, Treasury (so they can spend some) , INF (needed during prosecutions)
+                 * - A Senator's vote total should be described in a tooltip
+                 * - All Tribunes (for vetoes)
+                 * The interface will have the following :
+                 * - A general switch to vote YES/NO
+                 * - A list of Senators reflecting the YES/NO of the general switch, but that can be overriden. Each Senator also has a treasury drop down
+                 * - A VETO button with a "with" dropdown (Tribune, Free tribune, Free veto...)
+                 * - A VOTE button
+                 */
+                $this->interface['name'] = 'senateVote';
+                $this->interface['senateGeneralVote'] =  array (
+                    'type'  => 'toggle' ,
+                    'name' => 'senateGeneralVote' ,
+                    'description' => _('Party votes : '),
+                    'items' => array(
+                        array('value' => 'YES' , 'description' =>'FOR') ,
+                        array('value' => 'AGAINST' , 'description' =>'AGAINST') ,
+                        array('value' => 'ABSTAIN' , 'description' =>'ABSTAIN') ,
+                    )
+                ) ;
+            }
+        }
+
+        /**
+         * No proposal underway
+         * - Check if the user can make a proposal
+         * - This will bring up the 'senateMakeProposal' interface
+         * - In case he can't, this will bring up a waiting screen
+         */
+        else
+        {
+            $this->header['description'] .= _(' - No proposal underway') ;
+            $listProposalHow = $this->getProposalHow($game) ; 
+
+            /**
+            * This user has at least one way of making a proposal
+            **/
+            if (count($listProposalHow)>0)
+            {
+                // Bring up the senateMakeProposal interface
+                $this->interface['name'] = 'senateMakeProposal';
+
                 /**
-                * This user has at least one way of making a proposal
+                * How the Proposal is made :
+                * Items consists of arrays with 'type' , 'code', and 'description'
+                * Types : office, statesman, tribune
+                * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
                 **/
-                if (count($listProposalHow)>0)
-                {
-                    // Bring up the senateMakeProposal interface
-                    $this->interface['name'] = 'senateMakeProposal';
-                    
-                    /**
-                    * How the Proposal is made :
-                    * Items consists of arrays with 'type' , 'code', and 'description'
-                    * Types : office, statesman, tribune
-                    * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
-                    **/
-                    $this->interface['listProposalHow'] =  array (
-                        'type'  => 'select' ,
-                        'class' => 'senateMakeProposal' ,
-                        'items' => $listProposalHow
-                    ) ;
-                    /**
-                     * Voting order
-                     */
-                    $this->interface['listVotingOrder'] =  array (
-                        'type'  => 'sortable' ,
-                        'class' => 'senateListVotingOrder' ,
-                        'items' => $this->getVotingOrder($game)
-                    ) ;
-                    $this->interface['senateMakeProposal'] = array (
-                        'type' => 'button' ,
-                        'verb' => 'senateMakeProposal' ,
-                        'text' => _('MAKE PROPOSAL')
-                    ) ;
-                    /**
-                    * The proposal's content, specific to the subPhase. This should include :
-                    * - A description in the header
-                    * - An interface proposalType
-                    **/
-                    
-                    $this->setContent($game) ;
-                }
-                
+                $this->interface['listProposalHow'] =  array (
+                    'type'  => 'select' ,
+                    'class' => 'senateMakeProposal' ,
+                    'items' => $listProposalHow
+                ) ;
                 /**
-                * This user cannot make a proposal at this point in time
+                 * Voting order
+                 */
+                $this->interface['listVotingOrder'] =  array (
+                    'type'  => 'sortable' ,
+                    'class' => 'senateListVotingOrder' ,
+                    'items' => $this->getVotingOrder($game)
+                ) ;
+                $this->interface['senateMakeProposal'] = array (
+                    'type' => 'button' ,
+                    'verb' => 'senateMakeProposal' ,
+                    'text' => _('MAKE PROPOSAL')
+                ) ;
+                /**
+                * The proposal's content, specific to the subPhase. This should include :
+                * - A description in the header
+                * - An interface proposalType
                 **/
-                else
-                {
-                    $this->header['list'] = array (
-                        _('You have no way to make a proposal at the moment') ,
-                        _('Waiting for player who do')
-                    ) ;
-                }
+
+                $this->setContent($game) ;
+            }
+
+            /**
+            * This user cannot make a proposal at this point in time
+            **/
+            else
+            {
+                $this->header['list'] = array (
+                    _('You have no way to make a proposal at the moment') ,
+                    _('Waiting for player who do')
+                ) ;
             }
         }
     }
