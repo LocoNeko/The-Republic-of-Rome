@@ -93,7 +93,7 @@ class Proposal
             {
                 $this->vote[$i++] = array (
                     'user_id' => $votingOrderUser_id ,
-                    'votes' => 0 ,
+                    'votes' => NULL ,
                     'split_vote' => ''
                 );
             }
@@ -186,5 +186,41 @@ class Proposal
         }
         // TO DO : all other proposals
     }
+ 
+    /**
+     * @return string A string showing the voting order using party->getFullName()
+     */
+    public function getVotingOrder()
+    {
+        $result ='' ;
+        foreach ($this->vote as $vote)
+        {
+            $result.=$this->game->getParty($vote['user_id'])->getFullName().', ';
+        }
+        return substr($result , 0 , -2) ;
+    }
     
+    /**
+     * Returns a state and a message describing the current voting situation for this user_id
+     * @param int $user_id
+     * @return array 'message' => 'Waiting for XXX' | 'This is your turn to vote' , 'state' => 'waiting'|'voting'
+     * @throws \Exception
+     */
+    public function getVotingOrWaiting($user_id)
+    {
+        foreach ($this->vote as $vote)
+        {
+            // party hasn't voted, and is not you : waiting
+            if ($vote['user_id']!==$user_id && $vote['votes']===NULL)
+            {
+                return array('message' => sprintf(_('Waiting for %1$s') , $this->game->getParty($vote['user_id'])->getFullName() )  , 'state' => 'waiting') ;
+            }
+            // Party hasn't voted and is you
+            elseif ($vote['user_id']===$user_id && $vote['votes']===NULL)
+            {
+                return array('message' => _('This is your turn to vote') , 'state' => 'voting') ;
+            }
+        }
+        throw new \Exception(_('Invalid voting state')) ;
+    }
 }

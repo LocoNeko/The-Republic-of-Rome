@@ -17,6 +17,7 @@ class SenatePhasePresenter
     /**
      * @param \Entities\Game $game
      * @param int $user_id
+     * @throws \Exception
      */
     public function __construct($game, $user_id)
     {
@@ -49,6 +50,7 @@ class SenatePhasePresenter
         }
         else
         {
+            /* @var $currentProposal \Entities\Proposal  */
             $currentProposal = $game->getProposals()->last() ;
             /**
              * There is a proposal underway
@@ -57,8 +59,28 @@ class SenatePhasePresenter
             {
                 $this->header['description'] .= _(' - Proposal underway');
                 $this->header['list'] = array (
-                    $game->getProposals()->last()->getDescription()
+                    $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id) ,
+                    _('Voting order : ').$this->game->displayContextualName($currentProposal->getVotingOrder() , $user_id) 
                 );
+                try 
+                {
+                    $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
+                } catch (Exception $ex) {
+                    throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
+                }
+                if ($votingOrWaiting['state'] == 'voting')
+                {
+                    $this->header['list'][] = 'voting' ;
+                }
+                elseif ($votingOrWaiting['state'] == 'waiting')
+                {
+                    $this->header['list'][] = 'waiting' ;
+                }
+                else 
+                {
+                    throw new \Exception(_('WRONG VOTING STATE')) ;
+                }
+                    
                 // TO DO
             }
             
