@@ -65,6 +65,7 @@ class SenatePhasePresenter
                 try 
                 {
                     $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
+                    $this->header['list'][] = print_r($votingOrWaiting, TRUE) ;
                 } catch (Exception $ex) {
                     throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
                 }
