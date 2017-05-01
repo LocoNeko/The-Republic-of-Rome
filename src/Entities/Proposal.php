@@ -180,8 +180,8 @@ class Proposal
     {
         if ($this->type=='Consuls')
         {
-            $FirstSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['First Senator']))->getFullName() ;
-            $SecondSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['Second Senator']))->getFullName() ;
+            $FirstSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['First Senator']))->first()->getFullName() ;
+            $SecondSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['Second Senator']))->first()->getFullName() ;
             return sprintf(_('%1$s is proposing %2$s and %3$s as Consuls.') , $this->proposedBy->getFullName() , $FirstSenatorName , $SecondSenatorName) ;
         }
         // TO DO : all other proposals
