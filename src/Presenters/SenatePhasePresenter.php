@@ -94,7 +94,6 @@ class SenatePhasePresenter
                 $this->interface['senateGeneralVote'] =  array (
                     'type'  => 'toggle' ,
                     'name' => 'senateGeneralVote' ,
-                    'description' => _('Party votes : '),
                     'items' => array(
                         array('value' => 'YES' , 'description' =>'FOR') ,
                         array('value' => 'AGAINST' , 'description' =>'AGAINST') ,

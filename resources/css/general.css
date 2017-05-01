@@ -102,3 +102,9 @@
     position: relative;  
     cursor: pointer ;
 }
+
+.toggle a
+{
+    color: #3276b1;
+    background-color: #fff;
+}

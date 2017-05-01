@@ -60,24 +60,15 @@
     {#
         A toggle has :
         - action['name'] : A name
-        - action['description'] : A descriptive text before it
         - A list of items in the action['items'] array. Each item must have at least one 'value' and one 'description' 
-        - A RADIO_ID to trigger the JS, but it could a toggle class ?
         - A TOGGLE_ID : to collect the information once the toggle has been clicked ? -> might not be necessary if global-postable is set ?
         - Default value can be set by using active/notActive in the <a> class
     #}
-    <div class="form-group">
-        <label for="{{action['name']}}" class="col-sm-4 col-md-4 control-label text-right">{{action['description']}}</label>
-        <div class="col-sm-7 col-md-7">
-                <div class="input-group">
-                        <div id="RADIO_ID" class="btn-group toggle">
-                            {% for item in action['items'] %}
-                                <a class="btn btn-primary notActive" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
-                            {% endfor %}
-                        </div>
-                        <input type="hidden" name="{{action['name']}}" id="TOGGLE_ID" class="global-postable">
-                </div>
-        </div>
+    <div class="btn-group toggle">
+        {% for item in action['items'] %}
+            <a class="btn btn-primary notActive" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
+        {% endfor %}
+    <input type="hidden" name="{{action['name']}}" id="TOGGLE_ID" class="global-postable">
     </div>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">
