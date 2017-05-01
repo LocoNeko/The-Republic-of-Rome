@@ -92,7 +92,7 @@ class Proposal
             foreach ($json_data['senateListVotingOrder'] as $votingOrderUser_id)
             {
                 $this->vote[$i++] = array (
-                    'user_id' => $votingOrderUser_id ,
+                    'user_id' => (int)$votingOrderUser_id ,
                     'votes' => NULL ,
                     'split_vote' => ''
                 );
@@ -211,12 +211,12 @@ class Proposal
         foreach ($this->vote as $vote)
         {
             // party hasn't voted, and is not you : waiting
-            if ($vote['user_id']!==$user_id && $vote['votes']===NULL)
+            if ((int)$vote['user_id']!==(int)$user_id && $vote['votes']===NULL)
             {
                 return array('message' => sprintf(_('Waiting for %1$s') , $this->game->getParty($vote['user_id'])->getFullName() )  , 'state' => 'waiting') ;
             }
             // Party hasn't voted and is you
-            elseif ($vote['user_id']===$user_id && $vote['votes']===NULL)
+            elseif ((int)$vote['user_id']===(int)$user_id && $vote['votes']===NULL)
             {
                 return array('message' => _('This is your turn to vote') , 'state' => 'voting') ;
             }
