@@ -165,11 +165,12 @@ function getReady(phase , subPhase)
      * - Every object with the toggle class gets an onClick event to set each button to its correct active/notActive state
      */
     $('.toggle').each( function() {
+        // toggle is the class of the toggle group
         var toggle = $(this) ;
-        toggle.on("click", function(){
-            var sel = $(this).data('title');
-            var tog = $(this).data('toggle');
-            alert('A toggle was clicked '+sel);
+        toggle.on("click", function(e){
+            // $(e.target) is the specific tag that was clicked
+            var sel = $(e.target).data('title');
+            var tog = $(e.target).data('toggle');
             $('#'+tog).prop('value', sel);
             $('a[data-toggle="'+tog+'"]').not('[data-title="'+sel+'"]').removeClass('active').addClass('notActive');
             $('a[data-toggle="'+tog+'"][data-title="'+sel+'"]').removeClass('notActive').addClass('active');

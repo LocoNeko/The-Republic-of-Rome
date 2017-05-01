@@ -60,15 +60,17 @@
     {#
         A toggle has :
         - action['name'] : A name
-        - A list of items in the action['items'] array. Each item must have at least one 'value' and one 'description' 
+        - A list of items in the action['items'] array. Each item must have at least one 'value' and one 'description'. 
+        - 'active' can be set to YES to toggle by default
         - A TOGGLE_ID : to collect the information once the toggle has been clicked ? -> might not be necessary if global-postable is set ?
-        - Default value can be set by using active/notActive in the <a> class
     #}
-    <div class="btn-group toggle">
-        {% for item in action['items'] %}
-            <a class="btn btn-primary notActive" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
-        {% endfor %}
-    <input type="hidden" name="{{action['name']}}" id="TOGGLE_ID" class="global-postable">
+    <div class="input-group">
+        <div class="btn-group toggle">
+            {% for item in action['items'] %}
+                <a class="btn btn-primary {{(item['active']|default('NO')=='YES' ? 'active' : 'notActive')}}" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
+            {% endfor %}
+        </div>
+        <input type="hidden" name="{{action['name']}}" id="{{action['name']}}" class="global-postable">
     </div>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">

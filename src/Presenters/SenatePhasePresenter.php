@@ -100,6 +100,11 @@ class SenatePhasePresenter
                         array('value' => 'ABSTAIN' , 'description' =>'ABSTAIN') ,
                     )
                 ) ;
+                $this->interface['senateVoteSenators'] = array () ;
+                foreach ($game->getParty($user_id)->getSenators()->getCards() as $senator)
+                {
+                    $this->interface['senateVoteSenators'][] = $senator->getFullName() ;
+                }
             }
         }
 

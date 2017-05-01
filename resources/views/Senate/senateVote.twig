@@ -4,5 +4,14 @@
             <td class="success">Party votes :</td>
             <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
         </tr>
+        <tr>
+            <td class="success text-center" colspan="2">Senators</td>
+        </tr>
+        {% for senator in view.interface['senateVoteSenators'] %}
+            <tr>        
+                <td colspan="2">{{senator}}</td>
+            </tr>
+        {% endfor %}
+
     </tbody>
 </table>
