@@ -197,13 +197,13 @@ function getReady(phase , subPhase)
             if (phase==='Senate' && toggle.hasClass('toggleSenatorVote'))
             {
                 $('.togglePartyVote').each(function(e){
-                    $('a').removeClass('active').addClass('notActive') ;
+                    $(this).find('a').removeClass('active').addClass('notActive') ;
                 }) ;
             }
             if (phase==='Senate' && toggle.hasClass('togglePartyVote'))
             {
                 $('.toggleSenatorVote').each(function(e){
-                    $('a').removeClass('active').addClass('notActive') ;
+                    $(this).find('a').removeClass('active').addClass('notActive') ;
                 }) ;
             }
         });
