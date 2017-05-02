@@ -42,7 +42,7 @@ function getReady(phase , subPhase)
             $('.sortable').each(function() {
                 json[$(this).attr('name')] = $(this).sortable('toArray' , { attribute: "user_id" }) ;
             });
-            /* TO DO : how to collect all the toggles :
+            /* Collect all the toggles :
              * - Go through all items with a toggle class, they should have a name : this is the name of the variable we need to set
              * - They all have a tags with either the active or notActive class
              * - All a tags have a value in data-title
@@ -52,7 +52,7 @@ function getReady(phase , subPhase)
             $('.toggle').each(function() {
                 $varName = $(this).attr('name') ; // example : togglePartyVote
                 $value = $(this).find('.active').first().data('title') ;
-                $toggles.push([$varName , $value]) ;
+                $toggles.push('{'+ $varName +' : '+ $value +'}') ;
             });
             if ($toggles.length>0)
             {
@@ -189,7 +189,23 @@ function getReady(phase , subPhase)
             var tog = $(e.target).data('toggle');
             $('a[data-toggle="'+tog+'"]').not('[data-title="'+sel+'"]').removeClass('active').addClass('notActive');
             $('a[data-toggle="'+tog+'"][data-title="'+sel+'"]').removeClass('notActive').addClass('active');
-            // Senate Vote only : If the toggle was a party-level vote (class togglePartyVote), make inactive all <a> in all senator toggles (class toggleSenatorVote)
+            /* 
+             * Senate Vote only : 
+             * - If the toggle was a senator vote (class toggleSenatorVote), make inactive all <a> in the party level toggle (class togglePartyVote)
+             * - If the toggle was a party level vote (class togglePartyVote), make inactive all <a> in all senator toggles (class toggleSenatorVote)
+             */
+            if (phase==='Senate' && toggle.hasClass('toggleSenatorVote'))
+            {
+                $('.togglePartyVote').each(function(e){
+                    $('a').removeClass('active').addClass('notActive') ;
+                }) ;
+            }
+            if (phase==='Senate' && toggle.hasClass('togglePartyVote'))
+            {
+                $('.toggleSenatorVote').each(function(e){
+                    $('a').removeClass('active').addClass('notActive') ;
+                }) ;
+            }
         });
     });
     
