@@ -16,8 +16,8 @@
                     </div>
                 </td>
                 <td>
-                    {% if senatorVote['votes']>0 %}
-                        {{senatorVote['treasury']}} T.
+                    {% if senatorVote['votes']>0 and senatorVote['talents']!=0 %}
+                        {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['talents']}%}{% endembed %}
                     {% endif %}
                 </td>
             </tr>

@@ -900,9 +900,8 @@ class SenatePhasePresenter
                 $oratory = $senator->getORA() ;
                 $knights = $senator->getKnights() ;
                 $currentSenator['votes'] = $oratory + $knights ;
-                $currentSenator['treasury'] = $senator->getTreasury() ;
                 // Tooltip
-                $knightsTooltip = ($knights==0 ? '' : sprintf(_(' and %1$d knights.') , $knights)) ;
+                $knightsTooltip = ($knights==0 ? '' : sprintf(_(' and %1$d knights') , $knights)) ;
                 $currentSenator['attributes'] = array (
                    'data-toggle' => 'popover' ,
                    'data-content' => sprintf(_('%1$d votes from %2$s Oratory%3$s.') , $currentSenator['votes'] , $oratory , $knightsTooltip ) ,
@@ -910,10 +909,33 @@ class SenatePhasePresenter
                    'data-placement' => 'bottom'
                 ) ;
                 // TO DO  : Add INF for Prosecutions & Consul for life
+                // Dropdown for spedning talents
+                $treasury = $senator->getTreasury() ;
+                if ($treasury>0)
+                {
+                    $items = array() ;
+                    for ($i=0 ; $i<=$treasury ; $i++)
+                    {
+                        $items[] = array (
+                            'value' => $i ,
+                            'description' => $i." T."
+                        ) ;
+                    }
+                    $currentSenator['talents']= array (
+                        'type' => 'select' ,
+                        'class' => 'senatorVoteTalents' ,
+                        'items' => $items
+                    ) ;
+                }
+                else
+                {
+                    $currentSenator['talents'] = 0 ;
+                }
             }
             else
             {
                 $currentSenator['votes'] = 0 ;
+                $currentSenator['talents'] = 0 ;
                 // Tooltip
                 $currentSenator['attributes'] = array (
                    'data-toggle' => 'popover' ,
