@@ -50,7 +50,8 @@ function getReady(phase , subPhase)
              */
             $('.toggle').each(function() {
                 $varName = $(this).attr('name') ; // example : togglePartyVote
-                alert($varName) ;
+                $value = $(this).find('.active').first().data('title') ;
+                json[$varName] = $value ;
             });
         }
 
