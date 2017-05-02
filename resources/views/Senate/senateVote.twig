@@ -16,12 +16,12 @@
         {% for senatorVote in view.interface['senateVoteSenators'] %}
             <tr>        
                 <td>{{senatorVote['name']}}</td>
-                <td>
+                <td class="align-center">
                     <div class="senatorVotePopover" {% for key , attribute in senatorVote['attributes']|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
                         {{senatorVote['votes']}}
                     </div>
                 </td>
-                <td>
+                <td class="align-center">
                     {% if senatorVote['votes']>0 and senatorVote['talents']!=0 %}
                         {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['talents']}%}{% endembed %}
                     {% else %}
@@ -38,7 +38,8 @@
             </tr>
         {% endfor %}
         <tr>
-            <td class="success align-center" colspan="2">
+            <td class="success">&nbsp;</td>
+            <td class="success align-center">
                 <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVote']}%}{% endembed %}</div>
             </td>
             {% if view.interface['senateVeto'] is not empty %}

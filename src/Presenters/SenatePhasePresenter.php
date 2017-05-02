@@ -964,7 +964,7 @@ class SenatePhasePresenter
                     'items' => array(
                         array('value' => 'FOR'     , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
-                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                        array('active' => 'YES' , 'value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
                     )
                 ) ;
             }
