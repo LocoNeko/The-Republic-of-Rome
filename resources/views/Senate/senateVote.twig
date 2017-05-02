@@ -8,10 +8,10 @@
             <td class="success text-center" colspan="4">Senators</td>
         </tr>
         <tr>
-            <td class="success text-center">Name</td>
-            <td class="success text-center">Votes</td>
-            <td class="success text-center">Spend</td>
-            <td class="success text-center">Split vote</td>
+            <td class="text-center">Name</td>
+            <td class="text-center">Votes</td>
+            <td class="text-center">Spend</td>
+            <td class="text-center">Split vote</td>
         </tr>
         {% for senatorVote in view.interface['senateVoteSenators'] %}
             <tr>        
@@ -38,18 +38,18 @@
             </tr>
         {% endfor %}
         <tr>
-            <td class="success text-center" colspan="2">
+            <td class="success align-center" colspan="2">
                 <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVote']}%}{% endembed %}</div>
             </td>
-            {% if view.interface['senateVeto'] is empty %}
-                <td class="success text-center">
+            {% if view.interface['senateVeto'] is not empty %}
+                <td class="success align-center">
                     {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVeto']}%}{% endembed %}
                 </td>
-                <td class="success text-center">
+                <td class="success align-center">
                     {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVetoes']}%}{% endembed %}
                 </td>
             {% else %}
-                <td class="success text-center" colspan="2">
+                <td class="success align-center" colspan="2">
                     NO VETOES
                 </td>
             {% endif %}

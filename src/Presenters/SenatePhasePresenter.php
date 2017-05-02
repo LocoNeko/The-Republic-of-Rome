@@ -105,8 +105,8 @@ class SenatePhasePresenter
                 ) ;
                 // Vetoes (Tribune cards, Free tribunes, Free veto
                 $vetoes = [] ;
-                $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($this->user_id))) ;
-                $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($this->user_id))) ;
+                $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($user_id))) ;
+                $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($user_id))) ;
                 if (count($vetoes)>0)
                 {
                     $this->interface['senateVeto'] = array (
