@@ -97,10 +97,33 @@ class SenatePhasePresenter
                 ) ;
                 // List of Senators able to vote : name, votes, tooltip to explain (ORA, knights, INF in some cases...) , optional dropdown to spend talents , override of FOR/AGAINST/ABSTAIN
                 $this->interface['senateVoteSenators'] = $this->getSenatorVoteList($game , $currentProposal , $user_id) ;
-                // Vetoes (Tribune cards, Free tribunes, Free veto
-                // TO DO 
                 // Vote button
-                // TO DO
+                $this->interface['senateVote'] = array (
+                    'type' => 'button' ,
+                    'verb' => 'senateVote' ,
+                    'text' => _('VOTE')
+                ) ;
+                // Vetoes (Tribune cards, Free tribunes, Free veto
+                $vetoes = [] ;
+                $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($this->user_id))) ;
+                $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($this->user_id))) ;
+                if (count($vetoes)>0)
+                {
+                    $this->interface['senateVeto'] = array (
+                        'type' => 'button' ,
+                        'verb' => 'senateVeto' ,
+                        'text' => _('VETO')
+                    ) ;
+                    $this->interface['senateVetoes'] =  array (
+                        'type'  => 'select' ,
+                        'class' => 'senateVetoWith' ,
+                        'items' => $vetoes
+                    ) ;
+                }
+                else
+                {
+                    $this->interface['senateVeto'] = [] ;
+                }
             }
         }
 

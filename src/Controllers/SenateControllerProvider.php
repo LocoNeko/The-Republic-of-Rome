@@ -64,19 +64,15 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                /** @var \Presenters\GamePresenter $gamePresenter */
-                $gamePresenter = new \Presenters\GamePresenter($game , $user_id) ;
                 /** @var \Entities\Proposal $proposal */
                 $proposal = $this->makeProposal($user_id , $game , $json_data);
-                $app['session']->getFlashBag()->add('info', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
-                //$app['session']->getFlashBag()->add('info', $gamePresenter->displayContextualName($proposal->getDescription()));
-                $app['session']->getFlashBag()->add('danger', _('TESTING - this doesnt go farther yet !'));
                 $game->setNewProposal($proposal) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
-                $app['session']->getFlashBag()->add('info', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
+                // TO DO : remove the alert below once happy
+                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->json( $exception->getMessage() , 201 );
             }
