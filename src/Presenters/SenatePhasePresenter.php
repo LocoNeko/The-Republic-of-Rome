@@ -154,6 +154,7 @@ class SenatePhasePresenter
                 * Types : office, statesman, tribune
                 * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
                 **/
+                // TO DO : rethink the codes for senators & cards. They could both be card IDs : then if the card is a Senator, it's a free tribune, otherwise it's a tribune card
                 $this->interface['listProposalHow'] =  array (
                     'type'  => 'select' ,
                     'class' => 'senateMakeProposal' ,
@@ -695,7 +696,7 @@ class SenatePhasePresenter
         {
             if ($senator->getFreeTribune() == 1)
             {
-                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'description' => _('Free tribune from ').$senator->getName()) ;
+                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'value' =>$senator->getId() , 'description' => _('Free tribune from ').$senator->getName()) ;
             }
         }
         return $result ;
@@ -713,7 +714,7 @@ class SenatePhasePresenter
         {
             if ($card->getName()=='TRIBUNE')
             {
-                $result[] = array ('type' => 'tribune' , 'code' => $card->getId() , 'description' => 'Tribune card') ;
+                $result[] = array ('type' => 'tribune' , 'code' => $card->getId() , 'value' =>$card->getId() , 'description' => 'Tribune card') ;
             }
         }
         return $result ;
