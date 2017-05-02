@@ -57,8 +57,7 @@ class SenatePhasePresenter
         {
             $this->header['description'] .= _(' - Proposal underway');
             $this->header['list'] = array (
-                $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id) ,
-                _('Voting order : ').$this->game->displayContextualName($currentProposal->getVotingOrder() , $user_id) 
+                $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id)
             );
             try 
             {
@@ -95,16 +94,12 @@ class SenatePhasePresenter
                     'type'  => 'toggle' ,
                     'name' => 'senateGeneralVote' ,
                     'items' => array(
-                        array('value' => 'YES' , 'description' =>'FOR') ,
-                        array('value' => 'AGAINST' , 'description' =>'AGAINST') ,
-                        array('value' => 'ABSTAIN' , 'description' =>'ABSTAIN') ,
+                        array('value' => 'FOR' , 'description' =>_('FOR')) ,
+                        array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
+                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
                     )
                 ) ;
-                $this->interface['senateVoteSenators'] = array () ;
-                foreach ($game->getParty($user_id)->getSenators()->getCards() as $senator)
-                {
-                    $this->interface['senateVoteSenators'][] = $senator->getFullName() ;
-                }
+                $this->interface['senateVoteSenators'] = $this->getSenatorVoteList($game , $currentProposal , $user_id) ;
             }
         }
 
@@ -881,6 +876,53 @@ class SenatePhasePresenter
                     ) ;
                 }
             }
+        }
+        return $result ;
+    }
+    
+    /**
+     * All Senators in Rome with their names and votes : ORA , Knights, Treasury (so they can spend some) , INF (needed during prosecutions & Consul for life)
+     * @param \Entities\Game $game
+     * @param \Entities\Proposal $currentProposal
+     * @param int $user_id
+     */
+    public function getSenatorVoteList($game , $currentProposal , $user_id)
+    {
+        $result=array() ;
+        /* @var $senator \Entities\Senator */
+        foreach ($game->getParty($user_id)->getSenators()->getCards() as $senator)
+        {
+            $currentSenator = array() ;
+            $currentSenator['name'] = $senator->getName() ;
+            // Is in Rome : can vote
+            if ($senator->checkCriteria('alignedInRome'))
+            {
+                $oratory = $senator->getORA() ;
+                $knights = $senator->getKnights() ;
+                $currentSenator['votes'] = $oratory + $knights ;
+                $currentSenator['treasury'] = $senator->getTreasury() ;
+                // Tooltip
+                $knightsTooltip = ($knights==0 ? '' : sprintf(_(' and %1$d knights.') , $knights)) ;
+                $currentSenator['attributes'] = array (
+                   'data-toggle' => 'popover' ,
+                   'data-content' => sprintf(_('%1$d votes from %2$s Oratory%3$s.') , $currentSenator['votes'] , $oratory , $knightsTooltip ) ,
+                   'data-trigger' => 'hover' ,
+                   'data-placement' => 'bottom'
+                ) ;
+                // TO DO  : Add INF for Prosecutions & Consul for life
+            }
+            else
+            {
+                $currentSenator['votes'] = 0 ;
+                // Tooltip
+                $currentSenator['attributes'] = array (
+                   'data-toggle' => 'popover' ,
+                   'data-content' => _('Cannot vote.') ,
+                   'data-trigger' => 'hover' ,
+                   'data-placement' => 'bottom'
+                ) ;
+            }
+            $result[] = $currentSenator ;
         }
         return $result ;
     }

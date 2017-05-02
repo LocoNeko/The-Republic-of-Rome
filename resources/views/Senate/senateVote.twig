@@ -2,14 +2,24 @@
     <tbody>
         <tr>
             <td class="success">Party votes :</td>
-            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
+            <td colspan="2">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
         </tr>
         <tr>
-            <td class="success text-center" colspan="2">Senators</td>
+            <td class="success text-center" colspan="3">Senators</td>
         </tr>
-        {% for senator in view.interface['senateVoteSenators'] %}
+        {% for senatorVote in view.interface['senateVoteSenators'] %}
             <tr>        
-                <td colspan="2">{{senator}}</td>
+                <td>{{senatorVote['name']}}</td>
+                <td>
+                    <div {% for key , attribute in senatorVote['attributes']|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
+                        {{senatorVote['votes']}}
+                    </div>
+                </td>
+                <td>
+                    {% if senatorVote['votes']>0 %}
+                        {{senatorVote['treasury']}} T.
+                    {% endif %}
+                </td>
             </tr>
         {% endfor %}
 
