@@ -968,8 +968,7 @@ class SenatePhasePresenter
                         array('value' => 'FOR'     , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
                         array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
-                    ) ,
-                    'default' => 'ABSTAIN'
+                    )
                 ) ;
             }
             // For Senators who cannot vote
