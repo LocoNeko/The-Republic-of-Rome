@@ -2,10 +2,10 @@
     <tbody>
         <tr>
             <td class="success">Party votes :</td>
-            <td colspan="2">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
+            <td colspan="3">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
         </tr>
         <tr>
-            <td class="success text-center" colspan="3">Senators</td>
+            <td class="success text-center" colspan="4">Senators</td>
         </tr>
         {% for senatorVote in view.interface['senateVoteSenators'] %}
             <tr>        
@@ -18,6 +18,11 @@
                 <td>
                     {% if senatorVote['votes']>0 and senatorVote['talents']!=0 %}
                         {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['talents']}%}{% endembed %}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if senatorVote['votes']>0 %}
+                        {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['splitVote']}%}{% endembed %}
                     {% endif %}
                 </td>
             </tr>

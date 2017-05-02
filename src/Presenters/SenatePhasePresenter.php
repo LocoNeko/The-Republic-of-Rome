@@ -79,27 +79,28 @@ class SenatePhasePresenter
             else
             {
                // TO DO
-                /* Must have : 
-                 * - All Senators in Rome with their names and votes : ORA , Knights, Treasury (so they can spend some) , INF (needed during prosecutions)
-                 * - A Senator's vote total should be described in a tooltip
-                 * - All Tribunes (for vetoes)
-                 * The interface will have the following :
-                 * - A general switch to vote YES/NO
+                /* 
                  * - A list of Senators reflecting the YES/NO of the general switch, but that can be overriden. Each Senator also has a treasury drop down
                  * - A VETO button with a "with" dropdown (Tribune, Free tribune, Free veto...)
                  * - A VOTE button
                  */
                 $this->interface['name'] = 'senateVote';
+                // General toggle to vote FOR/AGAINST/ABSTAIN as a whole party
                 $this->interface['senateGeneralVote'] =  array (
                     'type'  => 'toggle' ,
                     'name' => 'senateGeneralVote' ,
                     'items' => array(
                         array('value' => 'FOR' , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
-                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                        array('active' => 'YES' , 'value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
                     )
                 ) ;
+                // List of Senators able to vote : name, votes, tooltip to explain (ORA, knights, INF in some cases...) , optional dropdown to spend talents , override of FOR/AGAINST/ABSTAIN
                 $this->interface['senateVoteSenators'] = $this->getSenatorVoteList($game , $currentProposal , $user_id) ;
+                // Vetoes (Tribune cards, Free tribunes, Free veto
+                // TO DO 
+                // Vote button
+                // TO DO
             }
         }
 
@@ -660,6 +661,7 @@ class SenatePhasePresenter
     /**
     * Returns a list of free tribunes provided by Satesmen special abilities
     * @param \Entities\Party $party
+    * @return array {'type' , 'code' , 'description'}
     **/
     public function getFreeTribunes($party)
     {
@@ -677,6 +679,7 @@ class SenatePhasePresenter
     /**
     * Returns a list of tribune cards for this party
     * @param \Entities\Party $party
+    * @return array {'type' , 'code' , 'description'}
     **/
     public function getCardTribunes($party)
     {
@@ -910,7 +913,7 @@ class SenatePhasePresenter
                 ) ;
                 // TO DO  : Add INF for Prosecutions & Consul for life
                 // Dropdown for spedning talents
-                $treasury = $senator->getTreasury()+10 ;
+                $treasury = $senator->getTreasury() ;
                 if ($treasury>0)
                 {
                     $items = array() ;
@@ -931,7 +934,18 @@ class SenatePhasePresenter
                 {
                     $currentSenator['talents'] = 0 ;
                 }
+                // Toggle for split vote (when a senator votes differently from the party)
+                $currentSenator['splitVote'] = array (
+                    'type'  => 'toggle' ,
+                    'name' => 'senateSplitVote_'.$senator->getSenatorID() ,
+                    'items' => array(
+                        array('value' => 'FOR'     , 'description' =>_('FOR')) ,
+                        array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
+                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                    )
+                ) ;
             }
+            // For Senators who cannot vote
             else
             {
                 $currentSenator['votes'] = 0 ;
