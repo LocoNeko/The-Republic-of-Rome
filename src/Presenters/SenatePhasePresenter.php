@@ -88,7 +88,8 @@ class SenatePhasePresenter
                 // General toggle to vote FOR/AGAINST/ABSTAIN as a whole party
                 $this->interface['senateGeneralVote'] =  array (
                     'type'  => 'toggle' ,
-                    'name' => 'senateGeneralVote' ,
+                    'name' => 'partyVote' ,
+                    'class' => 'togglePartyVote' ,
                     'items' => array(
                         array('value' => 'FOR' , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
@@ -961,7 +962,8 @@ class SenatePhasePresenter
                 // Toggle for split vote (when a senator votes differently from the party)
                 $currentSenator['splitVote'] = array (
                     'type'  => 'toggle' ,
-                    'name' => 'senateSplitVote_'.$senator->getSenatorID() ,
+                    'name' => $senator->getSenatorID() ,
+                    'class' => 'toggleSenatorVote' ,
                     'items' => array(
                         array('value' => 'FOR'     , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,

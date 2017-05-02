@@ -42,6 +42,16 @@ function getReady(phase , subPhase)
             $('.sortable').each(function() {
                 json[$(this).attr('name')] = $(this).sortable('toArray' , { attribute: "user_id" }) ;
             });
+            /* TO DO : how to collect all the toggles :
+             * - Go through all items with a toggle class, they should have a name : this is the name of the variable we need to set
+             * - They all have a tags with either the active or notActive class
+             * - All a tags have a value in data-title
+             * - Summary : json[toggle name] = value of data-title of the only a tag with active class 
+             */
+            $('.toggle').each(function() {
+                $varName = $(this).attr('name') ; // example : togglePartyVote
+                alert($varName) ;
+            });
         }
 
         // Get the verb from the button, put it in the json as well
@@ -171,15 +181,14 @@ function getReady(phase , subPhase)
             // $(e.target) is the specific tag that was clicked
             var sel = $(e.target).data('title');
             var tog = $(e.target).data('toggle');
-            $('#'+tog).prop('value', sel);
             $('a[data-toggle="'+tog+'"]').not('[data-title="'+sel+'"]').removeClass('active').addClass('notActive');
             $('a[data-toggle="'+tog+'"][data-title="'+sel+'"]').removeClass('notActive').addClass('active');
+            // Senate Vote only : If the toggle was a party-level vote (class togglePartyVote), make inactive all <a> in all senator toggles (class toggleSenatorVote)
         });
     });
     
     /**
      * Sortable lists
-     * 
      */
     $( '.sortable' ).sortable();
     $( '.sortable' ).disableSelection();
@@ -196,12 +205,11 @@ function getReady(phase , subPhase)
     });
 
     /**
-     * Popovers for Statesman information when hovering on a Senator's name
+     * Popovers : 
+     * - Statesman information when hovering on a Senator's name
+     * - Vote details when hovering on vote count (Senate)
      */
     $('.sprite-position-name').popover();
-    /**
-     * 
-     */
     $('.senatorVotePopover').popover();
 
     /**

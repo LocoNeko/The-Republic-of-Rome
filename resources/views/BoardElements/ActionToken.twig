@@ -60,17 +60,16 @@
     {#
         A toggle has :
         - action['name'] : A name
+        - action['class'] : A class like 'togglePartyVote' or 'toggleSenatorVote', to find similar toggles
         - A list of items in the action['items'] array. Each item must have at least one 'value' and one 'description'. 
-        - 'default' can be set to an item's value to be toggled by default
-        - A TOGGLE_ID : to collect the information once the toggle has been clicked ? -> might not be necessary if global-postable is set ?
+        - action['default'] can be set to an item's value to be toggled by default
     #}
     <div class="input-group">
-        <div class="btn-group toggle">
+        <div class="btn-group toggle {{action['class']}}" name="{{action['name']}}">
             {% for item in action['items'] %}
                 <a class="btn btn-primary {{(item['value']==action['default'] ? 'active' : 'notActive')}}" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
             {% endfor %}
         </div>
-        <input type="hidden" name="{{action['name']}}" id="{{action['name']}}" class="global-postable" value="{{action['default']|default('')}}">
     </div>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">
