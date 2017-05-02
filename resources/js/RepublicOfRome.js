@@ -199,6 +199,10 @@ function getReady(phase , subPhase)
      * Popovers for Statesman information when hovering on a Senator's name
      */
     $('.sprite-position-name').popover();
+    /**
+     * 
+     */
+    $('.senatorVotePopover').popover();
 
     /**
      * Phase-specific functions

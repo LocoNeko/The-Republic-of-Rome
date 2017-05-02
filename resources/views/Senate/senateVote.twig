@@ -11,7 +11,7 @@
             <tr>        
                 <td>{{senatorVote['name']}}</td>
                 <td>
-                    <div {% for key , attribute in senatorVote['attributes']|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
+                    <div class="senatorVotePopover" {% for key , attribute in senatorVote['attributes']|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
                         {{senatorVote['votes']}}
                     </div>
                 </td>
