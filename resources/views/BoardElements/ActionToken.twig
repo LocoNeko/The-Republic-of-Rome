@@ -67,7 +67,7 @@
     <div class="input-group">
         <div class="btn-group toggle {{action['class']}}" name="{{action['name']}}">
             {% for item in action['items'] %}
-                <a class="btn btn-primary {{(item['value']==action['default'] ? 'active' : 'notActive')}}" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
+                <a class="btn btn-primary {{(item['value']==action['default']|default('') ? 'active' : 'notActive')}}" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
             {% endfor %}
         </div>
     </div>
