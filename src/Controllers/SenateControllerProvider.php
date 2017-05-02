@@ -81,6 +81,32 @@ class SenateControllerProvider implements ControllerProviderInterface
 
         /*
         * POST target
+        * Verb : senateVote
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/senateVote', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $this->vote($user_id , $game , $json_data) ;
+                //$this->entityManager->persist($game);
+                //$this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            } catch (\Exception $exception) {
+                // TO DO : remove the alert below once happy
+                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+        ->bind('verb_senateVote');
+
+        /*
+        * POST target
         * Verb : senateVeto
         * JSON data : user_id
         */
@@ -92,7 +118,6 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 //$this->entityManager->persist($game);
                 //$this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -128,5 +153,24 @@ class SenateControllerProvider implements ControllerProviderInterface
             throw new \Exception($ex) ;
         }
         return $proposal ;
+    }
+    
+    /**
+     * @param int $user_id
+     * @param \Entities\Game $game
+     * @param type $json_data
+     * @throws \Exception
+     */
+    public function vote($user_id , $game , $json_data)
+    {
+        /*
+         * - First, test all parameters : 
+         * > Is the user_id the current voter for this proposal (proposal is underway and current proposal->vote user_id = user_id)
+         * > Was there any talents spent, if yes, spend them (if impossible, throw exception)
+         * > Manage whole party & senator-by-senator votes
+         * > If this is the last vote, do the proposal->flow++
+         */
+        /* @var $currentProposal \Entities\Proposal  */
+        $currentProposal = $game->getProposals()->last() ;
     }
 }

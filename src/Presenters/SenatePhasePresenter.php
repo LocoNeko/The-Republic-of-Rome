@@ -952,7 +952,7 @@ class SenatePhasePresenter
                     }
                     $currentSenator['talents']= array (
                         'type' => 'select' ,
-                        'class' => 'senatorVoteTalents' ,
+                        'class' => 'senatorVoteTalents_'.$senator->getSenatorID() ,
                         'items' => $items
                     ) ;
                 }
