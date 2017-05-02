@@ -92,8 +92,9 @@ class SenatePhasePresenter
                     'items' => array(
                         array('value' => 'FOR' , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
-                        array('active' => 'YES' , 'value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
-                    )
+                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                    ) ,
+                    'default' => 'ABSTAIN'
                 ) ;
                 // List of Senators able to vote : name, votes, tooltip to explain (ORA, knights, INF in some cases...) , optional dropdown to spend talents , override of FOR/AGAINST/ABSTAIN
                 $this->interface['senateVoteSenators'] = $this->getSenatorVoteList($game , $currentProposal , $user_id) ;
@@ -964,8 +965,9 @@ class SenatePhasePresenter
                     'items' => array(
                         array('value' => 'FOR'     , 'description' =>_('FOR')) ,
                         array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
-                        array('active' => 'YES' , 'value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
-                    )
+                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                    ) ,
+                    'default' => 'ABSTAIN'
                 ) ;
             }
             // For Senators who cannot vote
