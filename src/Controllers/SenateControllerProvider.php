@@ -92,6 +92,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
+                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $this->vote($user_id , $game , $json_data) ;
                 //$this->entityManager->persist($game);
                 //$this->entityManager->flush();
