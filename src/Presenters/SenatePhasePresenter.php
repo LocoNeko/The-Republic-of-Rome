@@ -910,7 +910,7 @@ class SenatePhasePresenter
                 ) ;
                 // TO DO  : Add INF for Prosecutions & Consul for life
                 // Dropdown for spedning talents
-                $treasury = $senator->getTreasury() ;
+                $treasury = $senator->getTreasury()+10 ;
                 if ($treasury>0)
                 {
                     $items = array() ;
