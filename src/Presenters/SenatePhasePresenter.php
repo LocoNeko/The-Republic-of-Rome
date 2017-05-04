@@ -876,12 +876,6 @@ class SenatePhasePresenter
         // Merging  $value into the array $json[$name]
         if ($mergeArray)
         {
-<<<<<<< HEAD
-            /*
-            if (array_key_exists ( $name , $json ))
-=======
-            if (!isset ($json[$name]))
->>>>>>> 82404b5ab8a90a16c0ce7d9e2ee12f8c57a49cb3
             {
                 $json[$name] = array() ;
             }
