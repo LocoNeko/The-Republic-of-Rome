@@ -18,7 +18,7 @@
                 <td class="success">Give</td>
                 <td><select id="otherBusinessCardSelectconcession" class="form-control global-postable"></select></td>
                 <td class="success">To</td>
-                <td><select id="otherBusinessSenatorSelectconcession" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessSenatorSelectconcession" class="form-control global-postable otherBusinessSenatorSelectconcession"></select></td>
                 <td><button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button></td>
             </tr>
             <tr class="dynamicSectionLast">
@@ -35,11 +35,11 @@
             </tr>
             <tr>
                 <td class="success">Sponsor</td>
-                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessSenatorSelectlandBillSponsor" class="form-control global-postable otherBusinessSenatorSelectlandBill"></select></td>
             </tr>
             <tr>
                 <td class="success">Co-sponsor</td>
-                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessSenatorSelectlandBillCoSponsor" class="form-control global-postable otherBusinessSenatorSelectlandBill"></select></td>
             </tr>
         </tbody>
     </table>
@@ -48,7 +48,7 @@
         <tbody>
             <tr>
                 <td class="success">Send</td>
-                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessSenatorSelectcommander" class="form-control global-postable otherBusinessSenatorSelectcommander"></select></td>
             </tr>
             <tr>
                 <td class="success">To fight</td>
@@ -59,15 +59,15 @@
             </tr>
             <tr>
                 <td class="success">Fleets</td>
-                <td><select id="otherBusinessFleetsSelectcommander" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessFleetsSelect" class="form-control global-postable"></select></td>
             </tr>
             <tr>
                 <td class="success">Regular legions</td>
-                <td><select id="otherBusinessRegularsSelectcommander" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessRegularsSelect" class="form-control global-postable"></select></td>
             </tr>
             <tr>
                 <td class="success">Veteran legions</td>
-                <td id="otherBusinessVeteransCheckboxescommander">
+                <td id="otherBusinessVeteransCheckboxes">
                 </td>
             </tr>
         </tbody>
@@ -77,7 +77,7 @@
         <tbody>
             <tr>
                 <td class="success">Recall</td>
-                <td><select id="otherBusinessSenatorSelectcommanderRecall" class="form-control global-postable"></select></td>
+                <td><select id="otherBusinessSenatorSelectcommanderRecall" class="form-control global-postable otherBusinessSenatorSelectcommanderRecall"></select></td>
             </tr>
         </tbody>
     </table>
@@ -98,12 +98,17 @@
     <table id='recruit' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
         <tbody>
             <tr>
-                <td class="success"></td>
-                <td>Recruit interface</td>
+                <td class="success">Regular legions</td>
+                <td><select id="otherBusinessRecruitRegularsSelect" class="form-control global-postable otherBusinessRecruit"></select></td>
             </tr>
             <tr>
-                <td class="success"></td>
-                <td>TO DO</td>
+                <td class="success">Fleets</td>
+                <td><select id="otherBusinessRecruitFleetsSelect" class="form-control global-postable otherBusinessRecruit"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Total cost</td>
+                <td><input type="text" readonly id="otherBusinessRecruitTotal" class="form-control"></input></td>
+            </tr>
             </tr>
         </tbody>
     </table>

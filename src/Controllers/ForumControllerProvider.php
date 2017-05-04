@@ -2,7 +2,7 @@
 namespace Controllers ;
 
 use Silex\Application;
-use Silex\ControllerProviderInterface;
+use Silex\Api\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class ForumControllerProvider implements ControllerProviderInterface
@@ -69,7 +69,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-            ->bind('verb_forumInitiativeBid');
+        ->bind('verb_forumInitiativeBid');
 
         /*
         * POST target

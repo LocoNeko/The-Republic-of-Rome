@@ -2,7 +2,7 @@
 namespace Controllers ;
 
 use Silex\Application;
-use Silex\ControllerProviderInterface;
+use Silex\Api\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 class RevenueControllerProvider implements ControllerProviderInterface

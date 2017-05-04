@@ -70,9 +70,6 @@ class Senator extends Card
     /** @OneToMany(targetEntity="Legion", mappedBy="loyalTo") **/
     private $loyalLegions ;
 
-    
-
-
     /**
      * ----------------------------------------------------
      * Getters & Setters

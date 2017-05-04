@@ -38,11 +38,40 @@ function getReady(phase , subPhase)
             $('.global-postable').each(function(i, obj) {
                 json[obj.name] = obj.value ;
             });
+            // Also collect all sortable lists values as arrays
+            $('.sortable').each(function() {
+                json[$(this).attr('name')] = $(this).sortable('toArray' , { attribute: "user_id" }) ;
+            });
+            /* Collect all the toggles :
+             * - Go through all items with a toggle class, they should have a name : this is the name of the variable we need to set
+             * - They all have a tags with either the active or notActive class
+             * - All a tags have a value in data-title
+             * - Summary : json[toggle name] = value of data-title of the only a tag with active class 
+             */
+            $toggles= {} ;
+            $('.toggle').each(function() {
+                $varName = $(this).attr('name') ; // example : togglePartyVote
+                $value = $(this).find('.active').first().data('title') ;
+                $toggles[$varName] = $value ;
+            });
+            if (Object.keys($toggles).length>0)
+            {
+                json['toggles'] = $toggles ;
+            }
         }
 
         // Get the verb from the button, put it in the json as well
         json['verb'] = $(this).attr('verb') ;
 
+        // Senate - Add the ProposalHow (type & code) to the json
+        if (phase==='Senate')
+        {
+            proposalHow = {} ;
+            proposalHow["type"] = $('.senateMakeProposal option:selected').attr('type') ;
+            proposalHow["code"] = $('.senateMakeProposal option:selected').attr('code') ;
+            json['senateMakeProposal'] = proposalHow ;
+        }
+        
         // Store the json data in the 'data-json' attribute of the body
         $(document.body).attr('data-json' , JSON.stringify(json)) ;
 
@@ -147,7 +176,45 @@ function getReady(phase , subPhase)
         });
     });
 
-
+    /**
+     * TOGGLE
+     * - Every object with the toggle class gets an onClick event to set each button to its correct active/notActive state
+     */
+    $('.toggle').each( function() {
+        // toggle is the class of the toggle group
+        var toggle = $(this) ;
+        toggle.on("click", function(e){
+            // $(e.target) is the specific tag that was clicked
+            var sel = $(e.target).data('title');
+            var tog = $(e.target).data('toggle');
+            $('a[data-toggle="'+tog+'"]').not('[data-title="'+sel+'"]').removeClass('active').addClass('notActive');
+            $('a[data-toggle="'+tog+'"][data-title="'+sel+'"]').removeClass('notActive').addClass('active');
+            /* 
+             * Senate Vote only : 
+             * - If the toggle was a senator vote (class toggleSenatorVote), make inactive all <a> in the party level toggle (class togglePartyVote)
+             * - If the toggle was a party level vote (class togglePartyVote), make inactive all <a> in all senator toggles (class toggleSenatorVote)
+             */
+            if (phase==='Senate' && toggle.hasClass('toggleSenatorVote'))
+            {
+                $('.togglePartyVote').each(function(e){
+                    $(this).find('a').removeClass('active').addClass('notActive') ;
+                }) ;
+            }
+            if (phase==='Senate' && toggle.hasClass('togglePartyVote'))
+            {
+                $('.toggleSenatorVote').each(function(e){
+                    $(this).find('a').removeClass('active').addClass('notActive') ;
+                }) ;
+            }
+        });
+    });
+    
+    /**
+     * Sortable lists
+     */
+    $( '.sortable' ).sortable();
+    $( '.sortable' ).disableSelection();
+    
     /**
      *  Popover for Rome Current State
      */
@@ -160,9 +227,12 @@ function getReady(phase , subPhase)
     });
 
     /**
-     * Popovers for Statesman information when hovering on a Senator's name
+     * Popovers : 
+     * - Statesman information when hovering on a Senator's name
+     * - Vote details when hovering on vote count (Senate)
      */
     $('.sprite-position-name').popover();
+    $('.senatorVotePopover').popover();
 
     /**
      * Phase-specific functions
@@ -438,6 +508,19 @@ function prepareSenateOtherBusiness()
             }
         });
     });
+    
+    var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
+
+    // Recruit : Dynamically display total cost of forces
+    $('#otherBusinessRecruitTotal').val('0 T.') ;
+    $('.otherBusinessRecruit').on('change', function()
+    {
+        $('#otherBusinessRecruitTotal').val(
+            jsonOtherBusiness.legions['cost'] * parseInt($('#otherBusinessRecruitRegularsSelect').val()) +
+            jsonOtherBusiness.fleets['cost']  * parseInt($('#otherBusinessRecruitFleetsSelect').val())   +
+            ' T.' 
+        ) ;
+    });
 }
 
 function prepareDynamicSection()
@@ -465,11 +548,13 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
     var jsonOtherBusiness = JSON.parse($('.otherBusinessWrapper').attr('data-json')) ;
 
     $('#otherBusinessSenatorSelect' + $otherBusinessType).find('option').remove() ;
+    
     // Go through all Senators
-    $('.sprite-Senator').each(function(i) {
+    $('.sprite-Senator').each(function(i, senator) {
         // Get the JSON data from the Senator Card and retrieve what is necessary : name, senatorID, list of otherBusiness
-        var $json = $(this).data('json') ;
+        var $json = $(senator).data('json') ;
         var $senatorName = $json.name ;
+        var $senatorFullName = $json.fullName ;
         var $senatorID = $json.senatorID ;
         var $otherBusinessList = $json.otherBusiness ;
         // If the $otherBusinessType is in this Senator's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
@@ -477,14 +562,18 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         {
             if ($otherBusinessType=='commander')
             {
-                $senatorName+=' ('+$json.office+')';
+                $senatorFullName+=' ('+$json.office+')';
             }
             // IDs in OtherBusiness_Proposal.twig have the format : #otherBusinessSenatorSelect{$otherBusinessType}
-            $('#otherBusinessSenatorSelect' + $otherBusinessType).append($("<option></option>").attr("value",$senatorID).text($senatorName));
+            // Go through all Senator Selectors with this otherBusinessType class. There can be more than one in some cases (Land bill sponsor & co sponsor)
+            $('.otherBusinessSenatorSelect' + $otherBusinessType).each(function(i , select) {
+                $(select).append($("<option></option>").attr("value" , $senatorID).text($senatorFullName));
+            });
         }
     });
 
     $('#otherBusinessCardSelect' + $otherBusinessType).find('option').remove() ;
+    
     // For concession and commander proposals, we need the cards as well, not just senators
     if ($otherBusinessType=='concession' || $otherBusinessType=='commander')
     {
@@ -492,7 +581,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
         $('.sprite-Card').each(function(i) {
             // Get the JSON data from the Card and retrieve what is necessary : name, cardID, list of otherBusiness
             var $json = $(this).data('json') ;
-            var $cardName = $json.name ;
+            var $cardName = $json.name+ ' ('+$json.deck+')' ;
             var $card_id = $json.card_id ;
             var $otherBusinessList = $json.otherBusiness ;
             // If the $otherBusinessType is in this Card's $otherBusinessList, add his {value,text} to the #otherBusinessSelect{$otherBusinessType}
@@ -521,10 +610,14 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
     
     if ($otherBusinessType=='recruit')
     {
-        var fleetsData  = jsonOtherBusiness.fleets ;
-        $.each( fleetsData, function( key, value ) {
-            alert( "Fleet data - " + key + ": " + value );
-        });
+        for (i = 0; i <= jsonOtherBusiness.legions['regularsCanBeRecruited'] ; i++)
+        {
+            $('#otherBusinessRecruitRegularsSelect').append( $("<option></option>").text(i) );
+        }
+        for (i = 0; i <= jsonOtherBusiness.fleets['canBeRecruited'] ; i++)
+        {
+            $('#otherBusinessRecruitFleetsSelect').append( $("<option></option>").text(i) );
+        }
     }
     
     if ($otherBusinessType=='commander' || $otherBusinessType=='garrison')
@@ -535,9 +628,9 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             // Fleets in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of fleets
             if (key=='inRome')
             {
-                for (i = 0; i < value ; i++) 
+                for (i = 0; i <= value ; i++) 
                 {
-                    $('#otherBusinessFleetsSelectcommander').append( $("<option></option>").text(i) );
+                    $('#otherBusinessFleetsSelect').append( $("<option></option>").text(i) );
                 }
             }
         });
@@ -548,9 +641,9 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
             // Regulars in Rome can be sent. Create a drop down list with the following options : 1, 2, 3, ... to number of regulars
             if (key=='regularsInRome')
             {
-                for (i = 0; i < value ; i++) 
+                for (i = 0; i <= value ; i++) 
                 {
-                    $('#otherBusinessRegularsSelectcommander').append( $("<option></option>").text(i) );
+                    $('#otherBusinessRegularsSelect').append( $("<option></option>").text(i) );
                 }
             }
             // Appending checkboxes for sending specific Veteran legions
@@ -561,7 +654,7 @@ function senateOtherBusinessPopulateSection($otherBusinessType)
                     if (legionData['otherLocation'] == 'Rome')
                     {
                         // TO DO : The title will not be helpful. It should say "Loyal to X"
-                        $('<label class="checkbox-inline" title="'+legionData['loyalTo']+'"><input type="checkbox" id="'+legionID+'">'+legionData['name']+'</label>').appendTo('#otherBusinessVeteransCheckboxescommander') ;
+                        $('<label class="checkbox-inline" title="'+legionData['loyalTo']+'"><input type="checkbox" id="'+legionID+'">'+legionData['name']+'</label>').appendTo('#otherBusinessVeteransCheckboxes') ;
                     }
                 });
             }

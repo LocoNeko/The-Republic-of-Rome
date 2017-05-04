@@ -1,6 +1,6 @@
 {#
     Creates an action token from the action array
-    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'submitWithVerb' , 'select' , 'disabled input'
+    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'submitWithVerb' , 'select' , 'cardSlot' , 'disabled input'
 #}
 
 {% if action['type']=='icon' %}
@@ -43,6 +43,33 @@
 {% elseif action['type']=='cardSlot' %}
     <div class="sprite-CardSlot droppable">
         {{action['description']}}
+    </div>
+{% elseif action['type']=='sortable' %}
+    {#
+        A sortable has :
+        - a class (to plugin JavaScript functions)
+        - items : An array of items with 'attribute name' => 'attribute value'
+        - One of those must be 'description' => 'XXXX'
+    #}
+    <ul class="sortable" name="{{action['class']|default('')}}">
+        {% for item in action['items'] %}
+            <li {% for key, value in item %} {{key}}="{{value}}"{% endfor %} >{{item['description']|escape('html')}}</li>
+        {% endfor %}
+    </ul>
+{% elseif action['type']=='toggle' %}
+    {#
+        A toggle has :
+        - action['name'] : A name
+        - action['class'] : A class like 'togglePartyVote' or 'toggleSenatorVote', to find similar toggles
+        - A list of items in the action['items'] array. Each item must have at least one 'value' and one 'description'. 
+        - action['default'] can be set to an item's value to be toggled by default
+    #}
+    <div class="input-group">
+        <div class="btn-group toggle {{action['class']}}" name="{{action['name']}}">
+            {% for item in action['items'] %}
+                <a class="btn btn-primary {{(item['value']==action['default']|default('') ? 'active' : 'notActive')}}" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
+            {% endfor %}
+        </div>
     </div>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">

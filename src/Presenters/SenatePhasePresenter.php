@@ -17,6 +17,7 @@ class SenatePhasePresenter
     /**
      * @param \Entities\Game $game
      * @param int $user_id
+     * @throws \Exception
      */
     public function __construct($game, $user_id)
     {
@@ -45,73 +46,173 @@ class SenatePhasePresenter
         $this->header['description'] = _('Senate') ;
         if ($game->getPhase() != 'Senate') 
         {
-            $this->header['description'] .= _('ERROR - Wrong phase');
+            throw new \Exception(_('ERROR - Wrong phase')) ;
         }
-        else
+        /* @var $currentProposal \Entities\Proposal  */
+        $currentProposal = $game->getProposals()->last() ;
+        /**
+         * There is a proposal underway
+         */
+        if ($currentProposal!==FALSE)
         {
-            $currentProposal = $game->getProposals()->last() ;
+            $this->header['description'] .= _(' - Proposal underway');
+            $this->header['list'] = array (
+                $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id)
+            );
             /**
-             * There is a proposal underway
+             * Currently voting
              */
-            if ($currentProposal!==FALSE && $currentProposal->getOutcome()!=='underway')
+            if ($currentProposal->getCurrentStep()=='vote')
             {
-                $this->header['description'] .= _(' - Proposal underway');
-            }
-            
-            /**
-             * No proposal underway
-             * - Check if the user can make a proposal
-             * - This will bring up the 'senateMakeProposal' interface
-             * - In case he can't, this will bring up a waiting screen
-             */
-            else
-            {
-                $this->header['description'] .= _(' - No proposal underway') ;
-                $listProposalHow = $this->getProposalHow($game) ; 
-                
-                /**
-                * This user has at least one way of making a proposal
-                **/
-                if (count($listProposalHow)>0)
+                /*
+                 * Describe the votes so far (if any)
+                 */
+                foreach ($currentProposal->getVote() as $voteOfParty)
                 {
-                    // Bring up the senateMakeProposal interface
-                    $this->interface['name'] = 'senateMakeProposal';
-                    
-                    /**
-                    * How the Proposal is made :
-                    * Items consists of arrays with 'type' , 'code', and 'description'
-                    * Types : office, statesman, tribune
-                    * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
-                    **/
-                    $this->interface['listProposalHow'] =  array (
-                        'type' => 'select' ,
-                        'items' => $listProposalHow
-                    ) ;
-                    $this->interface['senateMakeProposal'] = array (
-                        'type' => 'button' ,
-                        'disabled' => TRUE ,
-                        'verb' => 'senateMakeProposal' ,
-                        'text' => _('MAKE PROPOSAL')
-                    ) ;
-                    /**
-                    * The proposal's content, specific to the subPhase. This should include :
-                    * - A description in the header
-                    * - An interface proposalType
-                    **/
-                    
-                    $this->setContent($game) ;
+                    if ($voteOfParty['votes']!=NULL)
+                    {
+                        $this->header['list'][] = $voteOfParty['description'];
+                    }
                 }
-                
+                try 
+                {
+                    $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
+                } catch (Exception $ex) {
+                    throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
+                }
+                $this->header['list'][] = sprintf(_('The proposal would currently %1$s') , ($currentProposal->isCurrentOutcomePass() ? _('PASS') : _('FAIL'))) ;
+                $this->header['list'][] = $votingOrWaiting['message'] ;
                 /**
-                * This user cannot make a proposal at this point in time
-                **/
+                 * Waiting for another party to vote
+                 */
+                if ($votingOrWaiting['state'] == 'waiting')
+                {
+                    // TO DO
+                }
+                /**
+                 * Voting interface (I could check for 'state' == 'voting', but why should I ? exception has been caught before)
+                 */
                 else
                 {
-                    $this->header['list'] = array (
-                        _('You have no way to make a proposal at the moment') ,
-                        _('Waiting for player who do')
+                   // TO DO
+                    /* 
+                     * - A list of Senators reflecting the YES/NO of the general switch, but that can be overriden. Each Senator also has a treasury drop down
+                     * - A VETO button with a "with" dropdown (Tribune, Free tribune, Free veto...)
+                     * - A VOTE button
+                     */
+                    $this->interface['name'] = 'senateVote';
+                    // General toggle to vote FOR/AGAINST/ABSTAIN as a whole party
+                    $this->interface['senateGeneralVote'] =  array (
+                        'type'  => 'toggle' ,
+                        'name' => 'partyVote' ,
+                        'class' => 'togglePartyVote' ,
+                        'items' => array(
+                            array('value' => 'FOR' , 'description' =>_('FOR')) ,
+                            array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
+                            array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                        ) ,
+                        'default' => 'ABSTAIN'
                     ) ;
+                    // List of Senators able to vote : name, votes, tooltip to explain (ORA, knights, INF in some cases...) , optional dropdown to spend talents , override of FOR/AGAINST/ABSTAIN
+                    $this->interface['senateVoteSenators'] = $currentProposal->getVoteTally($user_id) ;
+                    // Vote button
+                    $this->interface['senateVote'] = array (
+                        'type' => 'button' ,
+                        'verb' => 'senateVote' ,
+                        'style'=> 'danger' ,
+                        'text' => _('VOTE')
+                    ) ;
+                    // Vetoes (Tribune cards, Free tribunes, Free veto
+                    $vetoes = [] ;
+                    $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($user_id))) ;
+                    $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($user_id))) ;
+                    if (count($vetoes)>0)
+                    {
+                        $this->interface['senateVeto'] = array (
+                            'type' => 'button' ,
+                            'verb' => 'senateVeto' ,
+                            'text' => _('VETO')
+                        ) ;
+                        $this->interface['senateVetoes'] =  array (
+                            'type'  => 'select' ,
+                            'class' => 'senateVetoWith' ,
+                            'items' => $vetoes
+                        ) ;
+                    }
+                    else
+                    {
+                        $this->interface['senateVeto'] = [] ;
+                    }
                 }
+            }
+            else 
+            {
+                $this->header['list'][] = 'TO DO....';
+            }
+        }
+
+        /**
+         * No proposal underway
+         * - Check if the user can make a proposal
+         * - This will bring up the 'senateMakeProposal' interface
+         * - In case he can't, this will bring up a waiting screen
+         */
+        else
+        {
+            $this->header['description'] .= _(' - No proposal underway') ;
+            $listProposalHow = $this->getProposalHow($game) ; 
+
+            /**
+            * This user has at least one way of making a proposal
+            **/
+            if (count($listProposalHow)>0)
+            {
+                // Bring up the senateMakeProposal interface
+                $this->interface['name'] = 'senateMakeProposal';
+
+                /**
+                * How the Proposal is made :
+                * Items consists of arrays with 'type' , 'code', and 'description'
+                * Types : office, statesman, tribune
+                * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
+                **/
+                // TO DO : rethink the codes for senators & cards. They could both be card IDs : then if the card is a Senator, it's a free tribune, otherwise it's a tribune card
+                $this->interface['listProposalHow'] =  array (
+                    'type'  => 'select' ,
+                    'class' => 'senateMakeProposal' ,
+                    'items' => $listProposalHow
+                ) ;
+                /**
+                 * Voting order
+                 */
+                $this->interface['listVotingOrder'] =  array (
+                    'type'  => 'sortable' ,
+                    'class' => 'senateListVotingOrder' ,
+                    'items' => $this->getVotingOrder($game)
+                ) ;
+                $this->interface['senateMakeProposal'] = array (
+                    'type' => 'button' ,
+                    'verb' => 'senateMakeProposal' ,
+                    'text' => _('MAKE PROPOSAL')
+                ) ;
+                /**
+                * The proposal's content, specific to the subPhase. This should include :
+                * - A description in the header
+                * - An interface proposalType
+                **/
+
+                $this->setContent($game) ;
+            }
+
+            /**
+            * This user cannot make a proposal at this point in time
+            **/
+            else
+            {
+                $this->header['list'] = array (
+                    _('You have no way to make a proposal at the moment') ,
+                    _('Waiting for player who do')
+                ) ;
             }
         }
     }
@@ -294,7 +395,8 @@ class SenatePhasePresenter
                 _('Other business') ,
                 _('You must first choose a type of proposal')
             ) ;
-			// This interface just has a drop down list otherBusinessList (defined at the end of this section)
+            
+            // This interface just has a drop down list otherBusinessList (defined at the end of this section)
             $this->interface['proposalType']= 'OtherBusiness' ;
             $availableOtherBusiness = array () ;
             $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'NONE' , _('-') ) ;
@@ -345,17 +447,22 @@ class SenatePhasePresenter
             **/
             foreach ($allSenators as $senator)
             {
+
                 // Go through controlled cards and add them to $allCards except :
                 // - Senators, which represents the family of a Statesman and is not needed)
                 // - Concessions, which are already assigned if we find them in a Senator->controlledCards
                 foreach($senator->controlledCards as $subCard)
                 {
-                    if ($card->preciseType !== 'Senator' && $card->preciseType !== 'Concession')
+                    if ($subCard->preciseType !== 'Senator' && $subCard->preciseType !== 'Concession')
                     {
-                        $allCards->add($card) ;
+                        $allCards->add($subCard) ;
                     }
                 }
                 $senatorModel = $game->getFilteredCards(array('senatorID' => $senator->getAttribute('senatorID')))->first();
+
+                // The full contextual name is not readily available normally. Let's add it to the senator card's json
+                //$senator->addAttribute('fullName' , $this->game->displayContextualName($senatorModel->getFullName()));
+                $senator->addAttribute('fullName' , $this->game->displayContextualName($senatorModel->getFullName()));
                 
                 // Concession holder , Land bill sponsor & co-sponsor
                 if ($senatorModel->checkCriteria('alignedInRome'))
@@ -398,11 +505,12 @@ class SenatePhasePresenter
                 elseif ($card->preciseType==='Conflict')
                 {
                     $card->addAttribute('otherBusiness' , 'commander' , TRUE);
+                    $card->addAttribute('deck' , $card->location['name']);
                 }
                 elseif ($card->preciseType==='Province')
                 {
                     $card->addAttribute('otherBusiness' , 'garrison' , TRUE);
-					$availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
+		    $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'garrison' , _('Send garrions in Provinces') ) ;
                 }
             }
 	    
@@ -437,7 +545,7 @@ class SenatePhasePresenter
                     }
                 }
             }
-            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'inRome'=>$fleets_inRome , 'onCards' => $fleetsOnCards)) ;
+            $this->addAttribute('fleets' , array('canBeRecruited'=>$fleets_canBeRecruited , 'inRome'=>$fleets_inRome , 'onCards' => $fleetsOnCards , 'cost' => $game->getUnitCost('Fleet'))) ;
 
             /**
              * Legions
@@ -488,7 +596,8 @@ class SenatePhasePresenter
                     'regularsCanBeRecruited'=>$regulars_canBeRecruited ,
                     'regularsCanBeDisbanded'=>$regulars_canBeDisbanded ,
                     'regularsInRome'=>$regulars_inRome ,
-                    'veterans' => $veterans
+                    'veterans' => $veterans ,
+                    'cost' => $game->getUnitCost('Legion')
                 )
             ) ;
 
@@ -503,9 +612,9 @@ class SenatePhasePresenter
                     $this->addAttribute('landBill' , array('sign'=>'-' , 'level'=>$level , 'description' => sprintf(_('Repeal Level %1$d law') , $level)) , TRUE) ;
                 }
                 // A law can be added
-                if ((int)$details['inPlay']<=(3-$level) )
+                if ((int)$details['inPlay']<=(3-(int)$level) )
                 {
-                    $this->addAttribute('landBill' , array('sign'=>'+' , 'level'=>$level ,  'description' => sprintf(_('Pass Level %1$d law') , $level)) ,TRUE) ;
+                    $this->addAttribute('landBill' , array('sign'=>'+' , 'level'=>$level , 'description' => sprintf(_('Pass Level %1$d law') , $level)) ,TRUE) ;
                 }
             }
 
@@ -581,10 +690,26 @@ class SenatePhasePresenter
         $result = array_merge($result, $this->getCardTribunes($game->getParty($this->user_id))) ;
         return $result ;
     }
+
+    /**
+     * Returns an array of parties in order of play
+     * @param \Entities\Game $game
+     * @return array {'user_id' , 'description'}
+     */
+    public function getVotingOrder($game)
+    {
+        $result = array() ;
+        foreach ($game->getOrderOfPlay() as $party)
+        {
+            $result[] = array('user_id' => $party->getUser_id() , 'description' => $party->getFullName());
+        }
+        return $result ;
+    }
     
     /**
     * Returns a list of free tribunes provided by Satesmen special abilities
     * @param \Entities\Party $party
+    * @return array {'type' , 'code' , 'description'}
     **/
     public function getFreeTribunes($party)
     {
@@ -593,7 +718,7 @@ class SenatePhasePresenter
         {
             if ($senator->getFreeTribune() == 1)
             {
-                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'description' => _('Free tribune from ').$senator->getName()) ;
+                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'value' =>$senator->getId() , 'description' => _('Free tribune from ').$senator->getName()) ;
             }
         }
         return $result ;
@@ -602,6 +727,7 @@ class SenatePhasePresenter
     /**
     * Returns a list of tribune cards for this party
     * @param \Entities\Party $party
+    * @return array {'type' , 'code' , 'description'}
     **/
     public function getCardTribunes($party)
     {
@@ -610,7 +736,7 @@ class SenatePhasePresenter
         {
             if ($card->getName()=='TRIBUNE')
             {
-                $result[] = array ('type' => 'tribune' , 'code' => $card->getId() , 'description' => 'Tribune card') ;
+                $result[] = array ('type' => 'tribune' , 'code' => $card->getId() , 'value' =>$card->getId() , 'description' => 'Tribune card') ;
             }
         }
         return $result ;
@@ -630,6 +756,7 @@ class SenatePhasePresenter
             {
                 $result[] = array (
                     'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'value' => $senator->getSenatorID() ,
                     'senatorID' => $senator->getSenatorID()
                 );
             }
@@ -641,6 +768,7 @@ class SenatePhasePresenter
                 // TO DO : Check if the senator was not previously rejected in a proposal
                 $result[] = array (
                     'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'value' => $senator->getSenatorID() ,
                     'senatorID' => $senator->getSenatorID()
                 ) ;
             }
@@ -659,6 +787,7 @@ class SenatePhasePresenter
                         $result[] = array (
                             'prosecutionType' => $possibleProsecution['type'] ,
                             'description' => $possibleProsecution['description'] ,
+                            'value' => $senator->getSenatorID() ,
                             'senatorID' => $senator->getSenatorID()
                         ) ;
                     }
@@ -670,12 +799,14 @@ class SenatePhasePresenter
             // Add a "-" option linked to a NULL cardID, so no Senator is selected by default on a new drop down
             $result[] = array (
                 'description' => _('-') ,
+                'value' => NULL ,
                 'senatorID' => NULL
             ) ;
             foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleGovernor') as $senator)
             {
                 $result[] = array (
                     'description' => $this->game->displayContextualName($senator->getFullName()) ,
+                    'value' => $senator->getSenatorID() ,
                     'senatorID' => $senator->getSenatorID()
                 ) ;
             }
@@ -745,7 +876,7 @@ class SenatePhasePresenter
         // Merging  $value into the array $json[$name]
         if ($mergeArray)
         {
-            if (array_key_exists ( $name , $json ))
+            if (!isset ($json[$name]))
             {
                 $json[$name] = array() ;
             }
@@ -757,7 +888,7 @@ class SenatePhasePresenter
         }
         $this->data_json = json_encode($json) ;
     }
-	
+    
     /**
     * returns an array of possible prosecutions for this Senator:
     * 'prosecutionType' => 'Major' | 'Minor' , 'description'
@@ -796,6 +927,88 @@ class SenatePhasePresenter
                     ) ;
                 }
             }
+        }
+        return $result ;
+    }
+    
+    /**
+     * All Senators in Rome with their names and votes : ORA , Knights, Treasury (so they can spend some) , INF (needed during prosecutions & Consul for life)
+     * @param \Entities\Game $game
+     * @param \Entities\Proposal $currentProposal
+     * @param int $user_id
+     */
+    public function getSenatorVoteList($game , $currentProposal , $user_id)
+    {
+        $result=array() ;
+        /* @var $senator \Entities\Senator */
+        foreach ($game->getParty($user_id)->getSenators()->getCards() as $senator)
+        {
+            $currentSenator = array() ;
+            $currentSenator['name'] = $senator->getName() ;
+            // Is in Rome : can vote
+            if ($senator->checkCriteria('alignedInRome'))
+            {
+                // TO DO : vote calculation belongs in the proposal
+                $oratory = $senator->getORA() ;
+                $knights = $senator->getKnights() ;
+                $currentSenator['votes'] = $oratory + $knights ;
+                // Tooltip
+                $knightsTooltip = ($knights==0 ? '' : sprintf(_(' and %1$d knights') , $knights)) ;
+                $currentSenator['attributes'] = array (
+                   'data-toggle' => 'popover' ,
+                   'data-content' => sprintf(_('%1$d votes from %2$s Oratory%3$s.') , $currentSenator['votes'] , $oratory , $knightsTooltip ) ,
+                   'data-trigger' => 'hover' ,
+                   'data-placement' => 'bottom'
+                ) ;
+                // TO DO  : Add INF for Prosecutions & Consul for life
+                // Dropdown for spedning talents
+                $treasury = $senator->getTreasury() ;
+                if ($treasury>0)
+                {
+                    $items = array() ;
+                    for ($i=0 ; $i<=$treasury ; $i++)
+                    {
+                        $items[] = array (
+                            'value' => $i ,
+                            'description' => $i." T."
+                        ) ;
+                    }
+                    $currentSenator['talents']= array (
+                        'type' => 'select' ,
+                        'class' => 'senatorVoteTalents_'.$senator->getSenatorID() ,
+                        'items' => $items
+                    ) ;
+                }
+                else
+                {
+                    $currentSenator['talents'] = 0 ;
+                }
+                // Toggle for split vote (when a senator votes differently from the party)
+                $currentSenator['splitVote'] = array (
+                    'type'  => 'toggle' ,
+                    'name' => $senator->getSenatorID() ,
+                    'class' => 'toggleSenatorVote' ,
+                    'items' => array(
+                        array('value' => 'FOR'     , 'description' =>_('FOR')) ,
+                        array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
+                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                    )
+                ) ;
+            }
+            // For Senators who cannot vote
+            else
+            {
+                $currentSenator['votes'] = 0 ;
+                $currentSenator['talents'] = 0 ;
+                // Tooltip
+                $currentSenator['attributes'] = array (
+                   'data-toggle' => 'popover' ,
+                   'data-content' => _('Cannot vote.') ,
+                   'data-trigger' => 'hover' ,
+                   'data-placement' => 'bottom'
+                ) ;
+            }
+            $result[] = $currentSenator ;
         }
         return $result ;
     }

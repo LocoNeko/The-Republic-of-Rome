@@ -307,6 +307,7 @@ class Deck
             {
                 if ($card->$getter() == $value)
                 {
+                    // If a $target deck was given, move the card to that deck
                     if ($target!=NULL && strpos(get_class($target), 'Entities\\Deck') !== FALSE) 
                     {
                         $this->removeCard($card) ;
@@ -316,7 +317,7 @@ class Deck
                 }
             }
         }
-        return FALSE ;
+        throw new \Exception(_('ERROR - Could not find card')) ;
     }
     
     public function getFullName($self=FALSE)
