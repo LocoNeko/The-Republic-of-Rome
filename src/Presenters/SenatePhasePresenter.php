@@ -876,10 +876,10 @@ class SenatePhasePresenter
         // Merging  $value into the array $json[$name]
         if ($mergeArray)
         {
+	    if (!isset ($json[$name]))
             {
                 $json[$name] = array() ;
             }
-             */
             $json[$name][] = $value ;
         }
         else
