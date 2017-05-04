@@ -35,7 +35,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 catch (\Exception $exception) 
                 {
                     $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                    return $app->redirect('/');
+                    return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
                 }
                 
                 return $app['twig']->render('BoardElements/Main.twig', array(
@@ -92,10 +92,10 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $this->vote($user_id , $game , $json_data) ;
-                //$this->entityManager->persist($game);
-                //$this->entityManager->flush();
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                $app['session']->getFlashBag()->add('danger', print_r($game->getProposals()->last()->getVote() , TRUE));
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
                 // TO DO : remove the alert below once happy
@@ -164,14 +164,114 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function vote($user_id , $game , $json_data)
     {
-        /*
-         * - First, test all parameters : 
-         * > Is the user_id the current voter for this proposal (proposal is underway and current proposal->vote user_id = user_id)
-         * > Was there any talents spent, if yes, spend them (if impossible, throw exception)
-         * > Manage whole party & senator-by-senator votes
-         * > If this is the last vote, do the proposal->flow++
-         */
         /* @var $currentProposal \Entities\Proposal  */
         $currentProposal = $game->getProposals()->last() ;
+        $partyName = $game->getParty($user_id)->getName() ;
+        // Check if the user_id is equal to the current voter for this proposal (proposal is underway and current proposal->vote user_id = user_id)
+        try {
+            if ($currentProposal->getCurrentVoter()!=(int)$user_id)
+            {
+                throw new \Exception(_('Current voter and user mismatch')) ;
+            }
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+        $jsonVotes = $json_data['toggles'] ;
+        $voteTally = $currentProposal->getVoteTally($user_id) ;
+        $totalVotes = 0 ;
+        $splitVoteDetail=['FOR' => '' , 'AGAINST' => '' , 'ABSTAIN' => ''];
+        $isPartyVote = array_key_exists('partyVote', $jsonVotes) ;
+        $signDescription='';
+        $talentsSpent = [] ;
+        $totalTalentsAdded = 0 ;
+        /*
+         * Talents : spend them if required. If impossible, throw exception.
+         */
+        foreach($json_data as $key=>$value)
+        {
+            $senatorID = str_replace("senatorVoteTalents_" , "" , $key) ;
+            // We have found a senator who spent money
+            if ($senatorID!=$key && (int)$value>0)
+            {
+                /* @var $senator \Entities\Senator */
+                $senator = $game->getParty($user_id)->getSenators()->getFirstCardByProperty('senatorID', $senatorID) ;
+                if ($senator->getTreasury()<$value)
+                {
+                    throw new \Exception(sprintf(_('%1$s doesn\'t have enough money') , $senator->getName())) ;
+                }
+                else
+                {
+                    // Spend talents & add to votes total
+                    $senator->changeTreasury(-$value) ;
+                    $talentsSpent[$senatorID] = (int)$value ;
+                    $totalTalentsAdded+=$value;
+                }
+            }
+        }
+        /*
+         * Was it a whole party vote or split by Senators ?
+         */
+        foreach ($voteTally as $voteOfSenator)
+        {
+            // addedtalents
+            $addedTalents = (array_key_exists($voteOfSenator['senatorID'] , $talentsSpent) ? $talentsSpent[$voteOfSenator['senatorID']] : 0 );
+            $addedTalentsMessage = ($addedTalents>0 ? '+'.$addedTalents.'T':'');
+            if ( $isPartyVote && $jsonVotes['partyVote']=='FOR')         { $sign =  1 ; $signDescription = _('FOR') ; }
+            elseif ( $isPartyVote && $jsonVotes['partyVote']=='AGAINST') { $sign = -1 ; $signDescription = _('AGAINST') ; }
+            elseif ( $isPartyVote)                                       { $sign =  0 ; $signDescription = _('ABSTAIN') ; }
+            if (!$isPartyVote && $jsonVotes[$voteOfSenator['senatorID']]=='FOR')         { $sign =  1 ; $splitVoteDetail['FOR'].=$voteOfSenator['name'].' ['.$voteOfSenator['votes'].$addedTalentsMessage.'], ';}
+            elseif (!$isPartyVote && $jsonVotes[$voteOfSenator['senatorID']]=='AGAINST') { $sign = -1 ; $splitVoteDetail['AGAINST'].=$voteOfSenator['name'].' ['.$voteOfSenator['votes'].$addedTalentsMessage.'], ';}
+            elseif (!$isPartyVote)                                                       { $sign =  0 ; $splitVoteDetail['ABSTAIN'].=$voteOfSenator['name'].' [0], ';}
+            $totalVotes += ( ($voteOfSenator['votes']+$addedTalents) * $sign) ;
+        }
+        /**
+         * Description of the vote
+         */
+        if ($isPartyVote)
+        {
+            $description = (
+                $sign!=0 ?
+                (sprintf(_('%1$s %2$d votes %3$s%4$s') , $partyName , abs($totalVotes) , $signDescription , ($totalTalentsAdded>0 ? sprintf(_('(including %1$d T)') , $totalTalentsAdded): ''))) :
+                (sprintf(_('%1$s ABSTAINS') , $partyName ))
+            ) ;
+        }
+        else
+        {
+            if ($totalVotes>0) {$splitMessage=sprintf(_('%1$d votes FOR') , $totalVotes);}
+            if ($totalVotes<0) {$splitMessage=sprintf(_('%1$d votes AGAINST') , -$totalVotes);}
+            if ($totalVotes==0) {$splitMessage=sprintf(_('0 votes') , -$totalVotes);}
+            $description = sprintf(_('%1$s is split for a total of %2$s (') , $partyName , $splitMessage) ;
+            if ($splitVoteDetail['FOR']!='') {$description.=_(' FOR : ').substr($splitVoteDetail['FOR'],0,-2).' ; ';}
+            if ($splitVoteDetail['AGAINST']!='') {$description.=_(' AGAINST : ').substr($splitVoteDetail['AGAINST'],0,-2).' ; ';}
+            if ($splitVoteDetail['ABSTAIN']!='') {$description.=_(' ABSTAIN : ').substr($splitVoteDetail['ABSTAIN'],0,-2).' ; ';}
+            $description = substr($description,0,-3).')';
+        }
+        $currentProposal->setVote($user_id, $totalVotes, $description) ;
+        $this->doVoteEnd($game , $currentProposal) ;
+    }
+    
+    /**
+     * @param \Entities\Game $game
+     * @param \Entities\Proposal $proposal
+     */
+    public function doVoteEnd($game , $proposal)
+    {
+        try
+        {
+            $proposal->getCurrentVoter() ;
+        } catch (\Exception $ex) {
+            // This was the last voter
+            if ($ex->getCode() == \Entities\Proposal::ERROR_NO_VOTER)
+            {
+                /*
+                 * The vote is over
+                 * - Determine the outcome 'pass' or 'fail'
+                 * - Implement the proposal if it passed
+                 */
+                $proposal->setOutcome(($proposal->isCurrentOutcomePass() ? 'pass' : 'fail')) ;
+                $proposal->incrementStep() ;
+            }
+        }
+        return TRUE ;
     }
 }

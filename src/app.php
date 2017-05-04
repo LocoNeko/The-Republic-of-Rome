@@ -283,8 +283,6 @@
         }
     });
     
-    $app->run() ;
-
     $app->error(function (\Exception $e, $code) {
         switch ($code) {
             case 404:
@@ -296,3 +294,5 @@
 
         return new Response($message);
     });
+
+    $app->run() ;

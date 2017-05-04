@@ -41,10 +41,16 @@ class CardPresenter
         
         /**
          * All cards have :
-         * - Attribute card_id
+         * - Attribute card_id (and the corresponding class to display it)
          */
         $this->addAttribute('card_id', $card->getId()) ; 
         $this->addAttribute('name', $card->getName()) ; 
+        /* Padded text : CardID */
+        $this->elements[] = array (
+            'classes' => array('sprite-position-card-id') ,
+            'text' => sprintf("%'.03d", $card->getId())
+        ) ;
+
         
         /**
          * Senator or Statesman
@@ -96,13 +102,6 @@ class CardPresenter
             $this->elements[] = array (
                 'classes' => array('sprite-position-treasury') ,
                 'text' => $card->getTreasury()
-            ) ;
-            /**
-             * Padded text : CardID
-             */
-            $this->elements[] = array (
-                'classes' => array('sprite-position-card-id') ,
-                'text' => sprintf("%'.03d", $card->getId())
             ) ;
             /**
              * Markers (no text, but another class) : INF , INF10 , POP , Knights , Corrupt , priori consul , office

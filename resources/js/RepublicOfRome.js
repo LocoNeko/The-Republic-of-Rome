@@ -48,13 +48,13 @@ function getReady(phase , subPhase)
              * - All a tags have a value in data-title
              * - Summary : json[toggle name] = value of data-title of the only a tag with active class 
              */
-            $toggles= [] ;
+            $toggles= {} ;
             $('.toggle').each(function() {
                 $varName = $(this).attr('name') ; // example : togglePartyVote
                 $value = $(this).find('.active').first().data('title') ;
-                $toggles.push('{'+ $varName +' : '+ $value +'}') ;
+                $toggles[$varName] = $value ;
             });
-            if ($toggles.length>0)
+            if (Object.keys($toggles).length>0)
             {
                 json['toggles'] = $toggles ;
             }

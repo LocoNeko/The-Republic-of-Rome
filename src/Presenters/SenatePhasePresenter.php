@@ -53,79 +53,101 @@ class SenatePhasePresenter
         /**
          * There is a proposal underway
          */
-        if ($currentProposal!==FALSE && $currentProposal->getOutcome()=='underway')
+        if ($currentProposal!==FALSE)
         {
             $this->header['description'] .= _(' - Proposal underway');
             $this->header['list'] = array (
                 $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id)
             );
-            try 
-            {
-                $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
-            } catch (Exception $ex) {
-                throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
-            }
-            $this->header['list'][] = $votingOrWaiting['message'] ;
             /**
-             * Waiting for another party to vote
+             * Currently voting
              */
-            if ($votingOrWaiting['state'] == 'waiting')
+            if ($currentProposal->getCurrentStep()=='vote')
             {
-                // TO DO
-            }
-            /**
-             * Voting interface (I could check for 'state' == 'voting', but why should I ? exception has been caught before)
-             */
-            else
-            {
-               // TO DO
-                /* 
-                 * - A list of Senators reflecting the YES/NO of the general switch, but that can be overriden. Each Senator also has a treasury drop down
-                 * - A VETO button with a "with" dropdown (Tribune, Free tribune, Free veto...)
-                 * - A VOTE button
+                /*
+                 * Describe the votes so far (if any)
                  */
-                $this->interface['name'] = 'senateVote';
-                // General toggle to vote FOR/AGAINST/ABSTAIN as a whole party
-                $this->interface['senateGeneralVote'] =  array (
-                    'type'  => 'toggle' ,
-                    'name' => 'partyVote' ,
-                    'class' => 'togglePartyVote' ,
-                    'items' => array(
-                        array('value' => 'FOR' , 'description' =>_('FOR')) ,
-                        array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
-                        array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
-                    ) ,
-                    'default' => 'ABSTAIN'
-                ) ;
-                // List of Senators able to vote : name, votes, tooltip to explain (ORA, knights, INF in some cases...) , optional dropdown to spend talents , override of FOR/AGAINST/ABSTAIN
-                $this->interface['senateVoteSenators'] = $this->getSenatorVoteList($game , $currentProposal , $user_id) ;
-                // Vote button
-                $this->interface['senateVote'] = array (
-                    'type' => 'button' ,
-                    'verb' => 'senateVote' ,
-                    'text' => _('VOTE')
-                ) ;
-                // Vetoes (Tribune cards, Free tribunes, Free veto
-                $vetoes = [] ;
-                $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($user_id))) ;
-                $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($user_id))) ;
-                if (count($vetoes)>0)
+                foreach ($currentProposal->getVote() as $voteOfParty)
                 {
-                    $this->interface['senateVeto'] = array (
-                        'type' => 'button' ,
-                        'verb' => 'senateVeto' ,
-                        'text' => _('VETO')
-                    ) ;
-                    $this->interface['senateVetoes'] =  array (
-                        'type'  => 'select' ,
-                        'class' => 'senateVetoWith' ,
-                        'items' => $vetoes
-                    ) ;
+                    if ($voteOfParty['votes']!=NULL)
+                    {
+                        $this->header['list'][] = $voteOfParty['description'];
+                    }
                 }
+                try 
+                {
+                    $votingOrWaiting = $currentProposal->getVotingOrWaiting($user_id) ;
+                } catch (Exception $ex) {
+                    throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
+                }
+                $this->header['list'][] = sprintf(_('The proposal would currently %1$s') , ($currentProposal->isCurrentOutcomePass() ? _('PASS') : _('FAIL'))) ;
+                $this->header['list'][] = $votingOrWaiting['message'] ;
+                /**
+                 * Waiting for another party to vote
+                 */
+                if ($votingOrWaiting['state'] == 'waiting')
+                {
+                    // TO DO
+                }
+                /**
+                 * Voting interface (I could check for 'state' == 'voting', but why should I ? exception has been caught before)
+                 */
                 else
                 {
-                    $this->interface['senateVeto'] = [] ;
+                   // TO DO
+                    /* 
+                     * - A list of Senators reflecting the YES/NO of the general switch, but that can be overriden. Each Senator also has a treasury drop down
+                     * - A VETO button with a "with" dropdown (Tribune, Free tribune, Free veto...)
+                     * - A VOTE button
+                     */
+                    $this->interface['name'] = 'senateVote';
+                    // General toggle to vote FOR/AGAINST/ABSTAIN as a whole party
+                    $this->interface['senateGeneralVote'] =  array (
+                        'type'  => 'toggle' ,
+                        'name' => 'partyVote' ,
+                        'class' => 'togglePartyVote' ,
+                        'items' => array(
+                            array('value' => 'FOR' , 'description' =>_('FOR')) ,
+                            array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
+                            array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                        ) ,
+                        'default' => 'ABSTAIN'
+                    ) ;
+                    // List of Senators able to vote : name, votes, tooltip to explain (ORA, knights, INF in some cases...) , optional dropdown to spend talents , override of FOR/AGAINST/ABSTAIN
+                    $this->interface['senateVoteSenators'] = $currentProposal->getVoteTally($user_id) ;
+                    // Vote button
+                    $this->interface['senateVote'] = array (
+                        'type' => 'button' ,
+                        'verb' => 'senateVote' ,
+                        'style'=> 'danger' ,
+                        'text' => _('VOTE')
+                    ) ;
+                    // Vetoes (Tribune cards, Free tribunes, Free veto
+                    $vetoes = [] ;
+                    $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($user_id))) ;
+                    $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($user_id))) ;
+                    if (count($vetoes)>0)
+                    {
+                        $this->interface['senateVeto'] = array (
+                            'type' => 'button' ,
+                            'verb' => 'senateVeto' ,
+                            'text' => _('VETO')
+                        ) ;
+                        $this->interface['senateVetoes'] =  array (
+                            'type'  => 'select' ,
+                            'class' => 'senateVetoWith' ,
+                            'items' => $vetoes
+                        ) ;
+                    }
+                    else
+                    {
+                        $this->interface['senateVeto'] = [] ;
+                    }
                 }
+            }
+            else 
+            {
+                $this->header['list'][] = 'TO DO....';
             }
         }
 
@@ -926,6 +948,7 @@ class SenatePhasePresenter
             // Is in Rome : can vote
             if ($senator->checkCriteria('alignedInRome'))
             {
+                // TO DO : vote calculation belongs in the proposal
                 $oratory = $senator->getORA() ;
                 $knights = $senator->getKnights() ;
                 $currentSenator['votes'] = $oratory + $knights ;
@@ -939,7 +962,7 @@ class SenatePhasePresenter
                 ) ;
                 // TO DO  : Add INF for Prosecutions & Consul for life
                 // Dropdown for spedning talents
-                $treasury = $senator->getTreasury()+3 ;
+                $treasury = $senator->getTreasury() ;
                 if ($treasury>0)
                 {
                     $items = array() ;

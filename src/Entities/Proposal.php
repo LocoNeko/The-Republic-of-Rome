@@ -7,10 +7,12 @@ use Doctrine\Common\Collections\Criteria;
  * @Entity @Table(name="proposals")
  * - vote is in the form of an array :
  * > keys are integer from 0 and give the order of vote
- * > values are arrays of 'user_id' , 'votes' , 'split_vote'
+ * > values are arrays of 'user_id' , 'votes' , 'description'
  **/
 class Proposal
 {
+    const ERROR_NO_VOTER = 1;
+    
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
 
@@ -37,8 +39,10 @@ class Proposal
     // A Proposal has a Party that proposed it
     /** @ManyToOne(targetEntity="Party" , inversedBy="proposed" , cascade={"persist"}) **/
     private $proposedBy ;
-
-    /** @Column(type="string") @var string */
+    
+    /** @Column(type="string") @var string 
+     * Can be 'underway' , 'pass' , or 'fail'
+     */
     private $outcome = 'underway';
 
     /** @Column(type="array") @var array */
@@ -87,14 +91,14 @@ class Proposal
          */
         try 
         {
-            $this->vote = [] ;
+            $this->vote = array() ;
             $i = 0 ;
             foreach ($json_data['senateListVotingOrder'] as $votingOrderUser_id)
             {
                 $this->vote[$i++] = array (
                     'user_id' => (int)$votingOrderUser_id ,
                     'votes' => NULL ,
-                    'split_vote' => ''
+                    'description' => ''
                 );
             }
         } catch (Exception $ex) {
@@ -117,6 +121,7 @@ class Proposal
         
     }
 
+
     public function getType()       { return $this->type ; }
     public function getFlow()       { return $this->flow; }
     public function getStep()       { return $this->step; }
@@ -125,7 +130,9 @@ class Proposal
     public function getOutcome()    { return $this->outcome ; }
     public function getVote()       { return $this->vote; }
 
-     /**
+    public function setOutcome($outcome) { $this->outcome = $outcome; }
+
+      /**
      * 
      * @param type $type
      * @param \Entities\Game $game
@@ -188,6 +195,41 @@ class Proposal
     }
  
     /**
+     * 
+     * @return string Description of the current step ('vote' , 'agree' , 'appoint' ...)
+     * @throws \Exception
+     */
+    public function getCurrentStep()
+    {
+        try {
+            return $this->flow[$this->step] ;
+        } catch (Exception $ex) {
+            throw new \Exception(_('Invalid step for this proposal')) ;
+        }
+    }
+
+    /**
+     * Returns the user id of the current voter for this proposal, or throws an exception
+     * @return int $user_id
+     * @throws \Exception
+     */
+    public function getCurrentVoter()
+    {
+        if ($this->outcome!='underway')
+        {
+            throw new \Exception(_('No vote underway')) ;
+        }
+        foreach ($this->vote as $vote)
+        {
+            if ($vote['votes']==NULL)
+            {
+                return $vote['user_id'] ;
+            }
+        }
+        throw new \Exception(_('No voters left') , self::ERROR_NO_VOTER) ;
+    }
+    
+    /**
      * @return string A string showing the voting order using party->getFullName()
      */
     public function getVotingOrder()
@@ -222,5 +264,145 @@ class Proposal
             }
         }
         throw new \Exception(_('Invalid voting state')) ;
+    }
+    
+    /**
+     * Returns a complex array describing the vote tally of a user senator by senator. Array is presenter-ready
+     * @param int $user_id
+     * @return array 
+     * @throws \Exception
+     */
+    public function getVoteTally($user_id)
+    {
+        $result = [] ;
+        try 
+        {
+            $party = $this->game->getParty($user_id) ;
+        } catch (Exception $ex) {
+            throw new \Exception(_('Couldn\'t find party')) ;
+        }
+        try
+        {
+            /* @var $senator \Entities\Senator  */
+            foreach($party->getSenators()->getCards() as $senator)
+            {
+                $currentSenator = array() ;
+                $currentSenator['name'] = $senator->getName() ;
+                $currentSenator['senatorID'] = $senator->getSenatorID() ;
+                // Is in Rome : can vote
+                if ($senator->checkCriteria('alignedInRome'))
+                {
+                    $oratory = $senator->getORA() ;
+                    $knights = $senator->getKnights() ;
+                    $currentSenator['votes'] = $oratory + $knights ;
+                    // Tooltip
+                    $knightsTooltip = ($knights==0 ? '' : sprintf(_(' and %1$d knights') , $knights)) ;
+                    $currentSenator['attributes'] = array (
+                       'data-toggle' => 'popover' ,
+                       'data-content' => sprintf(_('%1$d votes from %2$s Oratory%3$s.') , $currentSenator['votes'] , $oratory , $knightsTooltip ) ,
+                       'data-trigger' => 'hover' ,
+                       'data-placement' => 'bottom'
+                    ) ;
+                    // TO DO  : Add INF for Prosecutions & Consul for life
+                    // Dropdown for spedning talents
+                    $treasury = $senator->getTreasury() ;
+                    if ($treasury>0)
+                    {
+                        $items = array() ;
+                        for ($i=0 ; $i<=$treasury ; $i++)
+                        {
+                            $items[] = array (
+                                'value' => $i ,
+                                'description' => $i." T."
+                            ) ;
+                        }
+                        $currentSenator['talents']= array (
+                            'type' => 'select' ,
+                            'class' => 'senatorVoteTalents_'.$senator->getSenatorID() ,
+                            'items' => $items
+                        ) ;
+                    }
+                    else
+                    {
+                        $currentSenator['talents'] = 0 ;
+                    }
+                    // Toggle for split vote (when a senator votes differently from the party)
+                    $currentSenator['splitVote'] = array (
+                        'type'  => 'toggle' ,
+                        'name' => $senator->getSenatorID() ,
+                        'class' => 'toggleSenatorVote' ,
+                        'items' => array(
+                            array('value' => 'FOR'     , 'description' =>_('FOR')) ,
+                            array('value' => 'AGAINST' , 'description' =>_('AGAINST')) ,
+                            array('value' => 'ABSTAIN' , 'description' =>_('ABSTAIN'))
+                        )
+                    ) ;
+                }
+                // For Senators who cannot vote
+                else
+                {
+                    $currentSenator['votes'] = 0 ;
+                    $currentSenator['talents'] = 0 ;
+                    // Tooltip
+                    $currentSenator['attributes'] = array (
+                       'data-toggle' => 'popover' ,
+                       'data-content' => _('Cannot vote.') ,
+                       'data-trigger' => 'hover' ,
+                       'data-placement' => 'bottom'
+                    ) ;
+                }
+                $result[] = $currentSenator ;
+            }
+        } catch (Exception $ex) {
+            throw new \Exception(_('ERROR retrieving senator vote')) ;
+        }
+        return $result ;
+    }
+
+    /**
+     * Sets the votes and their description for this proposal and this user_id
+     * @param int $user_id
+     * @param int $votes
+     * @param string $description
+     * @return TRUE
+     * @throws \Exception
+     */
+    public function setVote($user_id , $votes , $description) 
+    {
+        foreach ($this->getVote() as $i=>$vote)
+        {
+            if ($vote['user_id']==$user_id)
+            {
+                $this->vote[$i]['votes'] = $votes ;
+                $this->vote[$i]['description'] = $description ;
+                return TRUE ;
+            }
+        }
+        throw new \Exception(_('ERROR - user not found')) ;
+    }
+
+    /**
+     * Returns TRUE if the proposal would pass with current votes
+     * @return bool
+     */
+    public function isCurrentOutcomePass()
+    {
+        $totalVotes = 0 ;
+        foreach ($this->getVote() as $aVote)
+        {
+            if ($aVote['votes']!=NULL)
+            {
+                $totalVotes+=$aVote['votes'] ;
+            }
+        }
+        return ($totalVotes>0) ;
+    }
+    
+    /**
+     * Adds 1 to this proposal flow
+     */
+    public function incrementStep()
+    {
+        $this->step++;
     }
 }

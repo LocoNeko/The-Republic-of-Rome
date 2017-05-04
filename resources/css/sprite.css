@@ -1,7 +1,16 @@
+:root
+{
+    --zoom: 1;
+}
 .sprite {
     background-image: url(spritesheet.png);
     background-repeat: no-repeat;
     display: block;
+    transform: scale(var(--zoom) , var(--zoom));
+}
+
+.popover {
+    transform: scale(var(--zoom) , var(--zoom));
 }
 
 .sprite-modal {
@@ -361,7 +370,7 @@
     text-shadow: 1px 1px #777777;
     text-align: center;
     right: 20px;
-    top: 60px;
+    top: 55px;
 }
 
 .sprite-position-ORA {
@@ -372,7 +381,7 @@
     text-shadow: 1px 1px #777777;
     text-align: center;
     right: 20px;
-    top: 95px;
+    top: 90px;
 }
 
 .sprite-position-LOY {
@@ -383,7 +392,7 @@
     text-shadow: 1px 1px #777777;
     text-align: center;
     right: 20px;
-    top: 130px;
+    top: 125px;
 }
 
 .sprite-position-treasury {
@@ -394,7 +403,7 @@
     text-shadow: 1px 1px #777777;
     text-align: center;
     left: 50px;
-    top: 105px;
+    top: 90px;
 }
 
 .sprite-position-POP {
@@ -488,6 +497,6 @@
     position: absolute;
     font-size: 100%;
     text-shadow: 1px 1px #777777;
-    left: 275px;
-    top: 254px;
+    left: 15px;
+    top: 266px;
 }
