@@ -60,6 +60,10 @@ class Party
 
     /** @OneToOne(targetEntity="Senator" , mappedBy="biddingFor" , cascade={"persist"}) **/
     private $bidWith = NULL ;
+    
+    // A Party can have many Proposals
+    /** @OneToMany(targetEntity="Proposal" , mappedBy="proposedBy") **/
+    private $proposed ;
 
     /**
      * ----------------------------------------------------
@@ -90,6 +94,10 @@ class Party
     public function setBid($bid) { $this->bid = $bid; }
     public function setBidWith($bidWith) {
         $this->bidWith = $bidWith ;
+        foreach($this->getSenators()->getCards() as $senator) 
+        {
+            $senator->setBiddingFor(NULL) ;
+        }
         $bidWith->setBiddingFor($this) ;
     }
 
@@ -129,6 +137,7 @@ class Party
         $this->hand->setInHand($this) ;
         $this->senators = new \Entities\Deck($this->getName().' - Senators') ;
         $this->senators->setInParty($this) ;
+        $this->proposed = new ArrayCollection();
     }
 
     public function saveData() {

@@ -572,14 +572,14 @@ class Game
     
     /**
      * Get all parties names
-     * @return array of [$user_id] => 'party name [user name]'
+     * @return array of [$user_id] => '[user name]'
      */
     public function getPartiesNames()
     {
         $result=array() ;
         foreach($this->getParties() as $party)
         {
-            $result[$party->getUser_id()] = $party->getFullName() ;
+            $result[$party->getUser_id()] = $party->getUserName() ;
         }
         return $result ;
     }
@@ -838,15 +838,14 @@ class Game
                 $family->resetSenator() ;
                 // The family was the party's leader
                 if ($party->getLeader()->getSenatorID() == $family->getSenatorID()) { $party->setLeader($statesman); }
-                $familyMessage=_(' He has the Family and puts it under the Statesman.');
+                $familyMessage=_(' {You have,He has} the Family and {put,puts} it under the Statesman.');
                 
             // The Family was found in the forum - Play the Statesman and make him control the Family
             }
             elseif (($familyLocation['type']=='game') && ($familyLocation['name']=='forum') ) 
             {
                 $this->getDeck('forum')->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
-                $familyMessage=_(' He takes the Family from the forum and puts it under the Statesman.');
-
+                $familyMessage=_(' {You take,He takes} the Family from the forum and {put,puts} it under the Statesman.');
             }
             // Move any card controlled by the Family on the Statesman
             if ($family->hasControlledCards())
@@ -1691,4 +1690,38 @@ class Game
             }
         }
     }
+    
+    /**
+    * ----------------------------------------------------
+    * Senate
+    * ----------------------------------------------------
+    */
+
+    /**
+     * Given a string ('Legion'|'Fleet') returns the cost per unit
+     * @param string $type Legion|Fleet
+     * @return int
+     */
+    public function getUnitCost($type)
+    {
+        switch ($type)
+        {
+            case 'Legion' :
+            case 'Fleet' :
+                return 10 * ( 1 + $this->getEventProperty('name' , 'Manpower Shortage') ) ;
+            default :
+                return 0 ;
+        }
+    }
+    
+    /**
+     * Sets the latest proposal
+     * @param \Entities\Proposal $proposal
+     */
+    public function setNewProposal($proposal)
+    {
+        $index = $this->proposals->count() + 1 ; 
+        $this->proposals->set($index, $proposal) ;
+    }
+
 }

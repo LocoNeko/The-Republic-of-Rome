@@ -802,7 +802,7 @@ class ForumPhasePresenter
         $target = $game->getPersuasionTarget() ;
         $bribes =$game->getParty($this->idWithInitiative)->getBid() ;
         // Counter bribes
-        $counterBribesDescription = _('') ;
+        $counterBribesDescription = '' ;
         $counterBribes = 0 ;
         foreach ($game->getParties() as $party)
         {

@@ -10,6 +10,7 @@ class CardPresenter
     private $user_id ;
     public $preciseType ;
     public $id ;
+    public $location ;
     public $classes;
     public $attributes ;
     public $data_json ;
@@ -27,6 +28,7 @@ class CardPresenter
         $this->user_id = $user_id ;
         $this->preciseType = $card->getPreciseType() ;
         $this->id = $card->getId() ;
+        $this->location = $card->getLocation() ;
         /*
          * What we need to display the card :
          */
@@ -39,10 +41,16 @@ class CardPresenter
         
         /**
          * All cards have :
-         * - Attribute card_id
+         * - Attribute card_id (and the corresponding class to display it)
          */
         $this->addAttribute('card_id', $card->getId()) ; 
         $this->addAttribute('name', $card->getName()) ; 
+        /* Padded text : CardID */
+        $this->elements[] = array (
+            'classes' => array('sprite-position-card-id') ,
+            'text' => sprintf("%'.03d", $card->getId())
+        ) ;
+
         
         /**
          * Senator or Statesman
@@ -94,13 +102,6 @@ class CardPresenter
             $this->elements[] = array (
                 'classes' => array('sprite-position-treasury') ,
                 'text' => $card->getTreasury()
-            ) ;
-            /**
-             * Padded text : CardID
-             */
-            $this->elements[] = array (
-                'classes' => array('sprite-position-card-id') ,
-                'text' => sprintf("%'.03d", $card->getId())
             ) ;
             /**
              * Markers (no text, but another class) : INF , INF10 , POP , Knights , Corrupt , priori consul , office
@@ -226,23 +227,23 @@ class CardPresenter
      * @param string $name The value's name (key)
      * @param mixed $value The value itself
      */
-	public function addAttribute($name , $value , $mergeArray = FALSE)
-	{
-	    $json = json_decode($this->data_json , TRUE) ;
-	    if ($mergeArray)
-	    {
-		if (!isset ($json[$name]))
-		{
-		    $json[$name] = array() ;
-		}
-		$json[$name][] = $value ;
-	    }
-	    else
-	    {
-		$json[$name] = $value ;
-	    }
-	    $this->data_json = json_encode($json) ;
-	}
+    public function addAttribute($name , $value , $mergeArray = FALSE)
+    {
+        $json = json_decode($this->data_json , TRUE) ;
+        if ($mergeArray)
+        {
+            if (!isset ($json[$name]))
+            {
+                $json[$name] = array() ;
+            }
+            $json[$name][] = $value ;
+        }
+        else
+        {
+            $json[$name] = $value ;
+        }
+        $this->data_json = json_encode($json) ;
+    }
 
     /**
      * Returns the attribute named $name for this card

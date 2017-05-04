@@ -8,19 +8,20 @@
         {#
             CSS - TO DO : put in one minified file 
         #}
-        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.css">
-        <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
-        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/css/sprite.css">
-        <link rel="stylesheet" type="text/css" href="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/css/general.css">
-        <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" type="text/css" href="{{ asset('bootstrap.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('jquery.dataTables.min.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('sprite.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('general.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('jquery-ui.css' , 'css') }}">
+
         {#
             JS - TO DO : put in one minified file 
         #}
-        <script type="text/javascript" src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-        <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
-        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.js"></script>
-        <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="{{ asset('socket.io-1.2.0.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('jquery.min.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('jquery-ui.min.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bootstrap.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('jquery.dataTables.min.js' , 'js') }}"></script>
     </head>
     
     <body style="{{ game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%; overflow-y: hidden ;">
@@ -73,11 +74,11 @@
             - If a game is defined, the file js/{{phase}}/{{subphase}}.js is loaded
             - If no game is defined, the file js/Lobby.js is loaded
         #}
-        <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/GeneralFunctions.js"></script>
+        <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/GeneralFunctions.js"></script>
         {% if game is defined %}
-            <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/{{game.getPhase()}}/{{game.getSubPhase()}}.js"></script>
+            <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/{{game.getPhase()}}/{{game.getSubPhase()}}.js"></script>
         {% else %}
-            <script src="{{ app.request.basepath }}/..{{app['BASE_URL']}}/resources/js/Lobby/Lobby.js"></script>
+            <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/Lobby/Lobby.js"></script>
         {% endif %}
     </body>
 </html>
