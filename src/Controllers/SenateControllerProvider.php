@@ -34,7 +34,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 }
                 catch (\Exception $exception) 
                 {
-                    $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                    $app['session']->getFlashBag()->add('danger', print_r($exception->getTrace(),TRUE));
                     return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
                 }
                 
@@ -95,7 +95,6 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $this->vote($user_id , $game , $json_data) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
-                $app['session']->getFlashBag()->add('danger', print_r($game->getProposals()->last()->getVote() , TRUE));
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
                 // TO DO : remove the alert below once happy
@@ -150,6 +149,7 @@ class SenateControllerProvider implements ControllerProviderInterface
         try 
         {
             $proposal = new \Entities\Proposal($user_id , $proposalType , $game , $json_data) ;
+            $game->log($proposal->getDescription(), 'log') ;
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
@@ -247,6 +247,7 @@ class SenateControllerProvider implements ControllerProviderInterface
             $description = substr($description,0,-3).')';
         }
         $currentProposal->setVote($user_id, $totalVotes, $description) ;
+        $game->log($description);
         $this->doVoteEnd($game , $currentProposal) ;
     }
     
@@ -256,10 +257,12 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function doVoteEnd($game , $proposal)
     {
+        error_log('HIP');
         try
         {
             $proposal->getCurrentVoter() ;
         } catch (\Exception $ex) {
+            error_log('HOP');
             // This was the last voter
             if ($ex->getCode() == \Entities\Proposal::ERROR_NO_VOTER)
             {
@@ -269,6 +272,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                  * - Implement the proposal if it passed
                  */
                 $proposal->setOutcome(($proposal->isCurrentOutcomePass() ? 'pass' : 'fail')) ;
+                // TO DO : describe outcome
                 $proposal->incrementStep() ;
             }
         }

@@ -53,14 +53,14 @@ class SenatePhasePresenter
         /**
          * There is a proposal underway
          */
-        if ($currentProposal!==FALSE)
+        if ($currentProposal!==FALSE && $currentProposal->getCurrentStep()!='done')
         {
             $this->header['description'] .= _(' - Proposal underway');
             $this->header['list'] = array (
                 $this->game->displayContextualName($game->getProposals()->last()->getDescription() , $user_id)
             );
             /**
-             * Currently voting
+             * This proposal's current step is 'vote'
              */
             if ($currentProposal->getCurrentStep()=='vote')
             {
@@ -88,13 +88,13 @@ class SenatePhasePresenter
                 if ($votingOrWaiting['state'] == 'waiting')
                 {
                     // TO DO
+                    // But what do I really need to do here ???
                 }
                 /**
                  * Voting interface (I could check for 'state' == 'voting', but why should I ? exception has been caught before)
                  */
                 else
                 {
-                   // TO DO
                     /* 
                      * - A list of Senators reflecting the YES/NO of the general switch, but that can be overriden. Each Senator also has a treasury drop down
                      * - A VETO button with a "with" dropdown (Tribune, Free tribune, Free veto...)
@@ -123,9 +123,7 @@ class SenatePhasePresenter
                         'text' => _('VOTE')
                     ) ;
                     // Vetoes (Tribune cards, Free tribunes, Free veto
-                    $vetoes = [] ;
-                    $vetoes = array_merge($vetoes , $this->getFreeTribunes($game->getParty($user_id))) ;
-                    $vetoes = array_merge($vetoes , $this->getCardTribunes($game->getParty($user_id))) ;
+                    $vetoes = array_merge(array_merge([] , $this->getCardTribunes($game->getParty($user_id))) , $this->getFreeTribunes($game->getParty($user_id))) ;
                     if (count($vetoes)>0)
                     {
                         $this->interface['senateVeto'] = array (
@@ -145,12 +143,14 @@ class SenatePhasePresenter
                     }
                 }
             }
-            else 
+            /**
+             * This proposal's current step is 'agree'
+             */
+            if ($currentProposal->getCurrentStep()=='agree') 
             {
-                $this->header['list'][] = 'TO DO....';
+                $this->setAgreeContent($game , $currentProposal , $user_id) ;
             }
         }
-
         /**
          * No proposal underway
          * - Check if the user can make a proposal
@@ -629,6 +629,86 @@ class SenatePhasePresenter
                     'class' => 'otherBusinessList',
                     'items' => $availableOtherBusiness
                 )
+            ) ;
+        }
+    }
+
+    /**
+     * Content when :
+     * - A proposal is underway 
+     * - The surrent step is "agree"
+     * @param \Entities\Game $game
+     * @param \Entities\Proposal $proposal
+     * @param int $user_id
+     */
+    public function setAgreeContent($game, $proposal , $user_id) {
+        /**
+         * Consuls proposal : The consuls now need to decide who will be Rome Consul & Field Consul
+         */
+        $this->interface['name'] = 'senateAgree';
+        if ($proposal->getType()=='Consuls')
+        {
+            $this->header['list'][] = _('The parties now need to decide who will be Rome Consul & Field Consul') ;
+            $this->interface['choices'] = [] ;
+            /* 
+             * Show : 
+             * - If no choice has been made yet (no agree has the senatorID of you senator)
+             * -> You want xxx to be [drop down]
+             * - If you have made your choice
+             * -> WAiting for the other consul
+             */
+            /* @var $senators[] \Entities\Senator  */
+            $senator = [] ;
+            /* @var $parties[] \Entities\Party  */
+            $party = [] ;
+            
+            for ($i=1 ; $i<=2 ; $i++)
+            {
+                $senator[$i] = $game->getFilteredCards(array('id'=>$proposal->getCards()[($i==1 ? 'First Senator' : 'Second Senator' )]))->first() ;
+                $party[$i] = $senator[$i]->getLocation()['value'] ;
+            }
+
+            /**
+             * Not part of this choice : waiting message
+             */
+            if (($party[1]->getUser_id()!=$user_id) && ($party[2]->getUser_id()!=$user_id))
+            {
+                $this->interface['description'] = _('Waiting for consuls to decide') ;
+                return TRUE ;
+            }
+
+            /**
+             * Has a choice to make
+             */
+            for ($i=1 ; $i<=2 ; $i++)
+            {
+                if (
+                    ($party[$i]->getUser_id()==$user_id) && (
+                        ($proposal->getAgree()['Rome consul']!=$senator[$i]->getId()) ||
+                        ($proposal->getAgree()['Field consul']!=$senator[$i]->getId())
+                    )
+                )
+                {
+                    $this->header['list'][] = _('You must decide for '.$senator[$i]->getName()) ;
+                    $this->interface['description'] = _('Choose role for the Senator') ;
+                    $this->interface['choices'][] = array(
+                        'description' => $senator[$i]->getName() ,
+                        'action' => array (
+                            'type' => 'select' ,
+                            'class' => $senator[$i]->getSenatorID() ,
+                            'items' => array (
+                                0 => array ('description' => 'Rome consul') ,
+                                1 => array ('description' => 'Field consul')
+                            )
+                        )
+                    ) ;
+                }
+            }
+            $this->interface['senateAgree'] = array (
+                'type' => 'button' ,
+                'verb' => 'senateAgree' ,
+                'style'=> 'danger' ,
+                'text' => _('DONE')
             ) ;
         }
     }

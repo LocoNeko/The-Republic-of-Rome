@@ -48,6 +48,9 @@ class Proposal
     /** @Column(type="array") @var array */
     private $vote = array() ;
 
+    /** @Column(type="array") @var array */
+    private $agree = array() ;
+
     /**
      * TO DO : Implement / remove all this below.  
      */
@@ -57,9 +60,6 @@ class Proposal
 
     /** @Column(type="array") @var array */
     private $conditions = array() ;
-
-    /** @Column(type="array") @var array */
-    private $agree = array() ;
 
     /**
      * @param int $user_id
@@ -113,9 +113,11 @@ class Proposal
             $this->type = 'Consuls' ;
             $this->flow = array (
                 0 => 'vote' ,
-                1 => 'agree'
+                1 => 'agree' ,
+                2 => 'done'
             ) ;
             $this->step = 0 ;
+            $this->agree = array ('Rome consul' => NULL , 'Field consul' => NULL);
         }
         // TO DO : all other types of proposals
         
@@ -129,6 +131,7 @@ class Proposal
     public function getProposedBy() { return $this->proposedBy; }
     public function getOutcome()    { return $this->outcome ; }
     public function getVote()       { return $this->vote; }
+    public function getAgree()      { return $this->agree; }
 
     public function setOutcome($outcome) { $this->outcome = $outcome; }
 
