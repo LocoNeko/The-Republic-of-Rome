@@ -650,13 +650,6 @@ class SenatePhasePresenter
         {
             $this->header['list'][] = _('The parties now need to decide who will be Rome Consul & Field Consul') ;
             $this->interface['choices'] = [] ;
-            /* 
-             * Show : 
-             * - If no choice has been made yet (no agree has the senatorID of you senator)
-             * -> You want xxx to be [drop down]
-             * - If you have made your choice
-             * -> WAiting for the other consul
-             */
             /* @var $senators[] \Entities\Senator  */
             $senator = [] ;
             /* @var $parties[] \Entities\Party  */
@@ -678,10 +671,14 @@ class SenatePhasePresenter
             }
 
             /**
-             * Has a choice to make
+             * Part of this choice
              */
+            $choiceMade = TRUE ;
             for ($i=1 ; $i<=2 ; $i++)
             {
+                /**
+                 * Has a choice to make
+                 */
                 if (
                     ($party[$i]->getUser_id()==$user_id) && (
                         ($proposal->getAgree()['Rome consul']!=$senator[$i]->getId()) ||
@@ -689,6 +686,7 @@ class SenatePhasePresenter
                     )
                 )
                 {
+                    $choiceMade = FALSE ;
                     $this->header['list'][] = _('You must decide for '.$senator[$i]->getName()) ;
                     $this->interface['description'] = _('Choose role for the Senator') ;
                     $this->interface['choices'][] = array(
@@ -703,13 +701,29 @@ class SenatePhasePresenter
                         )
                     ) ;
                 }
+                else
+                {
+                }
             }
-            $this->interface['senateAgree'] = array (
-                'type' => 'button' ,
-                'verb' => 'senateAgree' ,
-                'style'=> 'danger' ,
-                'text' => _('DONE')
-            ) ;
+            
+            /**
+             * You have made your choice and are waiting for the other consul
+             */
+            if($choiceMade)
+            {
+                $this->interface['description'] = _('Waiting for the other party to decide') ;
+                return TRUE ;
+            }
+            else
+            {
+                $this->interface['senateAgree'] = array (
+                    'type' => 'button' ,
+                    'verb' => 'senateAgree' ,
+                    'style'=> 'danger' ,
+                    'text' => _('DONE')
+                ) ;
+            }
+
         }
     }
     

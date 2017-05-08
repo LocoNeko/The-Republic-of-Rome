@@ -385,6 +385,21 @@ class Proposal
     }
 
     /**
+     * Sets this->agree[$key] to be equal to $value
+     * @param mixed $key
+     * @param mixed  $value
+     * @throws \Exception
+     */
+    public function setAgree($key , $value)
+    {
+        try {
+            $this->agree[$key] = $value ;
+        } catch (Exception $ex) {
+            throw new \Exception(_('ERROR - user not found')) ;
+        }
+    }
+            
+    /**
      * Returns TRUE if the proposal would pass with current votes
      * @return bool
      */

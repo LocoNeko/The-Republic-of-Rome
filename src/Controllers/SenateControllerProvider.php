@@ -331,7 +331,13 @@ class SenateControllerProvider implements ControllerProviderInterface
             {
                 throw new \Exception(_('ERROR - Wrong proposal step, should be \'agree\'')) ;
             }
+            // $agreeCurrent = 'Rome consul'|'Field consul' = senatorID
             $agreeCurrent=$currentProposal->getAgree();
+            if ($json_data['user_id']!=$user_id)
+            {
+                throw new \Exception(_('ERROR - Trying to agree with the wrong party')) ;
+            }
+            // JSON: $key = senatorID ; $value = 'Rome consul'|'Field consul'
             foreach ($json_data as $key=>$value)
             {
                 if ($value=='Rome consul')
@@ -340,12 +346,20 @@ class SenateControllerProvider implements ControllerProviderInterface
                     {
                         throw new \Exception(_('ERROR - There is already a Rome Consul')) ;
                     }
+                    else
+                    {
+                        $currentProposal->setAgree('Rome consul', $key) ;
+                    }
                 }
                 elseif ($value=='Field consul')
                 {
                     if ($agreeCurrent['Field consul']!=NULL)
                     {
                         throw new \Exception(_('ERROR - There is already a Field Consul')) ;
+                    }
+                    else
+                    {
+                        $currentProposal->setAgree('Field consul', $key) ;
                     }
                 }
             }
