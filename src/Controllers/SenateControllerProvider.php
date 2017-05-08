@@ -118,6 +118,33 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
+                $this->veto($user_id , $game , $json_data) ;
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
+                return $app->json( 'SUCCESS' , 201);
+            } catch (\Exception $exception) {
+                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                return $app->json( $exception->getMessage() , 201 );
+            }
+        })
+        ->bind('verb_senateVeto');
+
+        /*
+        * POST target
+        * Verb : senateAgree
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/senateAgree', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /** @var \Entities\Game $game */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
+                $this->agree($user_id , $game , $json_data) ;
+
                 //$this->entityManager->persist($game);
                 //$this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -128,8 +155,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-        ->bind('verb_senateVeto');
-
+        ->bind('verb_senateAgree');
         return $controllers;
     }
     
@@ -278,4 +304,54 @@ class SenateControllerProvider implements ControllerProviderInterface
         }
         return TRUE ;
     }
+
+    /**
+     * @param int $user_id
+     * @param \Entities\Game $game
+     * @param type $json_data
+     * @throws \Exception
+     */
+    public function veto($user_id , $game , $json_data)
+    {
+        // TO DO
+    }
+
+    /**
+     * @param int $user_id
+     * @param \Entities\Game $game
+     * @param type $json_data
+     * @throws \Exception
+     */
+    public function agree($user_id , $game , $json_data)
+    {
+        try {
+            /* @var $currentProposal \Entities\Proposal  */
+            $currentProposal = $game->getProposals()->last() ;
+            if ($currentProposal->getCurrentStep()!='agree')
+            {
+                throw new \Exception(_('ERROR - Wrong proposal step, should be \'agree\'')) ;
+            }
+            $agreeCurrent=$currentProposal->getAgree();
+            foreach ($json_data as $key=>$value)
+            {
+                if ($value=='Rome consul')
+                {
+                    if ($agreeCurrent['Rome consul']!=NULL)
+                    {
+                        throw new \Exception(_('ERROR - There is already a Rome Consul')) ;
+                    }
+                }
+                elseif ($value=='Field consul')
+                {
+                    if ($agreeCurrent['Field consul']!=NULL)
+                    {
+                        throw new \Exception(_('ERROR - There is already a Field Consul')) ;
+                    }
+                }
+            }
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+
 }
