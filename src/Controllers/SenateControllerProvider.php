@@ -145,8 +145,8 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $this->agree($user_id , $game , $json_data) ;
 
-                //$this->entityManager->persist($game);
-                //$this->entityManager->flush();
+                $this->entityManager->persist($game);
+                $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
                 // TO DO : remove the alert below once happy
