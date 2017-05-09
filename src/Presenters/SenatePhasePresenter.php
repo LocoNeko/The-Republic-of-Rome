@@ -677,9 +677,21 @@ class SenatePhasePresenter
             for ($i=1 ; $i<=2 ; $i++)
             {
                 /**
-                 * Has a choice to make
+                 * The choice was already made
                  */
                 if (
+                    ($party[$i]->getUser_id()==$user_id) && (
+                        ($senator[$i]->getId() == $proposal->getAgree()['Rome consul']) ||
+                        ($senator[$i]->getId() == $proposal->getAgree()['Field consul'])
+                    )
+                )
+                {
+                    $this->header['list'][] = _('You have already decided for '.$senator[$i]->getName()) ;
+                }
+                /**
+                 * Has a choice to make
+                 */
+                elseif (
                     ($party[$i]->getUser_id()==$user_id) && (
                         ($proposal->getAgree()['Rome consul']!=$senator[$i]->getId()) ||
                         ($proposal->getAgree()['Field consul']!=$senator[$i]->getId())
@@ -700,9 +712,6 @@ class SenatePhasePresenter
                             )
                         )
                     ) ;
-                }
-                else
-                {
                 }
             }
             
