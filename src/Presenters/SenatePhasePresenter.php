@@ -314,7 +314,30 @@ class SenatePhasePresenter
             ) ;
         }
         /**
-        * Consuls
+        * Dictator
+        */
+        elseif ($game->getSubPhase()=='Dictator')
+        {
+            $this->header['list'] = array (
+                _('Dicator appointment') ,
+            ) ;
+            $this->interface['proposalType']= 'Dictator' ;
+            /*
+             * TO DO : HERE NOW
+            $this->interface['senators']= array
+            (
+		    'description' => _('Senator') ,
+		    'list' => array (
+		        'type' => 'select' ,
+		        'class' => 'Senator',
+		        'items' => $this->getListOfCandidates($game) 
+		    )
+            ) ;
+             * 
+             */
+        }
+        /**
+        * Censor
         */
         elseif ($game->getSubPhase()=='Censor')
         {
@@ -679,25 +702,15 @@ class SenatePhasePresenter
                 /**
                  * The choice was already made
                  */
-                if (
-                    ($party[$i]->getUser_id()==$user_id) && (
-                        ($senator[$i]->getId() == $proposal->getAgree()['Rome consul']) ||
-                        ($senator[$i]->getId() == $proposal->getAgree()['Field consul'])
-                    )
-                )
+                if ( ($party[$i]->getUser_id()==$user_id) && ($senator[$i]->getId() == $proposal->getAgree()[($i==1 ? 'First Senator' : 'Second Senator' )]) )
                 {
                     $this->header['list'][] = _('You have already decided for '.$senator[$i]->getName()) ;
                 }
                 /**
                  * Has a choice to make
                  */
-                elseif (
-                    ($party[$i]->getUser_id()==$user_id) && (
-                        ($proposal->getAgree()['Rome consul']!=$senator[$i]->getId()) ||
-                        ($proposal->getAgree()['Field consul']!=$senator[$i]->getId())
-                    )
-                )
-                {
+                elseif ( ($party[$i]->getUser_id()==$user_id) && ($proposal->getAgree()[($i==1 ? 'First Senator' : 'Second Senator' )]==NULL) )
+               {
                     $choiceMade = FALSE ;
                     $this->header['list'][] = _('You must decide for '.$senator[$i]->getName()) ;
                     $this->interface['description'] = _('Choose role for the Senator') ;
@@ -705,10 +718,10 @@ class SenatePhasePresenter
                         'description' => $senator[$i]->getName() ,
                         'action' => array (
                             'type' => 'select' ,
-                            'class' => $senator[$i]->getSenatorID() ,
+                            'class' => $senator[$i]->getId() ,
                             'items' => array (
-                                0 => array ('description' => 'Rome consul') ,
-                                1 => array ('description' => 'Field consul')
+                                0 => array ('description' => 'Rome Consul') ,
+                                1 => array ('description' => 'Field Consul')
                             )
                         )
                     ) ;
@@ -756,9 +769,9 @@ class SenatePhasePresenter
         if ($game->getSubPhase() == 'Prosecutions')
         {
             $searchResult = $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'isCensor') ;
-            if (count($searchResult)==1 && $searchResult->first()->getUser_id() == $this->user_id)
+            if (count($searchResult)==1 && $searchResult->first()->getLocation()['value']->getUser_id() == $this->user_id)
             {
-                return array(array ('type' => 'office' , 'code' => 'CENSOR' , 'description' => _('Proscutions by the Censor')));
+                return array(array ('type' => 'office' , 'code' => 'CENSOR' , 'description' => _('Prosecutions by the Censor')));
             }
             else
             {
@@ -769,10 +782,16 @@ class SenatePhasePresenter
         * Consuls appointing a Dictator
         * This is exculsive (will be the only result returned)
         **/
-        if ($game->getSubPhase() == 'DictatorAppointment')
+        /*
+        if ($game->getSubPhase() == 'Dictator')
         {
-            $searchResult = $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'canAppointDictator') ;
-            if (count($searchResult)==1 && $searchResult->first()->getUser_id() == $this->user_id)
+            $user_idThatCanAppoint=[] ;
+            
+            foreach($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'canAppointDictator') as $senator)
+            {
+                $user_idThatCanAppoint[] = $senator->getLocation()['value']->getUser_id() ;
+            }
+            if (in_array($this->user_id, $user_idThatCanAppoint))
             {
                 return array(array ('type' => 'office' , 'code' => 'DICTATOR APPOINTMENT' , 'description' => _('Dictator appointment by consuls')));
             }
@@ -781,6 +800,7 @@ class SenatePhasePresenter
                 return array() ;
             }
         }
+         */
         /**
         * Other means of proposals : President, tribune card, free tribune
         * This is not exclusive (several results can be returned)
@@ -866,7 +886,7 @@ class SenatePhasePresenter
         }
         elseif ($game->getSubPhase() == 'Censor')
         {
-            foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'priorConsul') as $senator)
+            foreach ($game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleCensor') as $senator)
             {
                 // TO DO : Check if the senator was not previously rejected in a proposal
                 $result[] = array (
@@ -888,8 +908,8 @@ class SenatePhasePresenter
                     {
                         // TO DO : check if there already was a minor prosecution (in which case, a major prosecution is impossible)
                         $result[] = array (
-                            'prosecutionType' => $possibleProsecution['type'] ,
-                            'description' => $possibleProsecution['description'] ,
+                            'prosecutionType' => $possibleProsecution['prosecutionType'] ,
+                            'description' => $this->game->displayContextualName($possibleProsecution['description']) ,
                             'value' => $senator->getSenatorID() ,
                             'senatorID' => $senator->getSenatorID()
                         ) ;
@@ -1020,7 +1040,7 @@ class SenatePhasePresenter
         }
         if ($senator->hasControlledCards())
         {
-            foreach($senator->getCardsControlled() as $card)
+            foreach($senator->getCardsControlled()->getCards() as $card)
             {
                 if ($card->getCorrupt())
                 {

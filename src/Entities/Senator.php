@@ -202,12 +202,12 @@ class Senator extends Card
     {
         if (!in_array($office, self::$VALID_OFFICES))
         {
-            throw new Exception(sprintf(_('%s is not a valid office') , $office)) ;
+            throw new \Exception(sprintf(_('%s is not a valid office') , $office)) ;
         }
         $currentOffice = $this->getOffice() ;
         if ($currentOffice!=NULL && $currentOffice!='Censor')
         {
-            throw new Exception(sprintf(_('The Senator cannot hold another office while he is %s') , $currentOffice)) ;
+            throw new \Exception(sprintf(_('The Senator cannot hold another office while he is %s') , $currentOffice)) ;
         }
         $this->setOffice($office) ;
         switch ($office) 
@@ -255,7 +255,11 @@ class Senator extends Card
 		    case 'possibleProsecutor' :
 		        return ( ($this->getOffice() != 'Censor') && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
 
-		    // In a Party, in Rome, not an Official except Censor
+		    // In a party & either Rome Consul, Field Consul or Dictator
+		    case 'canAppointDictator' :
+		        return (in_array($this->getOffice() , array('Rome Consul' , 'Field Consul')) && ($this->getDeck()->getInParty() != NULL) && $this->inRome()) ;
+
+                    // In a Party, in Rome, not an Official except Censor
 		    case 'possibleDictator' :
 		    case 'possibleMastersOfHorse' :
 		        return ( ($this->getOffice() === 'Censor' || $this->getOffice() === NULL) && ($this->getDeck()->getInParty() != NULL) && $this->inRome() ) ;
@@ -267,6 +271,14 @@ class Senator extends Card
 		    // In Rome, not necessarily in a party, no office
 		    case 'possibleGovernor' :
                         return ( $this->inRome() && $this->getOffice()===NULL) ;
+
+                    // all the offices
+                    case 'isDictator' : return ( $this->getOffice() === 'Dictator' ) ;
+                    case 'isRome Consul' : return ( $this->getOffice() === 'Rome Consul' ) ;
+                    case 'isField Consul' : return ( $this->getOffice() === 'Field Consul' ) ;
+                    case 'isCensor' : return ( $this->getOffice() === 'Censor' ) ;
+                    case 'isMaster of Horse' : return ( $this->getOffice() === 'Master of Horse' ) ;
+                    case 'isPontifex Maximus' : return ( $this->getOffice() === 'Pontifex Maximus' ) ;
 
 		    // Proconsul
 		    case 'isProconsul' :

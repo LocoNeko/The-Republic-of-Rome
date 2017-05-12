@@ -117,7 +117,7 @@ class Proposal
                 2 => 'done'
             ) ;
             $this->step = 0 ;
-            $this->agree = array ('Rome consul' => NULL , 'Field consul' => NULL);
+            $this->agree = array ('First Senator' => NULL , 'Second Senator' => NULL);
         }
         // TO DO : all other types of proposals
         

@@ -733,7 +733,8 @@ class Game
         {
             // If we are looking for the presiding magistrate, The Censor must be returned during the Senate phase if the latest proposal was a prosecution
             // TO DO : what if the all thing was interupted by a Special Assassin Prosecution ?
-            if ( $presiding && $this->getPhase()=='Senate' && count($this->getProposals())>0 && end($this->getProposals()->last())->getType()=='Prosecutions' && isset($rankedSenators[3]) ) 
+            //if ( $presiding && $this->getPhase()=='Senate' && count($this->getProposals())>0 && end($this->getProposals()->last())->getType()=='Prosecutions' && isset($rankedSenators[3]) ) 
+            if ( $presiding && $this->getPhase()=='Senate' && count($this->getProposals())>0 && $this->getProposals()->last()->getType()=='Prosecutions' && isset($rankedSenators[3]) ) 
             {
                 return $rankedSenators[3] ;
             // Otherwise, the HRAO
@@ -1724,4 +1725,16 @@ class Game
         $this->proposals->set($index, $proposal) ;
     }
 
+    /**
+     * Returns TRUE if there are 3+ active/unprosecuted conflicts
+     * @return bool
+     */
+    public function getDictatorPossible()
+    {
+        $activeWars=$this->getDeck('activeWars')->getNumberOfCards() + $this->getDeck('unprosecutedWars')->getNumberOfCards();
+        /**
+         * TO DO : must also check Conflicts with more than 20 strength
+         */
+        return ($activeWars>=3) ;
+    }
 }

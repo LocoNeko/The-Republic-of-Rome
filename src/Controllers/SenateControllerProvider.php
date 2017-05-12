@@ -34,7 +34,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 }
                 catch (\Exception $exception) 
                 {
-                    $app['session']->getFlashBag()->add('danger', print_r($exception->getTrace(),TRUE));
+                    $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                     return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
                 }
                 
@@ -144,7 +144,6 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $user_id = (int)$json_data['user_id'] ;
                 $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $this->agree($user_id , $game , $json_data) ;
-
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -283,12 +282,10 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function doVoteEnd($game , $proposal)
     {
-        error_log('HIP');
         try
         {
             $proposal->getCurrentVoter() ;
         } catch (\Exception $ex) {
-            error_log('HOP');
             // This was the last voter
             if ($ex->getCode() == \Entities\Proposal::ERROR_NO_VOTER)
             {
@@ -324,6 +321,9 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function agree($user_id , $game , $json_data)
     {
+        /**
+         * TO DO : This is only for consuls. Do it for all choices
+         */
         try {
             /* @var $currentProposal \Entities\Proposal  */
             $currentProposal = $game->getProposals()->last() ;
@@ -331,36 +331,78 @@ class SenateControllerProvider implements ControllerProviderInterface
             {
                 throw new \Exception(_('ERROR - Wrong proposal step, should be \'agree\'')) ;
             }
-            // $agreeCurrent = 'Rome consul'|'Field consul' = senatorID
+            // $agreeCurrent = 'Rome consul'|'Field consul' = cardId
             $agreeCurrent=$currentProposal->getAgree();
             if ($json_data['user_id']!=$user_id)
             {
                 throw new \Exception(_('ERROR - Trying to agree with the wrong party')) ;
             }
-            // JSON: $key = senatorID ; $value = 'Rome consul'|'Field consul'
+            // JSON: $key = card ID ; $value = 'Rome consul'|'Field consul'
             foreach ($json_data as $key=>$value)
             {
-                if ($value=='Rome consul')
+                if ($value=='Rome Consul' || $value=='Field Consul')
                 {
-                    if ($agreeCurrent['Rome consul']!=NULL)
+                    $senator = $game->getFilteredCards(array('id'=>$key))->first() ;
+                    if ($senator->getLocation()['value']->getUser_id()!=$user_id)
                     {
-                        throw new \Exception(_('ERROR - There is already a Rome Consul')) ;
+                        throw new \Exception(_('ERROR - Senator in the wrong party')) ;
+                    }
+                    $currentProposalCards = $currentProposal->getCards();
+                    if ($currentProposalCards['First Senator']==$key)
+                    {
+                        $currentProposal->setAgree('First Senator', $value);
+                    }
+                    elseif ($currentProposalCards['Second Senator']==$key)
+                    {
+                        $currentProposal->setAgree('Second Senator', $value);
                     }
                     else
                     {
-                        $currentProposal->setAgree('Rome consul', $key) ;
+                        throw new \Exception(_('ERROR - Senator not part of a choice')) ;
                     }
                 }
-                elseif ($value=='Field consul')
+            }
+            $agreeUpdated=$currentProposal->getAgree();
+            /**
+             * Check whether all needed choices have been made
+             */
+            if ( ($agreeUpdated['First Senator']!=NULL) && ($agreeUpdated['Second Senator']!=NULL) )
+            {
+                /**
+                 * Disagreement, choose randomely
+                 */
+                if ($agreeUpdated['First Senator']==$agreeUpdated['Second Senator'])
                 {
-                    if ($agreeCurrent['Field consul']!=NULL)
+                    $game->log(_('The parties could not agree.'));
+                    if (rand(1,100)<=50)
                     {
-                        throw new \Exception(_('ERROR - There is already a Field Consul')) ;
+                        $agreeUpdated['First Senator'] = 'Rome Consul' ; 
+                        $agreeUpdated['Second Senator'] = 'Field Consul' ;
                     }
                     else
                     {
-                        $currentProposal->setAgree('Field consul', $key) ;
+                        $agreeUpdated['First Senator'] = 'Field Consul' ; 
+                        $agreeUpdated['Second Senator'] = 'Rome Consul' ;
                     }
+                }
+                /**
+                 * Appointments
+                 */
+                // $key = 'First Senator'|'Second Senator' , $office = 'Rome consul' | 'Field consul'
+                foreach ($agreeUpdated as $key=>$office)
+                {
+                    $senator = $game->getFilteredCards(array('id'=>$currentProposal->getCards()[$key]))->first() ;
+                    $this->appoint($game, $senator, $office) ;
+                }
+                $currentProposal->incrementStep();
+                if ($game->getDictatorPossible())
+                {
+                    $game->setSubPhase('Dictator');
+                }
+                else
+                {
+                    $game->log(_('There isn\'t 3 or more active wars, or one with a combined strength of 20+. No Dictator can be appointed or elected.'));
+                    $this->doAutomaticCensor($game) ;
                 }
             }
         } catch (Exception $ex) {
@@ -368,4 +410,47 @@ class SenateControllerProvider implements ControllerProviderInterface
         }
     }
 
+    /**
+     * Disappoint current official, and appoints new one. Throws exceptions left and right.
+     * @param \Entities\Game $game
+     * @param \Entities\Senator $senator
+     * @param string $office
+     * @throws \Exception
+     */
+    public function appoint($game , $senator , $office)
+    {
+        try {
+            /* @var $currentOfficial \Entities\Senator  */
+            $currentOfficial =  $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'is'.$office)->first() ;
+            if ($currentOfficial!=NULL)
+            {
+                $currentOfficial->setOffice(NULL) ;
+            }
+        } catch (\Exception $ex) {
+            throw new \Exception(_('The following error was returned when retrieving the current official (if any) : ').$ex->getTraceAsString()) ;
+        }
+        try {
+            $senator->appoint($office) ;
+            $game->log(sprintf(_('%1$s becomes %2$s') , $senator->getName() , $office));
+        } catch (\Exception $ex) {
+            throw new \Exception(_('The following error was returned when appointing a Senator : ').$ex->getTraceAsString()) ;
+        }
+    }
+    
+    /**
+     * If there is only one possible Censor, appoint him and move to Prosecutions, otherwise move to Censor election
+     * @param \Entities\Game $game
+     */
+    public function doAutomaticCensor($game)
+    {
+        $game->setSubPhase('Censor');
+        $listOfPossibleCensors  = $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleCensor') ;
+        if (count($listOfPossibleCensors)==1)
+        {
+            $newCensor = $listOfPossibleCensors->first() ;
+            $game->log(sprintf(_('%1$s is the only possible Censor. He is automatically elected.') , $newCensor->getName()));
+            $this->appoint($game, $newCensor, 'Censor') ;
+            $game->setSubPhase('Prosecutions');
+        }
+    }
 }
