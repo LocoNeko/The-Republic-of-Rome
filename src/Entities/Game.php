@@ -731,10 +731,9 @@ class Game
         // We found at least one ranked Senator
         if (count($rankedSenators)>0) 
         {
-            // If we are looking for the presiding magistrate, The Censor must be returned during the Senate phase if the latest proposal was a prosecution
+            // If we are looking for the presiding magistrate, The Censor must be returned during the Senate phase if the sub phase is Prosecutions
             // TO DO : what if the all thing was interupted by a Special Assassin Prosecution ?
-            //if ( $presiding && $this->getPhase()=='Senate' && count($this->getProposals())>0 && end($this->getProposals()->last())->getType()=='Prosecutions' && isset($rankedSenators[3]) ) 
-            if ( $presiding && $this->getPhase()=='Senate' && count($this->getProposals())>0 && $this->getProposals()->last()->getType()=='Prosecutions' && isset($rankedSenators[3]) ) 
+            if ( $presiding && $this->getPhase()=='Senate' && $this->getSubPhase()=='Prosecutions' && isset($rankedSenators[3]) ) 
             {
                 return $rankedSenators[3] ;
             // Otherwise, the HRAO
@@ -1103,13 +1102,14 @@ class Game
      * @param string $senatorID The SenatorID of the dead senator
      * @param specificID TRUE if the Senator with this specific ID should be killed,<br>FALSE if the ID is a family, and Statesmen must be tested (default)
      * @param specificParty FALSE or equal to the $user_id of the party to which the dead Senator must belong<br>
-     * @param POPThreshold FALSE or equal to the level of POP at which a Senator is safe
-     * @param epidemic FALSE or equal to either 'domestic' or 'foreign'
+     * @param POPThreshold FALSE or equal to the level of POP at which a Senator is safe<br>
+     * @param epidemic FALSE or equal to either 'domestic' or 'foreign'<br>
+     * @param mob FALSE or equal to an array with SenatorIDs that can be killed (Censor & Prosecutor during popular appeal, or whole party during assassination prosecution) <br>
      * senators from other parties will not be killed.<br>
      * FALSE (default)
      * @return array Just a one message-array, not an array of messages
      */
-    public function killSenator($senatorID , $specificID=FALSE , $specificParty_UserId=FALSE , $POPThreshold=FALSE , $epidemic=FALSE)
+    public function killSenator($senatorID , $specificID=FALSE , $specificParty_UserId=FALSE , $POPThreshold=FALSE , $epidemic=FALSE , $popularAppealMob=FALSE)
     {
         $message = '' ;
         // Case of a random mortality chit
@@ -1134,13 +1134,11 @@ class Game
                             ( $POPThreshold===FALSE || ($senator->getPOP()<$POPThreshold && $senator->inRome()) )
                             &&
                             ( $epidemic===FALSE || (($epidemic='domestic' && $senator->inRome()) || ($epidemic='foreign' && !$senator->inRome())) )
+                            &&
+                            ( $popularAppealMob===FALSE || (in_array($senator->getSenatorID() , $popularAppealMob)) )
                         )
                         {
-                            if ( ($senator->getPreciseType() == 'Statesman') && ($senator->statesmanFamily() == $senatorID ) )
-                            {
-                                array_push($deadSenators , $senator) ;
-                            }
-                            elseif ( ($senator->getPreciseType() == 'Senator') && ($senator->getSenatorID() == $senatorID) )
+                            if ( $senator->getFamilyID() == $senatorID )
                             {
                                 array_push($deadSenators , $senator) ;
                             }
@@ -1736,5 +1734,49 @@ class Game
          * TO DO : must also check Conflicts with more than 20 strength
          */
         return ($activeWars>=3) ;
+    }
+    
+    /**
+     * @return 'Major'|'Minor'|'none' 
+     */
+    public function getWhichProsecutionPossible()
+    {
+        $nbOfProsecutions = 0 ;
+        foreach ($this->getProposals() as $proposal)
+        {
+            if ($proposal->getType()=='Prosecutions')
+            {
+                $nbOfProsecutions++ ;
+                if ($proposal->getContent()['Type']=='Major')
+                {
+                    return 'none' ;
+                }
+            }
+        }
+        if ($nbOfProsecutions==0)
+        {
+            return 'Major' ;
+        }
+        return (($nbOfProsecutions==1) ? 'Minor' : 'none') ;
+    }
+    
+    /**
+     * List of available Province Cards for Governors proposals
+     * @return array of elements that are array('description', 'recall', 'cardID')
+     */
+    public function getListOfAvailableProvinces()
+    {
+        $result=[] ;
+        foreach ($this->getFilteredCards(array('preciseType' => 'Province' , 'isProvinceInPlay' => TRUE)) as $province)
+        {
+            // If the card is not in the Forum, this is a recall
+            $recall = $province->getDeck()->getName() !== 'Forum' ;
+            $result[] = array (
+                'description' => $province->getName().($recall ? sprintf(_(' (recall of %1$s)') , $province->getDeck()->getControlled_by()->getName()) : '') ,
+                'recall' => $recall ,
+                'cardID' => $province->getId()
+            ) ;
+        }
+        return $result ;
     }
 }

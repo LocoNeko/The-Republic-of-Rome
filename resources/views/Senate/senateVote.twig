@@ -4,6 +4,12 @@
             <td class="success" colspan="3">Whole party vote  :</td>
             <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
         </tr>
+        {% if view.interface['senatePopularAppeal']|default([])|length > 0%}
+        <tr>
+            <td class="success" colspan="3">Popular appeal  :</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senatePopularAppeal']}%}{% endembed %}</td>
+        </tr>
+        {% endif %}
         <tr>
             <td class="success text-center" colspan="4">Senators</td>
         </tr>

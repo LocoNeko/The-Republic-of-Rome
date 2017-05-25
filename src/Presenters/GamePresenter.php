@@ -42,7 +42,7 @@ class GamePresenter
             }
         }
         $this->partiesNames = $game->getPartiesNames() ;
-        $this->HRAO_name = $this->displayContextualName($game->getHRAO()->getFullName()) ;
+        $this->HRAO_name = $this->displayContextualName($game->getHRAO(TRUE)->getFullName()) ;
         $this->orderOfPlay = $this->getOrderOfPlay($game, $user_id) ;
         foreach ($game->getDecks() as $deck)
         {

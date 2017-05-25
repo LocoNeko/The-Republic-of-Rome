@@ -38,7 +38,13 @@
             {%for message in messages %}
                     <div style="float: right; clear: right; display: inline-block;">
                         <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;" alert_number="{{loop.index}}">
-                            {{message}}
+                            {% if message is iterable %}
+                                {% for item in message %}
+                                    {{ item }}
+                                {% endfor %}
+                            {% else %}
+                                {{ message }}
+                            {% endif %}
                             <button type="button" class="close" data-dismiss="alert">&times;</button>
                         </div>
                     </div>

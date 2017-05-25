@@ -353,6 +353,15 @@ class Senator extends Card
         ) ;
     }
     
+    /**
+     * Returns the family ID of the Senator : same for a Family, excluding the letter for a Statesman
+     * @return int Family ID
+     */
+    public function getFamilyID()
+    {
+        return (int)str_replace( Array('A' , 'B' , 'C') , Array('' , '' , '') , $this->getSenatorID() ) ;
+    }
+    
     public function getFullName() {
         $result = $this->getName() ;
         $location = $this->getLocation() ;

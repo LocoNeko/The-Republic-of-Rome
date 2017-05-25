@@ -22,7 +22,7 @@ class Proposal
     /** @Column(type="string") @var string */
     private $type ;
 
-    // Possible values : 'vote' , 'agree' , 'appoint'
+    // Possible values : 'vote' , 'decision' , 'appoint'
     /** @Column(type="array") @var array */
     private $flow = array() ;
 
@@ -30,11 +30,11 @@ class Proposal
     private $step ;
 
     /**
-     * An array of cards id<br>
+     * An array of cards id, text, values, etc...<br>
      * keys are meanginful strings (like 'First Senator' , 'Prosecutor' ... )<br>
-     * values are card ids, <b>including</b> for Senators<br>
+     * For cards, use card ids, <b>even</b> for Senators<br> (not SenatorID)
      * @Column(type="array") @var array */
-    private $cards ;
+    private $content ;
 
     // A Proposal has a Party that proposed it
     /** @ManyToOne(targetEntity="Party" , inversedBy="proposed" , cascade={"persist"}) **/
@@ -49,7 +49,7 @@ class Proposal
     private $vote = array() ;
 
     /** @Column(type="array") @var array */
-    private $agree = array() ;
+    private $decision = array() ;
 
     /**
      * TO DO : Implement / remove all this below.  
@@ -113,25 +113,50 @@ class Proposal
             $this->type = 'Consuls' ;
             $this->flow = array (
                 0 => 'vote' ,
-                1 => 'agree' ,
+                1 => 'decision' , // Consuls must decide who becomes what
                 2 => 'done'
             ) ;
             $this->step = 0 ;
-            $this->agree = array ('First Senator' => NULL , 'Second Senator' => NULL);
+            $this->decision = array ('First Senator' => NULL , 'Second Senator' => NULL);
+        }
+        /**
+         * Censor
+         */
+        if ($type=='Censor')
+        {
+            $this->type = 'Censor' ;
+            $this->flow = array (
+                0 => 'vote' ,
+                1 => 'done'
+            ) ;
+            $this->step = 0 ;
+        }
+        /**
+         * Prosecutions
+         */
+        if ($type=='Prosecutions')
+        {
+            $this->type = 'Prosecutions' ;
+            $this->flow = array (
+                0 => 'decision' , // Prosecutor must agree
+                1 => 'vote' ,
+                2 => 'done'
+            ) ;
+            $this->step = 0 ;
         }
         // TO DO : all other types of proposals
         
     }
 
-
+    public function getId()         { return $this->id; }
     public function getType()       { return $this->type ; }
     public function getFlow()       { return $this->flow; }
     public function getStep()       { return $this->step; }
-    public function getCards()      { return $this->cards; }
+    public function getContent()    { return $this->content; }
     public function getProposedBy() { return $this->proposedBy; }
     public function getOutcome()    { return $this->outcome ; }
     public function getVote()       { return $this->vote; }
-    public function getAgree()      { return $this->agree; }
+    public function getDecision()      { return $this->decision; }
 
     public function setOutcome($outcome) { $this->outcome = $outcome; }
 
@@ -173,16 +198,59 @@ class Proposal
             } catch (Exception $ex) {
                 throw new \Exception(_('Senator doesn\'t exist or is not in Rome')) ;
             }
-            // REMINDER : the cards array is by card ids, NOT senator ids...
-            $this->cards = array ( 
+            // REMINDER : the content array has card ids, NOT senator ids...
+            // TO DO : Which is RETARDED. Change to SenatorID
+            $this->content = array ( 
                 'First Senator' => $First_Senator->getId() , 
                 'Second Senator' => $Second_Senator->getId() 
             ) ;
             // TO DO : Check already proposed pairs
         }
+        /**
+         * Prosecutions :
+         * specific json :
+         * - Prosecutor : SenatorID of prosecutor
+         * - Prosecution : json {type=>'Minor|Major' , senatorID , cardId if applicable}
+         */
+        if ($type=='Prosecutions')
+        {
+            $this->content = [] ;
+            try {
+                $prosecutor = $game->getFilteredCards(array('senatorID'=>$json_data['Prosecutor']))->first() ;
+                $this->content['Prosecutor'] = $prosecutor->getSenatorID() ;
+            } catch (Exception $ex) {
+                throw new \Exception(_('Could not retrieve the Prosecutor. He might be hiding.')) ;
+            }
+            try {
+                $prosecution = json_decode($json_data['Prosecution'],TRUE) ;
+                $accused = $game->getFilteredCards(array('senatorID'=>$prosecution['senatorID']))->first() ;
+                $this->content['Accused'] = $accused->getSenatorID() ;
+                $this->content['Type'] = $prosecution['Type'] ;
+                if (array_key_exists('cardId' , $prosecution))
+                {
+                    $this->content['Card'] = $prosecution['cardId'] ;
+                }
+            } catch (Exception $ex) {
+                throw new \Exception(_('Error in the prosecution.')) ;
+            }
+        }
         // TO DO : Check constraints of all other proposals
     }
     
+    /**
+     * Adds the array $newContent to this proposal's current content
+     * @param array$newContent
+     */
+    public function addContent($newContent)
+    {
+        if (is_array($newContent))
+        {
+            foreach ($newContent as $key => $value)
+            {
+                $this->content[$key] = $value ;
+            }
+        }
+    }
     /**
      * @return string A description of the proposal in the form "Party * is proposing *"
      */
@@ -190,16 +258,35 @@ class Proposal
     {
         if ($this->type=='Consuls')
         {
-            $FirstSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['First Senator']))->first()->getFullName() ;
-            $SecondSenatorName = $this->game->getFilteredCards(array('id'=>$this->cards['Second Senator']))->first()->getFullName() ;
+            $FirstSenatorName = $this->game->getFilteredCards(array('id'=>$this->content['First Senator']))->first()->getFullName() ;
+            $SecondSenatorName = $this->game->getFilteredCards(array('id'=>$this->content['Second Senator']))->first()->getFullName() ;
             return sprintf(_('%1$s is proposing %2$s and %3$s as Consuls.') , $this->proposedBy->getFullName() , $FirstSenatorName , $SecondSenatorName) ;
         }
-        // TO DO : all other proposals
+        if ($this->type=='Censor')
+        {
+            return ('PROPOSAL DESCRIPTION - TO DO');
+        }
+        if ($this->type=='Prosecutions')
+        {
+            $accused = $this->game->getFilteredCards(array('SenatorID'=>$this->content['Accused']))->first()->getFullName() ;
+            if (array_key_exists('Card', $this->content))
+            {
+                $card = $this->game->getFilteredCards(array('id'=>$this->content['Card']))->first() ;
+                $reason = sprintf(_('profiting from %1$s') , $card->getName()) ;
+            }
+            else
+            {
+                $reason = _('holding an office') ;
+            }
+            $prosecutor = $this->game->getFilteredCards(array('SenatorID'=>$this->content['Prosecutor']))->first()->getFullName() ;
+            return sprintf(_('%1$s faces a %2$s prosecution for %3$s. The prosecutor is %4$s.') , $accused , $this->content['Type'] , $reason , $prosecutor);
+        }
+        return ('PROPOSAL DESCRIPTION - TO DO');
     }
  
     /**
      * 
-     * @return string Description of the current step ('vote' , 'agree' , 'appoint' ...)
+     * @return string Description of the current step ('vote' , 'decision' , 'appoint' ...)
      * @throws \Exception
      */
     public function getCurrentStep()
@@ -385,15 +472,15 @@ class Proposal
     }
 
     /**
-     * Sets this->agree[$key] to be equal to $value
+     * Sets this->decision[$key] to be equal to $value
      * @param mixed $key
      * @param mixed  $value
      * @throws \Exception
      */
-    public function setAgree($key , $value)
+    public function setDecision($key , $value)
     {
         try {
-            $this->agree[$key] = $value ;
+            $this->decision[$key] = $value ;
         } catch (Exception $ex) {
             throw new \Exception(_('ERROR - user not found')) ;
         }
@@ -405,6 +492,12 @@ class Proposal
      */
     public function isCurrentOutcomePass()
     {
+        // There was a Popular appeal special result : ignore the votes (only applicable for prosecutions)
+        $content = $this->getContent() ;
+        if (array_key_exists('PopularAppealSpecial' , $content))
+        {
+            return ($content=='killed') ;
+        }
         $totalVotes = 0 ;
         foreach ($this->getVote() as $aVote)
         {

@@ -9,8 +9,15 @@
 <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
     <tbody>
         <tr>
-            <td class="success">{{view.interface['prosecutions']['description']}}</td>
-            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['prosecutions']['list']}%}{% endembed %}</td>
+            <td class="success">{{view.interface['Prosecution']['description']}}</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['Prosecution']['list']}%}{% endembed %}</td>
+        </tr>
+        <tr>
+            <td class="success">{{view.interface['Prosecutor']['description']}}</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['Prosecutor']['list']}%}{% endembed %}</td>
+        </tr>
+        <tr>
+            <td colspan="2">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['endProsecutions']}%}{% endembed %}</td>
         </tr>
     </tbody>
 </table>
