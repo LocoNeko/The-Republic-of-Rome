@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%;" ws_client="{{app['WS_CLIENT']|default('')}}">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        {% block title %}{% endblock %}
+        <link rel="icon" type="image/png" href="{{ asset('favicon.png' , 'css') }}">
+        {#
+            CSS - TO DO : put in one minified file 
+        #}
+        <link rel="stylesheet" type="text/css" href="{{ asset('bootstrap.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('jquery.dataTables.min.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('sprite.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('general.css' , 'css') }}">
+        <link rel="stylesheet" type="text/css" href="{{ asset('jquery-ui.css' , 'css') }}">
+
+        {#
+            JS - TO DO : put in one minified file 
+        #}
+        <script type="text/javascript" src="{{ asset('socket.io-1.2.0.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('jquery.min.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('jquery-ui.min.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('bootstrap.js' , 'js') }}"></script>
+        <script type="text/javascript" src="{{ asset('jquery.dataTables.min.js' , 'js') }}"></script>
+    </head>
+    
+    <body style="{{ game is defined ? 'padding-bottom: 150px;' : '' }} height: 100%; overflow-y: hidden ;">
+        
+        {# NAVBAR #}
+
+        {% embed 'navbar.twig' %}
+        {% endembed %}
+
+        {# FLASHBAG MESSAGES #}
+
+        <div id="message" style="position: absolute; top: 52px; right: 100px; padding: 5px; z-index: 10;">
+        {% for type , messages in app.session.flashbag.all() %}
+            {%for message in messages %}
+                    <div style="float: right; clear: right; display: inline-block;">
+                        <div class="alert alert-{{type}} alert-dismissable" style="margin-bottom: 10px;" alert_number="{{loop.index}}">
+                            {% if message is iterable %}
+                                {% for item in message %}
+                                    {{ item }}
+                                {% endfor %}
+                            {% else %}
+                                {{ message }}
+                            {% endif %}
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        </div>
+                    </div>
+            {% endfor %}
+        {% endfor %}
+        </div>
+
+        {# MAIN CONTENT #}
+
+        <div id="main-area" class="container-fluid main-area">
+            {% block content %}
+            {% endblock %}
+        </div>
+        
+        {% if game is defined %}
+
+        {# ROME'S STATE : Treasury, unrest, land bills, forces #}
+
+        {% embed 'RomeState.twig' %}
+        {% endembed %}
+
+        {# FOOTER - LOG #}        
+
+        {% embed 'log.twig' %}
+        {% endembed %}
+
+        {% endif %}
+        
+        {#
+            TO DO : Move this to one minified file
+            Javascript :
+            - The GeneralFunctions.js is always loaded
+            - If a game is defined, the file js/{{phase}}/{{subphase}}.js is loaded
+            - If no game is defined, the file js/Lobby.js is loaded
+        #}
+        <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/GeneralFunctions.js"></script>
+        {% if game is defined %}
+            <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/{{game.getPhase()}}/{{game.getSubPhase()}}.js"></script>
+        {% else %}
+            <script src="{{ global.request.basepath }}/..{{app['BASE_URL']}}/resources/js/Lobby/Lobby.js"></script>
+        {% endif %}
+    </body>
+</html>

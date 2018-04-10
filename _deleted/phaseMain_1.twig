@@ -1,0 +1,24 @@
+{#
+    MORTALITY PHASE
+#}
+
+{# Header : Description #}
+
+<h4>{{mortalityView['description']}}</h4>
+
+{# Header : List (optional) #}
+
+{% if mortalityView['list']|length > 0 %}
+    <ul>
+        {% for item in mortalityView['list'] %}
+            <li>{{item}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{# Header : Action (optional) #}
+
+{% if mortalityView['action']|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': mortalityView['action']}%}
+    {% endembed %}
+{% endif %}

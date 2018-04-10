@@ -1,0 +1,30 @@
+{#
+    At the top of the template, embed the proposal-specific template
+    The format of the file is : 'Senate/{proposalType}_Proposal.twig'
+#}
+{% embed view.game.phase ~ '/' ~ view.interface['proposalType'] ~ '_Proposal.twig' %}
+{% endembed %}
+{#
+    At the bottom of the template, put the list of proposal how.
+    This template is never displayed if there are no way to make a proposal for this user at this time
+#}
+
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+    <tbody>
+        <tr>
+            <td class="success">Make proposal using</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['listProposalHow']}%}{% endembed %}</td>
+        </tr>
+        <tr>
+            <td class="success" colspan="2">Voting order</td>
+        </tr>
+        <tr>
+            <td colspan="2">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['listVotingOrder']}%}{% endembed %}</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateMakeProposal']}%}{% endembed %}</div>
+            </td>
+        </tr>
+    </tbody>
+</table>

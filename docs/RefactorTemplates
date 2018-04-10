@@ -1,0 +1,31 @@
+New template scheme (2016 04 14) :
+
+$view = new \Presenters\ForumPhasePresenter_new($game , (int)$app['user']->getId()) ;
+
+return $app['twig']->render('BoardElements/Main_new.twig', array(
+	'layout_template' => 'InGameLayout.twig' ,
+	'view' => $view
+));
+
+Every PhasePresenter includes a GamePresenter that gives :
+- game_id
+- name
+- phase
+- subPhase
+- treasury
+- unrest
+- Land bills
+- Legions
+- Fleets
+- whose Turn (?)
+- HRAO
+- orderOfPlay
+- An array of Deck presenters for game decks (draw, forum, curia, wars...) deck['deckName'] = new \Presenters\DeckPresenter($game , $deckName) ;
+
+It is accessed in twig through view.game.{property} 
+e.g. The Curia deck presenter is : view.game.deck['curia']
+
+Each phase must then include :
+- An array of Party presenters party['user_id'] = new \Presenters\DeckPresenter($game , $user_id) ;
+- A deck presenter for the current user_id's hand : hand = new \Presenters\DeckPresenter($game , $user_id) ;
+- All properties specific to this phase

@@ -1,0 +1,16 @@
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+    <tbody>
+        <tr>
+            <td class="success">Bribe more</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['persuasionAddedBribe']}%}{% endembed %}</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <div class="row">
+                    <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['persuasionBribeMore']}%}{% endembed %}</div>
+                    <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['persuasionRoll']}%}{% endembed %}</div>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>

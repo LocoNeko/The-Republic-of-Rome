@@ -1,0 +1,50 @@
+{% extends layout_template  %}
+
+{% block title %}
+    <title realm="{{game.getId()}}">Join</title>
+{% endblock %}
+
+{% block menu %}
+    <a class="navbar-brand" href="{{ path('ListGames') }}">List</a>
+    <a class="navbar-brand" href="{{ path('CreateGame') }}">Create</a>
+{% endblock %}
+
+{% block content %}
+    <h2>Game {{game.getName()}}</h2>
+    <h5 style="margin-left: 20px;"><strong>Scenario: </strong>{{game.getScenario()}}</h5>
+    <h5 style="margin-left: 20px;"><strong>Created: </strong>{{game.getCreated()|date('Y/m/d H:i')}} ({{game.getTimezone()}})</h5>
+    <h5 style="margin-left: 20px;"><strong>Variants: </strong>{{game.getVariants()|join(', ')}}</h5>
+    <div class="table table-bordered">
+        <table class="table table-hover" id='listGames'>
+            <thead>
+                <tr>
+                    <th>Player</th>
+                    <th>Party</th>
+                    <th>Ready</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for party in game.getParties() %}
+                <tr>
+                    <td>{{party.getUserName()}}</td>
+                    <td>{{party.getName()}}</td>
+                    <td>
+                        {% if party.getReadyToStart() %}
+                            <span class="glyphicon glyphicon-ok text-success"></span>
+                        {% else %}
+                            <span class="glyphicon glyphicon-remove text-danger"></span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% set gamestate = game.getGameState(app.user.id) %}
+    {% if gamestate == 'CAN_JOIN' %}
+        {% embed 'Lobby/Form_Join.twig' %}{% endembed %}
+    {% elseif gamestate == 'JOINED'  %}
+        {% embed 'Lobby/Form_Ready.twig' %}{% endembed %}
+    {% endif %}
+
+{% endblock %}

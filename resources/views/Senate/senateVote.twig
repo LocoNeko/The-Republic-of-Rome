@@ -1,0 +1,66 @@
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+    <tbody>
+        <tr>
+            <td class="success" colspan="3">Whole party vote  :</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateGeneralVote']}%}{% endembed %}</td>
+        </tr>
+        {% if view.interface['senatePopularAppeal']|default([])|length > 0%}
+        <tr>
+            <td class="success" colspan="3">Popular appeal  :</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senatePopularAppeal']}%}{% endembed %}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <td class="success text-center" colspan="4">Senators</td>
+        </tr>
+        <tr>
+            <td class="text-center">Name</td>
+            <td class="text-center">Votes</td>
+            <td class="text-center">Spend</td>
+            <td class="text-center">Split vote</td>
+        </tr>
+        {% for senatorVote in view.interface['senateVoteSenators'] %}
+            <tr>        
+                <td>{{senatorVote['name']}}</td>
+                <td class="text-center">
+                    <div class="senatorVotePopover" {% for key , attribute in senatorVote['attributes']|default([]) %} {{key}}="{{attribute}}"{% endfor %}>
+                        {{senatorVote['votes']}}
+                    </div>
+                </td>
+                <td class="text-center">
+                    {% if senatorVote['votes']>0 and senatorVote['talents']!=0 %}
+                        {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['talents']}%}{% endembed %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if senatorVote['votes']>0 %}
+                        {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['splitVote']}%}{% endembed %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        <tr>
+            <td class="success">&nbsp;</td>
+            <td class="success align-center">
+                <div class="col-sm-6">{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVote']}%}{% endembed %}</div>
+            </td>
+            {% if view.interface['senateVeto'] is not empty %}
+                <td class="success align-center">
+                    {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVeto']}%}{% endembed %}
+                </td>
+                <td class="success align-center">
+                    {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['senateVetoes']}%}{% endembed %}
+                </td>
+            {% else %}
+                <td class="success align-center" colspan="2">
+                    NO VETOES
+                </td>
+            {% endif %}
+        </tr>
+
+    </tbody>
+</table>

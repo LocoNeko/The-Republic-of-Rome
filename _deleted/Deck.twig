@@ -1,0 +1,16 @@
+{% if deck.getNumberOfCards() > 0 %}
+    <h3>{{deck.getFullName(self)}}</h3>
+    <div class="row">
+        {% for card in deck.getCards() %}
+            {% embed "BoardElements/Card.twig" with
+                {
+                    'card': card ,
+                    'action': card.getAction(self)
+                } only
+            %}
+            {% endembed %}
+        {% endfor %}
+    </div>
+{% else %}
+    <h3>{{deck.getFullName(self)}} is empty</h3>
+{% endif %}

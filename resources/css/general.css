@@ -1,0 +1,156 @@
+.main-area
+{
+    top:52px;
+    height:100%;
+    width:100%;
+    border-top:52px solid transparent;
+    -webkit-box-sizing:border-box;
+    -moz-box-sizing:border-box;
+    box-sizing:border-box;
+    overflow-y:auto;
+    overflow-x:hidden;
+    padding-left: 80px;
+    padding-right: 80px;
+    padding-bottom: 5px;
+    padding-top: 5px;
+}
+
+.orderOfPlay-off
+{
+    color: black ;
+}
+
+.orderOfPlay-on
+{
+    border: 2px solid lightseagreen;
+}
+
+.leader 
+{
+    color: red ;
+}
+
+.sortable-list-placeholder
+{
+    background-color: #bbb ;
+    border: 1px dashed #666 ;
+    margin-bottom: -1px ;
+    padding: 10px 15px ;
+}
+
+.ui-resizable 
+{
+    position: relative;
+}
+
+.ui-resizable-handle 
+{
+    position: absolute ;
+    font-size: 0.1px ;
+    display: block ;
+}
+
+.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle 
+{
+    display: none ;
+}
+
+.ui-resizable-n 
+{
+    cursor: n-resize ;
+    height: 7px ;
+    width: 100% ;
+    top: -5px ;
+    left: 0 ;
+}
+
+.otherBusinessSection
+{ 
+    display: none ;
+}
+
+.sortable
+{
+    list-style-type: none;
+    margin: 10px;
+    padding: 0;
+    display: inline-block;
+    background-color: #bbb;
+}
+
+.sortable li 
+{
+    margin: 0;
+    height: 45px;  
+    line-height: 48px;  
+    font-size: 1.4em;   
+    color: #fff;  
+    outline: 0;  
+    padding: 0;  
+    text-indent: 15px;  
+    background: rgb(78,82,91);  
+    background: -moz-linear-gradient(top,  rgb(78,82,91) 0%, rgb(57,61,68) 100%);  
+    background: -webkit-gradient(linear, left top, left bottombottom, color-stop(0%,rgb(78,82,91)), color-stop(100%,rgb(57,61,68)));  
+    background: -webkit-linear-gradient(top,  rgb(78,82,91) 0%,rgb(57,61,68) 100%);  
+    background: -o-linear-gradient(top,  rgb(78,82,91) 0%,rgb(57,61,68) 100%);  
+    background: -ms-linear-gradient(top,  rgb(78,82,91) 0%,rgb(57,61,68) 100%);  
+    background: linear-gradient(to bottombottom,  rgb(78,82,91) 0%,rgb(57,61,68) 100%);  
+    border-top: 1px solid rgba(255,255,255,.2);  
+    border-bottom: 1px solid rgba(0,0,0,.5);  
+    text-shadow: -1px -1px 0px rgba(0,0,0,.5);  
+    font-size: 1.1em;  
+    position: relative;  
+    cursor: pointer ;
+}
+
+.toggle a
+{
+    color: #3276b1;
+    background-color: #fff;
+}
+
+.unit
+{
+    width: 25px ;
+    height: 25px ;
+    margin: 2px 2px 2px 2px;
+    text-align: center;
+    vertical-align: middle;
+    color: white;
+    font-size: 11px;
+}
+
+.unit-loyalTo
+{
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 12px 12px 0 0;
+    border-color: #ff0000 transparent transparent ;
+}
+
+.unit-inRome
+{
+    background: cornflowerblue ;
+}
+
+.unit-isAway
+{
+    background: darkslategray ;
+}
+
+.unit-canBeRecruited
+{
+    background: lightgrey  ;
+}
+
+.unit-veteran
+{
+    background: crimson ;
+}
+
+.popover
+{
+    max-width: 350px;
+    width: 350px;
+}

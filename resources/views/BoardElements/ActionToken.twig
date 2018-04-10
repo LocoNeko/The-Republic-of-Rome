@@ -1,0 +1,76 @@
+{#
+    Creates an action token from the action array
+    The type of token is determined by action['type'] which can be 'icon' , 'button' , 'submitWithVerb' , 'select' , 'cardSlot' , 'disabled input'
+#}
+
+{% if action['type']=='icon' %}
+    {#
+        An icon has :
+        - draggable (defaults to TRUE) : Whether or not this icon is draggable. Since it often is, this is TRUE by default so can be omitted for convenience
+        - droppable (defaults to FALSE) : Same with droppable, which defaults to FALSE as it's more likely
+        - verb : the action verb used when the token is dropped
+        - data-json : If needed, the data-json used when dropping the token
+        - caption : The tooltip on the icon
+        - text : The text next to the icon
+    #}
+    <div class="btn btn-default btn-lg {{(action['draggable']|default('YES')=='YES' ? 'draggable' : '')}} {{(action['droppable']|default('NO')=='YES' ? 'droppable' : '')}}" data-json="{{action['data_json']|default('')}}" verb='{{action['verb']}}' title='{{action['caption']}}'>
+        {# there is a glyphicon without an actual glyphicon-* fix this#}
+        <span class="glyphicon {{action['class']|default('')}}" aria-hidden="true" style="min-height: 150px; min-width: 150px;">{{action['text']}}</span>
+    </div>
+{% elseif action['type']=='button' %}
+    {#
+        A button has :
+        - verb : the action verb used when the button is clicked
+        - text : The text on the button
+        - (optional) disabled : disabled by default or not
+        - (optional) style : Can be btn-default , btn-primary , btn-success , btn-info , btn-warning (default), btn-danger , btn-link
+    #}
+    <button type="submit" class="btn btn-{{action['style']|default('warning')}} {{action['disabled']|default(FALSE) ? 'disabled' : ''}} submitWithVerb" verb="{{action['verb']}}">{{action['text']}}</button>
+{% elseif action['type']=='select' %}
+    {#
+        A select has :
+        - a class (to plugin JavaScript functions)
+        - items : An array of items with 'attribute name' => 'attribute value'
+        - One of those must be 'description' => 'XXXX'
+    #}
+    <select class="form-control {{action['class']|default('')}} global-postable" name="{{action['class']|default('')}}">
+        {% for item in action['items'] %}
+            <option {% for key, value in item %} {{key}}="{{value}}"{% endfor %} >
+                {{item['description']|escape('html')}}
+            </option>
+        {% endfor %}
+    </select>
+{% elseif action['type']=='cardSlot' %}
+    <div class="sprite-CardSlot droppable">
+        {{action['description']}}
+    </div>
+{% elseif action['type']=='sortable' %}
+    {#
+        A sortable has :
+        - a class (to plugin JavaScript functions)
+        - items : An array of items with 'attribute name' => 'attribute value'
+        - One of those must be 'description' => 'XXXX'
+    #}
+    <ul class="sortable" name="{{action['class']|default('')}}">
+        {% for item in action['items'] %}
+            <li {% for key, value in item %} {{key}}="{{value}}"{% endfor %} >{{item['description']|escape('html')}}</li>
+        {% endfor %}
+    </ul>
+{% elseif action['type']=='toggle' %}
+    {#
+        A toggle has :
+        - action['name'] : A name
+        - action['class'] : A class like 'togglePartyVote' or 'toggleSenatorVote', to find similar toggles
+        - A list of items in the action['items'] array. Each item must have at least one 'value' and one 'description'. 
+        - action['default'] can be set to an item's value to be toggled by default
+    #}
+    <div class="input-group">
+        <div class="btn-group toggle {{action['class']}}" name="{{action['name']}}">
+            {% for item in action['items'] %}
+                <a class="btn btn-primary {{(item['value']==action['default']|default('') ? 'active' : 'notActive')}}" data-toggle="{{action['name']}}" data-title="{{item['value']}}">{{item['description']|escape('html')}}</a>
+            {% endfor %}
+        </div>
+    </div>
+{% elseif action['type']=='disabledInput' %}
+    <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">
+{% endif %}

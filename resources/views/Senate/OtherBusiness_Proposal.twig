@@ -1,0 +1,157 @@
+{#
+    Other Business Proposal :
+    - First show a drop-down list of all possible types of proposals
+#}
+<table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+    <tbody>
+        <tr>
+            <td class="success">{{view.interface['otherBusinessList']['description']}}</td>
+            <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['otherBusinessList']['list']}%}{% endembed %}</td>
+        </tr>
+    </tbody>
+</table>
+<div class='otherBusinessWrapper' data-json='{{view.data_json}}'>
+    
+    <table id='concession' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody class="dynamicSectionsWrapper" name="concession">
+            <tr class="dynamicSection">
+                <td class="success">Give</td>
+                <td><select id="otherBusinessCardSelectconcession" class="form-control local-postable"  name="otherBusinessConcessionCard"></select></td>
+                <td class="success">To</td>
+                <td><select id="otherBusinessSenatorSelectconcession" class="form-control local-postable otherBusinessSenatorSelectconcession"  name="otherBusinessConcessionSenator"></select></td>
+                <td><button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button></td>
+            </tr>
+            <tr class="dynamicSectionLast">
+                <td colspan="5"><button type="button" class="btn btn-success dynamicSectionAddButton"><span class="glyphicon glyphicon-plus"></button></td>
+            </tr> 
+         </tbody>
+    </table>
+    
+    <table id='landBill' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success">Land bill type</td>
+                <td><select id="otherBusinessLandBillSelect" class="form-control local-postable"  name="otherBusinessLandBill"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Sponsor</td>
+                <td><select id="otherBusinessSenatorSelectlandBillSponsor" class="form-control local-postable otherBusinessSenatorSelectlandBill" name="otherBusinessLandBillSponsor"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Co-sponsor</td>
+                <td><select id="otherBusinessSenatorSelectlandBillCoSponsor" class="form-control local-postable otherBusinessSenatorSelectlandBill" name="otherBusinessLandBillCoSponsor"></select></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='commander' class="table otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody class="dynamicSectionsWrapper" name="commander">
+            <tr class="dynamicSection">
+                <td style="vertical-align: middle;">
+                    <table class="table table-bordered ">
+                        <tr>
+                            <td class="success">Send</td>
+                            <td><select id="otherBusinessSenatorSelectcommander" class="form-control local-postable otherBusinessSenatorSelectcommander" name="otherBusinessCommanderSenator"></select></td>
+                        </tr>
+                        <tr>
+                            <td class="success">To fight</td>
+                            <td><select id="otherBusinessCardSelectcommander" class="form-control local-postable" name="otherBusinessCommanderConflict"></select></td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="vertical-align: middle;">
+                    With
+                </td>
+                <td style="vertical-align: middle;">
+                    <table class="table table-bordered ">
+                        <tr>
+                            <td class="success">Fleets</td>
+                            <td><select id="otherBusinessFleetsSelect" class="form-control local-postable" name="otherBusinessCommanderFleets"></select></td>
+                        </tr>
+                        <tr>
+                            <td class="success">Regular legions</td>
+                            <td><select id="otherBusinessRegularsSelect" class="form-control local-postable" name="otherBusinessCommanderRegulars"></select></td>
+                        </tr>
+                        <tr>
+                            <td class="success">Veteran legions</td>
+                            <td id="otherBusinessVeteransCheckboxes"  name="otherBusinessCommanderVeterans">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+                <td style="vertical-align: middle;">
+                    <button type="button" class="btn btn-danger dynamicSectionRemoveButton disabled"><span class="glyphicon glyphicon-minus"></button>
+                </td>
+            </tr>
+            <tr class="dynamicSectionLast">
+                <td colspan="4"><button type="button" class="btn btn-success dynamicSectionAddButton"><span class="glyphicon glyphicon-plus"></button></td>
+            </tr> 
+        </tbody>
+    </table>
+
+    <table id='commanderRecall' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success">Recall</td>
+                <td><select id="otherBusinessSenatorSelectcommanderRecall" class="form-control local-postable otherBusinessSenatorSelectcommanderRecall" name="otherBusinessRecallSenator"></select></td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='reinforcement' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Reinforcement interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='recruit' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success">Regular legions</td>
+                <td><select id="otherBusinessRecruitRegularsSelect" class="form-control local-postable otherBusinessRecruit" name="otherBusinessRecruitRegulars"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Fleets</td>
+                <td><select id="otherBusinessRecruitFleetsSelect" class="form-control local-postable otherBusinessRecruit" name="otherBusinessRecruitFleets"></select></td>
+            </tr>
+            <tr>
+                <td class="success">Total cost</td>
+                <td><input type="text" readonly id="otherBusinessRecruitTotal" class="form-control"></input></td>
+            </tr>
+            </tr>
+        </tbody>
+    </table>
+    
+    <table id='disband' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Disband interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table id='garrison' class="table table-bordered otherBusinessSection" style="width:auto; font-size: 150%; font-weight: bold; text-shadow: 1px 1px #888888;">
+        <tbody>
+            <tr>
+                <td class="success"></td>
+                <td>Send garrisons interface</td>
+            </tr>
+            <tr>
+                <td class="success"></td>
+                <td>TO DO</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

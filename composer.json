@@ -1,0 +1,25 @@
+{
+    "require": {
+        "silex/silex": "2.0.4",
+        "twig/twig": "2.3.2",
+        "twig/extensions":"1.4.1",
+        "symfony/twig-bridge": "3.2.7",
+        "symfony/form": "3.2.7",
+        "symfony/config": "3.2.7",
+        "symfony/translation": "3.2.7",
+        "symfony/validator": "3.2.7",
+        "symfony/security-csrf": "3.2.7",
+        "symfony/asset": "3.2.7",
+        "symfony/yaml": "3.2.7",
+        "doctrine/orm": "2.4.*",
+        "dflydev/doctrine-orm-service-provider": "2.0.*",
+	"davec49/silex2-simpleuser" :"dev-master"
+    },
+    "autoload": {
+        "psr-0": {
+            "Entities": "src/",
+            "Controllers": "src/",
+            "Presenters": "src/"
+        }
+    }
+}

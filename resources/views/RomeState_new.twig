@@ -1,0 +1,164 @@
+<div style="position: absolute; right:25px; top:52px; margin-top:10px;">
+    <a class="btn btn-success globalRomeCurrentState" data-placement='left' title="Rome current state" href='#' data-trigger="click">ROME</a>
+    <div class="globalRomeCurrentState_content" style="display: none;">
+        <table>
+            <tr>
+                <td colspan="2">
+                    <table class="table" style="width:100%; font-weight: bold; ">
+                        <tbody>
+                            <tr>
+                                <th>Treasury</th>
+                                <td>{{view.game.treasury}} T</td>
+                            </tr>
+                            <tr>
+                                <th>Unrest</th>
+                                <td>{{view.game.unrest}}</td>
+                            </tr>
+                            <tr>
+                                <th>Land Bills</th>
+                                <td>TO DO</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <h3 style="text-align: center; vertical-align: middle;">Legions</h3>
+                </td>
+                <td>
+                    <h3 style="text-align: center; vertical-align: middle;">Fleets</h3>
+                </td>
+            </tr>
+            {#
+            IN ROME
+            #}
+            <tr>
+                <td colspan="2">
+                    <h4 style="text-align: center; vertical-align: middle;">In Rome</h4>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; vertical-align: text-top; padding-right: 10px;">
+                    <table>
+                    {% set item=1 %}
+                    <tr>
+                    {% for legion in view.game.legions %}
+                        {% if legion.isRegularInRome() %}
+                            <td>
+                                {% if legion.getLoyalTo() is not null %}
+                                    <div class="unit {{ legion.getVeteran() ? 'unit-veteran' : 'unit-inRome' }}" data-toggle="popover" data-trigger="hover" data-placement="top" data-content="Loyal to {{legion.getLoyalToMessage()}}">
+                                        <div class="unit-loyalTo">{{legion.getName()}}</div>
+                                    </div>
+                                {% else %}
+                                    <div class="unit {{ legion.getVeteran() ? 'unit-veteran' : 'unit-inRome' }}">{{legion.getName()}}</div>
+                                {% endif %}
+                            </td>
+                            {% if item is divisible by (5) %}</tr><tr>{% endif %}
+                            {% set item = item + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ item==1 ? '<b>None</b>' : ''}}
+                    </tr>
+                    </table>
+                </td>
+                <td style="text-align: center; vertical-align: text-top; padding-left: 10px;">
+                    <table>
+                    {% set item=1 %}
+                    <tr>
+                    {% for fleet in view.game.fleets %}
+                        {% if fleet.inRome() %}
+                            <td><div class="unit unit-inRome" >{{fleet.getName()}}</div></td>
+                            {% if item is divisible by (5) %}</tr><tr>{% endif %}
+                            {% set item = item + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ item==1 ? '<b>None</b>' : ''}}
+                    </tr>
+                    </table>    
+                </td>
+            </tr>
+            {#
+            AWAY FROM ROME
+            #}
+            <tr>
+                <td colspan="2">
+                    <h4 style="text-align: center; vertical-align: middle;">Away</h4>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; vertical-align: text-top; padding-right: 10px;">
+                    <table>
+                    {% set item=1 %}
+                    <tr>
+                    {% for legion in view.game.legions %}
+                        {% if legion.isAway() %}
+                            <td><div class="unit unit-isAway" >{{legion.getName()}}</div></td>
+                            {% if item is divisible by (5) %}</tr><tr>{% endif %}
+                            {% set item = item + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ item==1 ? '<b>None</b>' : ''}}
+                    </tr>
+                    </table>
+                </td>
+                <td style="text-align: center; vertical-align: text-top; padding-left: 10px;">
+                    <table>
+                    {% set item=1 %}
+                    <tr>
+                    {% for fleet in view.game.fleets %}
+                        {% if fleet.isAway() %}
+                            <td><div class="unit unit-isAway" >{{fleet.getName()}}</div></td>
+                            {% if item is divisible by (5) %}</tr><tr>{% endif %}
+                            {% set item = item + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ item==1 ? '<b>None</b>' : ''}}
+                    </tr>
+                    </table>
+                </td>
+            </tr>
+            {#
+            IN POOL
+            #}
+
+            <tr>
+                <td colspan="2">
+                    <h4 style="text-align: center; vertical-align: middle;">Can be recruited</h4>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; vertical-align: text-top; padding-right: 10px;">
+                    <table>
+                    {% set item=1 %}
+                    <tr>
+                    {% for legion in view.game.legions %}
+                        {% if legion.canBeRecruited() %}
+                            <td><div class="unit unit-canBeRecruited" >{{legion.getName()}}</div></td>
+                            {% if item is divisible by (5) %}</tr><tr>{% endif %}
+                            {% set item = item + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ item==1 ? '<b>None</b>' : ''}}
+                    </tr>
+                    </table>
+                </td>
+                <td style="text-align: center; vertical-align: text-top; padding-left: 10px;">
+                    <table>
+                    {% set item=1 %}
+                    <tr>
+                    {% for fleet in view.game.fleets %}
+                        {% if fleet.canBeRecruited() %}
+                            <td><div class="unit unit-canBeRecruited" >{{fleet.getName()}}</div></td>
+                            {% if item is divisible by (5) %}</tr><tr>{% endif %}
+                            {% set item = item + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ item==1 ? '<b>None</b>' : ''}}
+                    </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

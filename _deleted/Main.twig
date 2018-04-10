@@ -1,0 +1,115 @@
+{% extends layout_template  %}
+
+{% block title %}
+    <title realm="{{gameView.realm}}">
+        The Republic of Rome - Game {{gameView.gameName}} - {{gameView.phase}} phase
+    </title>
+{% endblock %}
+
+{% block content %}
+
+    {# HEADER : CURRENT HRAO, ORDER OF PLAY , CURRENT PHASE & SUBPHASE #}
+
+    {% embed 'BoardElements/Header.twig' %}
+    {% endembed %}
+    
+    {# THE CURRENT PHASE'S TEMPLATE #}
+    
+    {% embed gameView.phase ~ '/phaseMain.twig' %}
+    {% endembed %}
+
+    {# YOUR PARTY #}
+    
+    <h3>Your Party</h3>
+    {% embed 'BoardElements/Party.twig' with {'party' : gameView.party[app.user.id] , 'self' : TRUE} %}
+    {% endembed %}
+
+    {# YOUR HAND #}
+    
+    {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.party[app.user.id].getHand() , 'self' : TRUE} %}
+    {% endembed %}
+
+    {# OTHER PARTIES #}
+    
+    <h3>Other Parties</h3>
+    {% for party in gameView.getAllPartiesButOne(app.user.id) %}
+        {% embed 'BoardElements/Party.twig' with {'party' : party , 'self' : FALSE } %}
+        {% endembed %}
+    {% endfor %}
+
+    <h3>There is currently {{gameView.deck['drawDeck'].getNumberOfCards()}} cards left to draw.</h3>
+    
+    {# FORUM #}
+    
+    {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.deck['forum'] , 'self' : FALSE} %}
+    {% endembed %}
+
+    {# CURIA #}
+    
+    {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.deck['curia'] , 'self' : FALSE} %}
+    {% endembed %}
+        
+    {# WARS  #}
+    
+    {% for warName in gameView.warDecksNames %}
+        {% embed 'BoardElements/Deck.twig' with {'deck' : gameView.deck[warName] , 'self' : FALSE} %}
+        {% endembed %}
+    {% endfor %}
+
+    {# EVENTS #}
+
+    <h3>Events in play</h3>
+        <table class="table table-bordered" style="width:auto; font-size: 100%; font-weight: bold; ">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Level</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, event in game.getEvents %}
+                    {% if event['level']>0 %}
+                        <tr>
+                            <td>{{key}}</td>
+                            <td>{{game.getEventProperty('number',key,'name')}}</td>
+                            <td>{{event['level']}}</td>
+                            <td style="font-size: 90%; font-weight: normal; ">{{game.getEventProperty('number',key,'description')}}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        
+    {# DEBUG - : show all cards & decks, and allow moving a card to a deck #}
+
+    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MoveCard' gameId='{{game.getId()}}'>
+        <h3>Debug - Cards</h3>
+        <div class="btn-group" data-toggle="radio">
+            {% for card in game.getFilteredCards()%}
+                <div class="row">
+                    <label>
+                        <input type="radio" class="toggle" value="{{card.getId()}}" name="FromCard">
+                        {{card.getName()}} [{{card.getLocation()['name']}}]
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+        <h3>Debug - Decks</h3>
+        <div class="btn-group" data-toggle="radio">
+            {% for deck in game.getFilteredDecks()%}
+                <div class="row">
+                    <label>
+                        <input type="radio" value="{{deck.getId()}}" name="ToDeck">
+                        {{deck.getName()}}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            <button type="submit" class="btn btn-warning">MOVE CARD</button>
+        </div>
+    </form>
+        
+{% endblock %}

@@ -1,0 +1,35 @@
+<div style="position: absolute; right:15px; top:52px; margin-top:5px;">
+    <a class='btn btn-success' data-placement='left' title="Rome current state" href='#' id='RomeCurrentState' data-trigger="hover">ROME</a>
+    <div id='RomeCurrentState_content' style="display: none">
+        <div id="VariousInfo">
+            <table class="table table-bordered" style="width:auto; font-weight: bold; ">
+                <tbody>
+                    <tr>
+                        <th>Treasury</th>
+                        <td>{{game.getTreasury()}} T</td>
+                    </tr>
+                    <tr>
+                        <th>Unrest</th>
+                        <td>{{game.getUnrest()}}</td>
+                    </tr>
+                    <tr>
+                        <th>Land Bills</th>
+                        <td>TO DO</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="Forces">
+            <h3>Legions</h3>
+            <h4>In Rome</h4>
+            <ul class="list-unstyled">
+            {% for legion in game.getLegions() %}
+                {% if legion.getOtherLocation=='Rome' %}
+                    {{legion.getName()}},  
+                {% endif %}
+            {% endfor %}
+            </ul>
+            <h4>In Garrison</h4>
+        </div>
+    </div>
+</div>

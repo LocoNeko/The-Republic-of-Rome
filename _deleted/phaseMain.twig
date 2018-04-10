@@ -1,0 +1,304 @@
+{#
+    REVENUE PHASE
+#}
+
+{# Header : Description #}
+
+<h4>{{header['description']}}</h4>
+
+{# Header : List (optional) #}
+
+{% if header['list']|length > 0 %}
+    <ul>
+        {% for item in header['list'] %}
+            <li>{{item}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{# Header : Action (optional) #}
+
+{% if header['action']|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': header['action']}%}
+    {% endembed %}
+{% endif %}
+
+{#
+    CONTENT
+
+    - BASE REVENUE
+#}
+
+{% if gameView.subPhase == 'Base' %}
+    
+    {#
+        SUMMARY
+    #}
+    
+    <table class="table table-bordered" style="width:auto; font-size: 150%; font-weight: bold; ">
+        <thead>
+            <tr>
+                <th>Senators</th>
+                <th>Leader</th>
+                <th>Knights</th>
+                <th>Concessions</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr class="success text-center" style="text-shadow: 1px 1px #888888;">
+                <td>{{content['base']['senators']}}</td>
+                <td>{{content['base']['leader']!='' ? 3 : 0}}</td>
+                <td>{{content['base']['knights']}}</td>
+                <td>{{content['base']['concessions_total']}}</td>
+                <td class="danger">{{content['base']['total']}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {#
+        INTERFACE (display only if player is not done)
+    #}
+
+    {% if content['showInterface']%}
+        <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='RevenueDone'>
+
+            <div class="panel-group" role="tablist" aria-multiselectable="true">
+
+            {# Earn from drought or not #}
+
+                {% if content['base']['flag']['drought'] and content['droughtLevel']>0 %}
+                    <div class="panel panel-default">
+
+                        <div class="panel-heading" role="tab" id="headingOne">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                  Generate more revenue from Concessions during Drought
+                                </a>
+                            </h4>
+                        </div>
+
+                        <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+                            <div class="panel-body">
+                                <table class="table table-bordered" style="width:auto; font-size: 120%; font-weight: bold; ">
+                                    <thead>
+                                        <tr>
+                                            <th>Senator</th>
+                                            <th>POP</th>
+                                            <th>Concession</th>
+                                            <th>Extra income</th>
+                                            <th>POP cost</th>
+                                            <th>Generate extra income</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for concession in content['base']['concessions'] %}
+                                            <tr class="warning text-center">
+                                                <td>{{concession['senator'].getName()}}</td>
+                                                <td>{{concession['senator'].getPOP()}}</td>
+                                                <td>{{concession['card'].getName()}}</td>
+                                                <td>+{{content['droughtLevel'] * concession['card'].getIncome()}}</td>
+                                                <td>{{(-1-content['droughtLevel'])}}</td>
+                                                <td>
+                                                    <div class="btn-group" data-toggle="buttons">
+                                                        <label class="btn btn-primary">
+                                                            <input type="radio" name="{{concession['card'].getId()}}" value="YES" autocomplete="off">YES
+                                                        </label>
+                                                        <label class="btn btn-primary active">
+                                                            <input type="radio" name="{{concession['card'].getId()}}" value="NO" autocomplete="off" checked>NO
+                                                        </label>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                {% endif %}
+
+            {# Provincial spoils #}
+
+                {% if content['base']['flag']['province']%}
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingTwo">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                  Provincial spoils
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseTwo" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingTwo">
+                            <div class="panel-body">
+                                <table class="table table-bordered" style="width:auto; font-size: 120%; font-weight: bold; ">
+                                    <thead>
+                                        <tr>
+                                            <th>Senator</th>
+                                            <th>Province</th>
+                                            <th>Developed</th>
+                                            <th>Senator income</th>
+                                            <th>Take spoils</th>
+                                            <th>Let Rome pay negatives</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for province in content['base']['provinces'] %}
+                                            <tr class="warning text-center">
+                                                <td>{{province['senator'].getName()}}</td>
+                                                <td>{{province['card'].getName()}}</td>
+
+                                                {# If the Province is Overrun, don't display anything #}
+                                                {% if province['card'].getOverrun() %}
+                                                    <td colspan='4'>Province was overrun by Barbarians and/or internal disorder.</td>
+                                                {% else %}
+                                                    <td>{{province['card'].getDeveloped() ? 'YES' : 'NO' }}</td>
+                                                    <td>
+                                                        {{province['card'].getIncome()[province['card'].getDeveloped() ? 'developed' : 'undeveloped']['senator']['variable']}}d{{(province['card'].getIncome()[province['card'].getDeveloped() ? 'developed' : 'undeveloped']['senator']['fixed'] < 0 ? '-' : '+' )}}{{province['card'].getIncome()[province['card'].getDeveloped() ? 'developed' : 'undeveloped']['senator']['fixed']|abs}}
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group" data-toggle="buttons">
+                                                            <label class="btn btn-primary">
+                                                                <input type="radio" name="{{province['card'].getId()}}[spoils]" value="YES" autocomplete="off">YES
+                                                            </label>
+                                                            <label class="btn btn-primary active">
+                                                                <input type="radio" name="{{province['card'].getId()}}[spoils]" value="NO" autocomplete="off" checked>NO
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group" data-toggle="buttons">
+                                                            <label class="btn btn-primary">
+                                                                <input type="radio" name="{{province['card'].getId()}}[rome]" value="YES" autocomplete="off">YES
+                                                            </label>
+                                                            <label class="btn btn-primary active">
+                                                                <input type="radio" name="{{province['card'].getId()}}[rome]" value="NO" autocomplete="off" checked>NO
+                                                            </label>
+                                                        </div>
+                                                    </td>
+                                                {% endif %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Rebel maintaining legions #}
+
+                {% if content['base']['flag']['rebel']%}
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingThree">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                  Rebel legions maintenance
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseThree" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingThree">
+                            <div class="panel-body">
+                                <table class="table table-bordered" style="width:auto; font-size: 120%; font-weight: bold; ">
+                                    <thead>
+                                        <tr>
+                                            <th>Rebel</th>
+                                            <th>Legions</th>
+                                            <th>Maintenance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for rebel in content['base']['rebels'] %}
+                                            <tr class="warning text-center">
+                                                <td>{{province['senator'].getName()}}</td>
+                                                <td>TO DO</td>
+                                                <td>TO DO</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+
+            </div>
+            <button type="submit" class="btn btn-warning">Done</button>
+        </form>
+
+    {% endif %}
+
+{#
+    - REDISTRIBUTION INTERFACE (display only if player is not done)
+#}
+
+{% elseif gameView.subPhase == 'Redistribution' and content['showInterface'] %}
+    {#
+        If some legions are in the "released" location, this interface should not appear for the HRAO. He has to decide whether to maintain or disband them before.
+    #}
+    {% if content['showReleasedLegions'] %}
+        TO DO
+        {#
+        TO DO
+        #}
+    {% else %}
+        <div class="btn btn-default btn-lg draggable revenueRedistribution" title='Drag and drop to transfer money to/from your party treasury' treasury='{{content['yourParty'].getTreasury()}}' item_name='your party treasury' user_id="{{content['yourParty'].getUser_id()}}">
+            Your party : {{content['yourParty'].getTreasury()}}T
+        </div>
+        {% for otherParty in content['otherParties']%}
+            <div class="btn btn-default btn-lg revenueRedistribution" title='Drop to transfer money to {{otherParty.getName()}}' item_name='{{otherParty.getName()}}' user_id="{{otherParty.getUser_id()}}">
+                {{otherParty.getName()}}
+            </div>
+        {% endfor %}
+        <div class="modal fade" id="redistributionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="text" id="redistributionAmount" style="border:0; font-weight:bold; font-size: 2em; background: white;">
+                        <div id="redistributionSlider"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="submitRedistribution" from_senator="" to_senator="" from_party="" to_party="">Transfer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br><br>
+        <div>
+            {% if content['action']|length > 0 %}
+                {% embed 'BoardElements/ActionToken.twig' with {'action': content['action']}%}
+                {% endembed %}
+            {% endif %}
+        </div>
+
+    {% endif %}
+{#
+    CONTRIBUTIONS
+#}
+{% elseif gameView.subPhase == 'Contributions' and content['showInterface'] %}
+    {#
+        MODAL SLIDER
+    #}
+    <div class="modal fade" id="contributionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="contributionAmount" style="border:0; font-weight:bold; font-size: 2em; background: white;">
+                    <div id="contributionSlider"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="submitContribution" from_senator="">Give to Rome</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

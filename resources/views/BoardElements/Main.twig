@@ -1,0 +1,126 @@
+{% extends layout_template  %}
+
+{% block title %}
+    <title realm="{{view.game.game_id}}">
+        The Republic of Rome - Game {{view.game.name}} - {{view.game.phase}} phase
+    </title>
+{% endblock %}
+
+
+{% block content %}
+
+    {# Call the global JS function getReady(phase , subPhase) (zhich is in RepublicOfRome.js) that readies any needed function for this phase #}
+
+    <script>
+        $(function() {
+            getReady('{{view.game.phase}}' , '{{view.game.subPhase}}');
+        });
+    </script>
+
+    {# HEADER : CURRENT HRAO, ORDER OF PLAY , CURRENT PHASE & SUBPHASE #}
+
+    {% embed 'BoardElements/Header.twig' %}
+    {% endembed %}
+
+    {# THE CURRENT PHASE'S TEMPLATE #}
+    {% if view.interface|length>0 %}
+        {% embed view.game.phase ~ '/' ~ view.interface['name'] ~ '.twig' %}
+        {% endembed %}
+    {% endif %}
+
+    {# YOUR PARTY #}
+
+    <h3>Your Party</h3>
+    {% embed 'BoardElements/Party.twig' with {'party' : view.yourParty} %}
+    {% endembed %}
+
+    {# YOUR HAND #}
+
+    {% embed 'BoardElements/Deck.twig' with {'deck' : view.yourParty.hand } %}
+    {% endembed %}
+
+    {# OTHER PARTIES #}
+
+    <h3>Other Parties</h3>
+    {% for party in view.otherParties %}
+        {% embed 'BoardElements/Party.twig' with {'party' : party } %}
+        {% endembed %}
+    {% endfor %}
+
+    <h3>There are currently {{view.game.deck['drawDeck'].nbOfCards}} cards left to draw.</h3>
+    
+    {# FORUM #}
+
+    {% embed 'BoardElements/Deck.twig' with {'deck' : view.game.deck['forum'] } %}
+    {% endembed %}
+
+    {# CURIA #}
+
+    {% embed 'BoardElements/Deck.twig' with {'deck' : view.game.deck['curia'] } %}
+    {% endembed %}
+
+    {# WARS  #}
+
+    {% for warName in view.game.warDecksNames %}
+        {% embed 'BoardElements/Deck.twig' with {'deck' : view.game.deck[warName] } %}
+        {% endembed %}
+    {% endfor %}
+
+    {#
+        Modal sliders
+    #}
+
+    {% for slider in view.sliders %}
+
+        <div class="modal fade" id="{{slider['ID']}}" tabindex="-1" role="dialog" aria-labelledby="{{slider['ID']}}_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="{{slider['ID']}}_label">{{slider['title']}}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="{{slider['ID']}}_storedData">
+                        <input type="text" id="{{slider['ID']}}_value" style="border:0; font-weight:bold; font-size: 2em; background: white;">
+                        <div id="{{slider['ID']}}_slider"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary slider-submit" verb="{{slider['verb']}}">{{slider['text']}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% endfor %}
+
+    {# DEBUG - : show all cards & decks, and allow moving a card to a deck #}
+{#
+    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MoveCard' gameId='{{game.getId()}}'>
+        <h3>Debug - Cards</h3>
+        <div class="btn-group" data-toggle="radio">
+            {% for card in game.getFilteredCards()%}
+                <div class="row">
+                    <label>
+                        <input type="radio" class="toggle" value="{{card.getId()}}" name="FromCard">
+                        {{card.getName()}} [{{card.getLocation()['name']}}]
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+        <h3>Debug - Decks</h3>
+        <div class="btn-group" data-toggle="radio">
+            {% for deck in game.getFilteredDecks()%}
+                <div class="row">
+                    <label>
+                        <input type="radio" value="{{deck.getId()}}" name="ToDeck">
+                        {{deck.getName()}}
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="row">
+            <button type="submit" class="btn btn-warning">MOVE CARD</button>
+        </div>
+    </form>
+  #}      
+{% endblock %}

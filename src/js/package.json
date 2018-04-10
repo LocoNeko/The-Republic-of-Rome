@@ -1,0 +1,9 @@
+{
+    "name": "socketioserver",
+    "version": "0.0.1",
+    "description": "Basic socket.io push server",
+    "dependencies": {
+	"socket.io": "latest"
+    },
+    "author": "Me"
+}

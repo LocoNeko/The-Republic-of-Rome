@@ -1,0 +1,24 @@
+{#
+    SETUP PHASE
+#}
+
+{# Header : Description #}
+
+<h4>{{setupView['description']}}</h4>
+
+{# Header : List (optional) #}
+
+{% if setupView['list']|length > 0 %}
+    <ul>
+        {% for item in setupView['list'] %}
+            <li>{{item}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+{# Header : Action (optional) #}
+
+{% if setupView['action']|length > 0 %}
+    {% embed 'BoardElements/ActionToken.twig' with {'action': setupView['action']}%}
+    {% endembed %}
+{% endif %}
