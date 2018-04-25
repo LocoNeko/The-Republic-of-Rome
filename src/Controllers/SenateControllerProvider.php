@@ -45,7 +45,7 @@ class SenateControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', $exception->getTraceAsString());
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
                 return $app->redirect('/');
             }
         })
@@ -64,7 +64,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                /** @var \Entities\Proposal $proposal */
+                /* @var $proposal \Entities\Proposal */
                 $app['session']->getFlashBag()->add('danger', ' SenateMakeProposal json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 try {
                     $proposal = $this->makeProposal($user_id , $game , $json_data);
@@ -73,13 +73,11 @@ class SenateControllerProvider implements ControllerProviderInterface
                     return $app->json( $exception->getMessage() , 201 );
                 }
                 $game->setNewProposal($proposal) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
+                $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                $app['session']->getFlashBag()->add('danger', $exception->getTraceAsString());
-                return $app->json( $exception->getMessage() , 201 );
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_senateMakeProposal');
@@ -98,12 +96,11 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 $this->vote($user_id , $game , $json_data) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
+                $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201 );
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_senateVote');
@@ -122,12 +119,11 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 $this->veto($user_id , $game , $json_data) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
+                $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201 );
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_senateVeto');
@@ -147,12 +143,11 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $user_id = (int)$json_data['user_id'] ;
                 $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $this->decide($user_id , $game , $json_data , $this->entityManager) ;
-                $this->entityManager->persist($game) ;
-                $this->entityManager->flush() ;
+                $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
-                $app['session']->getFlashBag()->add('danger', $exception->getTraceAsString());
-                return $app->json( $exception->getMessage() , 201 );
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_senateDecide');
@@ -170,17 +165,22 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $game->log(_('The Censor ends prosecutions and returns the floor to the HRAO.'));
                 $this->setNextSubPhase($game) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
+                $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
-                $app['session']->getFlashBag()->add('danger', $exception->getTraceAsString());
-                return $app->json( $exception->getMessage() , 201 );
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_endProsecutions');
         
         return $controllers;
+    }
+    
+    private function persistFlush($game)
+    {
+        $this->entityManager->persist($game);
+        $this->entityManager->flush();
     }
     
     /**
@@ -193,7 +193,7 @@ class SenateControllerProvider implements ControllerProviderInterface
     public function makeProposal($user_id , $game , $json_data)
     {
         // The proposal type is equal to the sub phase, except during otherbusiness in which case it's determined by ???
-        // TO DO : Find the json var that holds the type of otherBusiness proposal that is selected
+        /** @todo Find the json var that holds the type of otherBusiness proposal that is selected */
         $subPhase = $game->getSubPhase() ;
         $proposalType = ( ($subPhase=='OtherBusiness') ? $json_data['otherBusinessList'] : $game->getSubPhase() ) ;
         try 
@@ -221,7 +221,7 @@ class SenateControllerProvider implements ControllerProviderInterface
         try {
             if ($currentProposal->getCurrentVoter()!=(int)$user_id)
             {
-                throw new \Exception(_('Current voter and user mismatch')) ;
+                throw new \Exception(sprintf(_('Current voter and user mismatch. Current voter ID : %1$s, user_id : %2$s') , $currentProposal->getCurrentVoter() , $user_id)) ;
             }
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
@@ -234,6 +234,8 @@ class SenateControllerProvider implements ControllerProviderInterface
         $signDescription='';
         $talentsSpent = [] ;
         $totalTalentsAdded = 0 ;
+        $unanimous = NULL ;
+
         /*
          * Talents : spend them if required. If impossible, throw exception.
          */
@@ -261,6 +263,7 @@ class SenateControllerProvider implements ControllerProviderInterface
         /*
          * Was it a whole party vote or split by Senators ?
          */
+        $unanimousSign = NULL ;
         foreach ($voteTally as $voteOfSenator)
         {
             // addedtalents
@@ -273,6 +276,14 @@ class SenateControllerProvider implements ControllerProviderInterface
             elseif (!$isPartyVote && $jsonVotes[$voteOfSenator['senatorID']]=='AGAINST') { $sign = -1 ; $splitVoteDetail['AGAINST'].=$voteOfSenator['name'].' ['.$voteOfSenator['votes'].$addedTalentsMessage.'], ';}
             elseif (!$isPartyVote)                                                       { $sign =  0 ; $splitVoteDetail['ABSTAIN'].=$voteOfSenator['name'].' [0], ';}
             $totalVotes += ( ($voteOfSenator['votes']+$addedTalents) * $sign) ;
+            // Handle unanimous vote for split votes
+            if (!$isPartyVote)
+            {
+                // Initialise the sign of the unanimous vote to how the current Senator has voted
+                if ($unanimousSign===NULL)                          { $unanimousSign=$sign ; $unanimous=TRUE; }
+                // If we already knew the unanimous sign, compare it with the current senator. If it's different, this is not a unanimous vote
+                if ($unanimousSign!==NULL && $unanimousSign!=$sign) { $unanimous=FALSE ; }
+            }
         }
         /**
          * Description of the vote
@@ -284,6 +295,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 (sprintf(_('%1$s %2$d votes %3$s%4$s') , $partyName , abs($totalVotes) , $signDescription , ($totalTalentsAdded>0 ? sprintf(_('(including %1$d T)') , $totalTalentsAdded): ''))) :
                 (sprintf(_('%1$s ABSTAINS') , $partyName ))
             ) ;
+            $unanimous = TRUE ;
         }
         else
         {
@@ -307,7 +319,7 @@ class SenateControllerProvider implements ControllerProviderInterface
             // POP changes the roll on appeal table
             $popularityMessage = '';
             $accused = $game->getFilteredCards(array('senatorID'=>$currentProposal->getContent()['Accused']))->first() ;
-            // TO DO : use victim's POP in case of assasination special prosecution
+            /** @todo : use victim's POP in case of assasination special prosecution */
             $popularity = $accused->getPOP() ;
             if ($popularity!=0)
             {
@@ -340,7 +352,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $description.=sprintf(_('. Popular appeal roll is %1$d%2$s%3$s resulting in %4$s. The final tally is %5$d %6$s') , $roll['total'] , $game->getEvilOmensMessage(-1) , $popularityMessage , $extraVotesMessage , abs($totalVotes) , (($totalVotes > 0) ? _('FOR') : _('AGAINST')));
             }
         }
-        $currentProposal->setVote($user_id, $totalVotes, $description) ;
+        $currentProposal->setVote($user_id, $totalVotes, $description , $unanimous) ;
         $game->log($description);
         $this->doVoteEnd($game , $currentProposal) ;
     }
@@ -368,11 +380,56 @@ class SenateControllerProvider implements ControllerProviderInterface
                  * Implement the proposal (for proposals that are implemented at the end of the vote, which is not always the case
                  */
                 $type = $proposal->getType() ;
-                if ($type=='Censor')        { $this->implementProposalCensor($game , $proposal);}
-                if ($type=='Prosecutions')  { $this->implementProposalProsecutions($game , $proposal);}
-                if ($type=='recruit')       { $this->implementProposalRecruit($game , $proposal);}
-                if ($type=='commander')     { $this->implementProposalCommander($game , $proposal);}
-                $proposal->incrementStep() ;
+                try
+                {
+                    if ($type=='Censor')        { $this->implementProposalCensor($game , $proposal);}
+                    if ($type=='Prosecutions')  { $this->implementProposalProsecutions($game , $proposal);}
+                    if ($type=='recruit')       { $this->implementProposalRecruit($game , $proposal);}
+                    if ($type=='commander')     { $this->implementProposalCommander($game , $proposal);}
+                    if ($type=='concession')    { $this->implementProposalConcession($game , $proposal);}
+                } catch (Exception $ex2) {
+                    throw new \Exception($ex2) ;
+                }
+                /**
+                 * @todo Handle unanimous defeat decision on the part of the HRAO
+                 * - Creates a 'Unanimous defeat' proposal
+                 * - It should put it as the latest proposal
+                 * - Once unanimous defeat has been handled, the proposal that was interrupted must be ->incrementStep()
+                 * - When checking the latest proposal underway in the Presenter, don't forget to check the latest proposal with currentStep!=='done'
+                 */
+                if ($proposal->isHRAOunanimousDefeat())
+                {
+                    $game->log(_('This was a unanimous defeat'));
+                    /* @var $HRAO \Entities\Senator */
+                    $HRAO = $game->getHRAO(TRUE) ;
+                    /* @var $UnanimousDefeatProposal \Entities\Proposal */
+                    $UnanimousDefeatProposal = new \Entities\Proposal( $HRAO->getLocation()['value']->getUser_id() , 'UnanimousDefeat',  $game , NULL ) ;
+                    /** 
+                     * The HRAO has no INF left and must step down
+                     * The UnanimousDefeat proposal is set to pass, decision 'stepDown' to true, and step incremented (should now be 'done')
+                     * We also increment the step of the proposal that was interrupted, since the UnanimousDefeat proposal is already over.
+                     */
+                    if ($HRAO->getINF()==0)
+                    {
+                        $game->log(_('The HRAO has no INF left and must step down'));
+                        $UnanimousDefeatProposal->setOutcome('pass');
+                        $UnanimousDefeatProposal->setDecision('stepDown', TRUE) ;
+                        $UnanimousDefeatProposal->incrementStep() ;
+                        $proposal->incrementStep() ;
+                    }
+                    $game->setNewProposal($UnanimousDefeatProposal) ;
+                }
+                else
+                {
+                    $proposal->incrementStep() ;
+                }
+                /**
+                 * Check if proposal is done. Once it is, handle the potential situations :
+                 * - Repopulating Rome (the proposal sent a Senator that made the total number of Senators in Rome below 8)
+                 * - Adjourn Senate (the proposal sent the HRAO away from Rome)
+                 * @todo repopulating Rome
+                 * @todo adjourn senate
+                 */
             }
         }
         return TRUE ;
@@ -386,7 +443,7 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function veto($user_id , $game , $json_data)
     {
-        // TO DO
+        /** @todo veto */
     }
 
     /**
@@ -421,7 +478,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 {
                     if ($value=='Rome Consul' || $value=='Field Consul')
                     {
-                        $senator = $game->getFilteredCards(array('id'=>$key))->first() ;
+                        $senator = $game->getFilteredCards(array('cardId'=>$key))->first() ;
                         if ($senator->getLocation()['value']->getUser_id()!=$user_id)
                         {
                             throw new \Exception(_('ERROR - Senator in the wrong party')) ;
@@ -441,7 +498,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                         }
                     }
                 }
-                $decision=$currentProposal->getAgree();
+                $decision=$currentProposal->getDecision();
                 /**
                  * Check whether all needed choices have been made
                  */
@@ -462,7 +519,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                     // $key = 'First Senator'|'Second Senator' , $office = 'Rome consul' | 'Field consul'
                     foreach ($decision as $key=>$office)
                     {
-                        $senator = $game->getFilteredCards(array('id'=>$currentProposal->getContent()[$key]))->first() ;
+                        $senator = $game->getFilteredCards(array('cardId'=>$currentProposal->getContent()[$key]))->first() ;
                         $this->appoint($game, $senator, $office) ;
                     }
                     $currentProposal->incrementStep();
@@ -480,6 +537,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                     }
                 }
             }
+            
             /**
              * The prosecutor can :
              * - Agree : proposal->incrementStep
@@ -501,9 +559,10 @@ class SenateControllerProvider implements ControllerProviderInterface
                 }
                 else
                 {
-                    throw new \Exception(_('ERROR - Unrecognized choice. Should be agree or disagree.')) ;
+                    throw new \Exception(_('ERROR - Unrecognised choice. Should be agree or disagree.')) ;
                 }
             }
+            
             /**
              * A commander without adequate forces can decide not to go fight : Step 0 is the decision 
              */
@@ -527,8 +586,8 @@ class SenateControllerProvider implements ControllerProviderInterface
 			                	// Check whether the decision was AGAINST, in which case the proposal is scrapped
 			                	if ($decision=='AGAINST')
 			                	{
-		                			$allFor = FALSE ;
-			                		$game->log(sprintf(_('%1$s refuses to go with inadequate forces.') , $commander->getName()));
+                                                    $allFor = FALSE ;
+                                                    $game->log(sprintf(_('%1$s refuses to go with inadequate forces.') , $commander->getName()));
 				                    $entityManager->remove($currentProposal) ;
 				                    $entityManager->flush() ;
 			                	}
@@ -547,7 +606,47 @@ class SenateControllerProvider implements ControllerProviderInterface
                     $currentProposal->incrementStep();
                 }
              }
+             
+             /**
+              * Unanimous defeat decision
+              */
+            if ( ($currentProposal->getType()=='UnanimousDefeat') && ($currentProposal->getCurrentStep()==0))
+            {
+                /** Lose 1 influence */
+                if ($json_data['toggles']['unanimousDefeatName']=='NO')
+                {
+                    $HRAO = $game->getHRAO(TRUE) ;
+                    $HRAO->setSteppedDown(FALSE) ;
+                    $HRAO->changeINF(-1) ;
+                    $game->log(sprintf(_('%1$s decides to lose 1 Influence') , $HRAO->getFullName()));
+                }
+                /** Step down */
+                if ($json_data['toggles']['unanimousDefeatName']=='YES')
+                {
+                    $HRAO = $game->getHRAO(TRUE) ;
+                    $HRAO->setSteppedDown(TRUE) ;
+                    $newHRAO = $game->getHRAO(TRUE) ;
+                    $game->log(sprintf(_('%1$s decides to step down as presiding magistrate. %2$s is the new president.') , $HRAO->getFullName() , $newHRAO->getFullName()));
+                }
+                $currentProposal->incrementStep();
 
+                /**
+                 * Also Increment step of the proposal that was interrupted
+                 */
+                foreach($game->getProposals() as $proposal)
+                {
+                    if ( ($proposal->getCurrentStep()!='done') && $proposal->getType()!='UnanimousDefeat')
+                    {
+                        /* @var $currentProposal \Entities\Proposal  */
+                        $previousProposal = $proposal ;
+                    }
+                }
+                if (isset($previousProposal))
+                {
+                    $previousProposal->incrementStep();
+                }
+                
+            }
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
@@ -684,7 +783,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                         if ($card->getPreciseType()=='Concession')
                         {
                             $card->setCorrupt(FALSE);
-                            $accused->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $game->getDeck('forum')) ;
+                            $accused->getCardsControlled()->getFirstCardByProperty('cardId' , $card->getCardId() , $game->getDeck('forum')) ;
                             $concessionsName.=$card->getName().', ';
                         }
                     }
@@ -716,7 +815,6 @@ class SenateControllerProvider implements ControllerProviderInterface
     }
 
     /**
-     * 
      * Implements OtherBusiness - recruit
      * proposal content is fleetsToRecruit , regularsToRecruit
      * @param \Entities\Game $game
@@ -741,56 +839,62 @@ class SenateControllerProvider implements ControllerProviderInterface
         {
             throw new \Exception(_('ERROR - Not enough money in Rome treasury.')) ;
         }
-        $game->changeTreasury( - ( ($regularsToRecruit * $legionStatus['cost']) + ($fleetsToRecruit * $fleetStatus['cost']) )) ;
-        $game->log(_('The forces are recruited'));
-        // Ship building
-        $shipBuilding = $game->getFilteredCards(array('special' => 'fleets'))->first() ;
-        $shipBuildingLocation = $shipBuilding->getLocation() ;
-        if ($shipBuildingLocation['type'] == 'card')
+        // Implement if the proposal passes
+        if ($proposal->isCurrentOutcomePass())
         {
-            $senator = $shipBuildingLocation['value'] ;
-            $senator->changeTreasury(3 * $fleetsToRecruit);
-            $shipBuilding->setCorrupt(TRUE);
-            $game->log(sprintf(_('With ship building, %1$s earns %2$d T.') , $shipBuildingLocation['name'] , (3 * $fleetsToRecruit) ));
-        }
-        // Armaments
-        $armament = $game->getFilteredCards(array('special' => 'legions'))->first() ;
-        $armamentLocation = $armament->getLocation() ;
-        if ($armamentLocation['type'] == 'card')
-        {
-            $senator = $armamentLocation['value'] ;
-            $senator->changeTreasury(2 * $regularsToRecruit);
-            $armament->setCorrupt(TRUE);
-            $game->log(sprintf(_('With armament, %1$s earns %2$d T.') , $armamentLocation['name'] , (2 * $regularsToRecruit) ));
-        }
-        $fleet = 0 ;
-        while (($fleetsToRecruit>0) && ($fleet<25))
-        {
-            $thisFleet = $game->getFleets()[$fleet] ;
-            if ($thisFleet->canBeRecruited())
+            $game->changeTreasury( - ( ($regularsToRecruit * $legionStatus['cost']) + ($fleetsToRecruit * $fleetStatus['cost']) )) ;
+            $game->log(_('The forces are recruited'));
+            // Ship building
+            $shipBuilding = $game->getFilteredCards(array('special' => 'fleets'))->first() ;
+            $shipBuildingLocation = $shipBuilding->getLocation() ;
+            if ($shipBuildingLocation['type'] == 'card')
             {
-                $thisFleet->recruit() ;
-                $fleetsToRecruit-- ;
+                $senator = $shipBuildingLocation['value'] ;
+                $senator->changeTreasury(3 * $fleetsToRecruit);
+                $shipBuilding->setCorrupt(TRUE);
+                $game->log(sprintf(_('With ship building, %1$s earns %2$d T.') , $shipBuildingLocation['name'] , (3 * $fleetsToRecruit) ));
             }
-            $fleet++;
-        }
-        $legion = 0 ;
-        while (($regularsToRecruit>0) && ($legion<25))
-        {
-            $thisLegion = $game->getLegions()[$legion] ;
-            if ($thisLegion->canBeRecruited())
+            // Armaments
+            $armament = $game->getFilteredCards(array('special' => 'legions'))->first() ;
+            $armamentLocation = $armament->getLocation() ;
+            if ($armamentLocation['type'] == 'card')
             {
-                $thisLegion->recruit() ;
-                $regularsToRecruit-- ;
+                $senator = $armamentLocation['value'] ;
+                $senator->changeTreasury(2 * $regularsToRecruit);
+                $armament->setCorrupt(TRUE);
+                $game->log(sprintf(_('With armament, %1$s earns %2$d T.') , $armamentLocation['name'] , (2 * $regularsToRecruit) ));
             }
-            $legion++;
+            $fleet = 0 ;
+            while (($fleetsToRecruit>0) && ($fleet<25))
+            {
+                $thisFleet = $game->getFleets()[$fleet] ;
+                if ($thisFleet->canBeRecruited())
+                {
+                    $thisFleet->recruit() ;
+                    $fleetsToRecruit-- ;
+                }
+                $fleet++;
+            }
+            $legion = 0 ;
+            while (($regularsToRecruit>0) && ($legion<25))
+            {
+                $thisLegion = $game->getLegions()[$legion] ;
+                if ($thisLegion->canBeRecruited())
+                {
+                    $thisLegion->recruit() ;
+                    $regularsToRecruit-- ;
+                }
+                $legion++;
+            }
         }
+
     }
     
     /**
      * 
      * Implements OtherBusiness - commander
-     * proposal content is commander, conflict , fleets, regulars TO DO : veterans
+     * proposal content is commander, conflict , fleets, regulars 
+     * @todo : veterans
      * @param \Entities\Game $game
      * @param \Entities\Proposal $proposal
      *
@@ -806,35 +910,75 @@ class SenateControllerProvider implements ControllerProviderInterface
     		$sendForces['conflict'] ;
     		$sendForces['fleets'] ;
     		$sendForces['regulars'] ;
-    		// TO DO : $sendForces['veterans'] ; 
+    		/** @todo : $sendForces['veterans'] ;  */
 
     		// Implementing the proposal itself
                 /* @var $commander \Entities\Senator */
                 /* @var $conflict \Entities\Conflict */
     		$commander = $game->getFilteredCards(array('senatorID'=>$sendForces['commander']))->first() ;
-    		$conflict = $game->getFilteredCards(array('id'=>$sendForces['conflict']))->first() ;
+    		$conflict = $game->getFilteredCards(array('cardId'=>$sendForces['conflict']))->first() ;
 
-                // Setting 'commanderIn' for the Senator, don't forget case of MoH
+                // Setting 'commanderIn' for the Senator
+                /** @todo : MoH */
                 $commander->setCommanderIn($conflict) ;
 
     		// Set fleets location
-                for ($i=$sendForces['fleets'] ; $i>0 ; $i--)
-    		{
-                    foreach($game->getFleets() as $fleet)
+                $fleetsToSend = $sendForces['fleets'] ;
+                foreach($game->getFleets() as $fleet)
+                {
+                    // Find the first fleet in Rome
+                    if ( ($fleetsToSend>0) && ($fleet->getLocation() == 'Rome'))
                     {
-                        // Find the first fleet in Rome
-                        if ($fleet->getLocation() == 'Rome')
-                        {
-                            /** @var \Entities\Fleet $fleet  */
-                            $fleet->setLocation($conflict);
-                        }
+                        /** @var \Entities\Fleet $fleet  */
+                        $fleet->setLocation($conflict);
+                        $fleetsToSend--;
                     }
-    		}
+                }
 
-                // Set regulars location
+                /** @todo implement commander proposal : Set regulars location */
+                /** @todo implement commander proposal : Set veterans */
     	}
     }
     
+    /**
+     * Implements OtherBusiness - concession proposal 
+     * @param \Entities\Game $game
+     * @param \Entities\Proposal $proposal
+     * @throws \Exception
+     */
+    public function implementProposalConcession($game , $proposal)
+    {
+    	$game->log(print_r($proposal->getContent(),TRUE));
+        try
+        {
+            // A concession proposal consists of an array, since they can be grouped.
+            foreach ($proposal->getContent() as $concessionAssignment)
+            {
+                /* @var $senator \Entities\Senator */
+                $senator = $game->getFilteredCards(array('senatorID'=>$concessionAssignment['senator']))->first() ;
+                if ($proposal->isCurrentOutcomePass())
+                {
+                    $game->getDeck('forum')->getFirstCardByProperty('cardId', $concessionAssignment['concession'], $senator->getCardsControlled()) ;
+                }
+                else
+                {
+                    $game->getDeck('forum')->getFirstCardByProperty('cardId', $concessionAssignment['concession'])->setFlipped(TRUE) ;
+                }
+            }
+            // Message
+            if ($proposal->isCurrentOutcomePass())
+            {
+                $game->log(_('Vote passes - The concessions are assigned'));
+            }
+            else
+            {
+                $game->log(_('Vote fails - The concessions are flipped for the reminder of this Senate phase'));
+            }
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+
     /**
      * find and set the next Senate subPhase base on the grand scheme of things
      * @param \Entities\Game $game

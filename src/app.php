@@ -1,6 +1,7 @@
 <?php
     use Silex\Provider;
     use Symfony\Component\HttpFoundation\Request;
+    use Symfony\Component\HttpFoundation\Response;
     use Symfony\Component\Debug\ErrorHandler;
     use Symfony\Component\Debug\ExceptionHandler;
     use Dflydev\Provider\DoctrineOrm\DoctrineOrmServiceProvider;
@@ -106,7 +107,7 @@
         'assets.version_format' => '%s?version=%s',
         'assets.named_packages' => array(
             'css' => array('version' => 'css2' , 'base_path' => $app['BASE_URL'].'/resources/css/') ,
-            'js' => array('version' => 'v1' , 'base_path' => $app['BASE_URL'].'/resources/js/')
+            'js' => array('version' => 'v1' , 'base_path' => $app['BASE_URL'].'/resources/js/') 
         ),
     ));
     
@@ -283,16 +284,9 @@
         }
     });
     
-    $app->error(function (\Exception $e, $code) {
-        switch ($code) {
-            case 404:
-                $message = 'The requested page could not be found.';
-                break;
-            default:
-                $message = 'Exception : '.$e->getMessage();
-        }
-
-        return new Response($message);
+    $app->error(function (\Exception $exception, $code) {
+        $message = 'Exception : '.sprintf("%s:%d\n %s\n [%s]\n%s", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception) , $exception->getTraceAsString());
+        return new Response(nl2br($message));
     });
 
     $app->run() ;

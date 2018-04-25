@@ -101,7 +101,7 @@
             {% for card in game.getFilteredCards()%}
                 <div class="row">
                     <label>
-                        <input type="radio" class="toggle" value="{{card.getId()}}" name="FromCard">
+                        <input type="radio" class="toggle" value="{{card.getCardId()}}" name="FromCard">
                         {{card.getName()}} [{{card.getLocation()['name']}}]
                     </label>
                 </div>

@@ -8,7 +8,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @Entity @Table(name="messages")
  **/
-class Message
+class Message extends TraceableEntity
 {
     public static $VALID_TYPES = array ('log' , 'alert' , 'error' , 'chat');
     public static $FLASH_TYPES = array ('log' => 'info' , 'alert' => 'warning' , 'error' => 'danger' , 'chat' => 'success') ;
@@ -165,7 +165,8 @@ class Message
      * @return string Message formatted for output
      */
     public function show($user_id , $partiesNames) {
-        $formattedMessage = $this->text ;
+        // First, replace parameters by their value in the text
+        $formattedMessage = vsprintf($this->text, $this->parameters) ;
         foreach($partiesNames as $party_id => $party_name) {
             if (strpos($formattedMessage, '[['.$party_id.']]') !==FALSE) {
                 $name = ( ($party_id==$user_id) ? 'you' : $party_name ) ;
@@ -199,7 +200,7 @@ class Message
             $formattedMessage = $playerNames[$this->from].' says to '.$recipientsList.' : '.$this->text ;
         }
         */
-        return ucfirst( vsprintf($formattedMessage, $this->parameters) );
+        return ucfirst( $formattedMessage );
     }
     
     public function getColour() {

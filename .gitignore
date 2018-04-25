@@ -2,10 +2,4 @@
 /nbproject
 composer.phar
 composer.lock
-/.idea/ROR_V2.iml
-/.idea/copyright/profiles_settings.xml
-/.idea/workspace.xml
-/.idea/dictionaries/gpetraud.xml
-/.idea/modules.xml
-/.idea/vcs.xml
-/.DAV
+.DAV/

@@ -61,6 +61,10 @@
     font-size: x-large ;
 }
 
+.sprite-Away {
+    opacity: .5;
+}
+
 /*
     Standard markers (52x52 px)
 */

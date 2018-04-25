@@ -4,7 +4,7 @@ namespace Entities ;
 /**
  * @Entity  @Table(name="legions")
  **/
-class Legion
+class Legion extends TraceableEntity
 {
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
@@ -19,31 +19,51 @@ class Legion
     protected $veteran = FALSE ;
 
     // A Legion can be loyal to one Senator
-    /** @ManyToOne(targetEntity="Senator", inversedBy="loyalLegions") @JoinColumn(name="loyalTo_id", referencedColumnName="internalId" , nullable=true) **/
+    /** @ManyToOne(targetEntity="Senator", inversedBy="loyalLegions") @JoinColumn(name="loyalTo_id", referencedColumnName="id" , nullable=true) **/
     private $loyalTo ;
 
-    // A Legion can be on a non-Card named location ("Rome" , "Pool" , "Released")
+    // A Legion can be in ("Rome" , "Pool" , "Released" , "Card")
     /** @Column(type="string") @var string */
-    private $otherLocation ='Pool';
+    private $location ='Pool';
 
     // A Legion can be located on a Card (Senator, Province, Conflict ?)
-    /** @ManyToOne(targetEntity="Card", inversedBy="withLegions") @JoinColumn(name="locatedOn_id", referencedColumnName="internalId" , nullable=true) **/
+    /** @ManyToOne(targetEntity="Card", inversedBy="withLegions") @JoinColumn(name="locatedOn_id", referencedColumnName="id" , nullable=true) **/
     private $cardLocation ;
 
     public function setGame($game) { $this->game = $game; }
     public function setName($name) { $this->name = $name; }
     public function setVeteran($veteran) { $this->veteran = $veteran; }
     public function setLoyalTo($loyalTo) { $this->loyalTo = $loyalTo; }
-    public function setOtherLocation($otherLocation) { $this->otherLocation = $otherLocation; }
-    public function setCardLocation($cardLocation) { $this->cardLocation = $cardLocation; }
+    /**
+     * Set the location of the Legion. If a Card is sent, sets it to 'Card' and sets the otherLocation to the Card that was sent
+     * @param string|\Entities\Card $location
+     */
+    public function setLocation($location) {
+        if (is_subclass_of($location, "Entities\\Card"))
+        {
+            $this->location='Card' ;
+            $this->cardLocation = $location ;
+        }
+        else
+        {
+            $this->location = $location ;
+            $this->cardLocation = NULL ;
+        }
+    }
 
     public function getId() { return $this->id; }
     public function getGame() { return $this->game; }
     public function getName() { return $this->name; }
     public function getVeteran() { return $this->veteran; }
     public function getLoyalTo() { return $this->loyalTo; }
-    public function getOtherLocation() { return $this->otherLocation; }
-    public function getCardLocation() { return $this->cardLocation; }
+
+    public function getLocation() {
+        if ($this->location=='Card')
+        {
+            return $this->cardLocation ;
+        }
+        return $this->location; 
+    }
 
     public function __construct($game , $num) 
     {
@@ -51,8 +71,7 @@ class Legion
         $this->setName(numberToRoman($num)) ;
         $this->setVeteran(FALSE) ;
         $this->setLoyalTo(NULL) ;
-        $this->setOtherLocation('Pool') ;
-        $this->setCardLocation(NULL) ;
+        $this->setLocation('Pool') ;
     }
     
     /**
@@ -89,22 +108,22 @@ class Legion
     
     public function canBeRecruited()
     {
-        return ($this->getOtherLocation() == 'Pool') ;
+        return ($this->getLocation() == 'Pool') ;
     }
 
     public function canBeDisbanded()
     {
-        return ($this->getOtherLocation()== 'Rome' || $this->getOtherLocation() == 'Released') ;
+        return ($this->getLocation()== 'Rome' || $this->getLocation() == 'Released') ;
     }
     
     public function isRegularInRome()
     {
-        return ($this->getOtherLocation()== 'Rome') ;
+        return ($this->getLocation()== 'Rome') ;
     }
     
     public function isAway()
     {
-        return (!$this->getOtherLocation()== 'Rome' && !$this->getOtherLocation()== 'Pool') ;
+        return ($this->getLocation()== 'Card') ;
     }
     
     /**
@@ -143,29 +162,19 @@ class Legion
      */
     public function getCardLocationCardId()
     {
-        $card = $this->getCardLocation() ;
-        if (is_null($card))
-        {
-            return NULL ;
-        }
-        else
-        {
-            return ($card === '' ? 0 : $card->getId()) ;
-        }
+        return (($this->location=='Card') ? $this->getLocation()->getCardId() : 0) ;
     }
     
     public function recruit()
     {
-        $this->setOtherLocation('Rome') ;
-        $this->setCardLocation(NULL) ;
+        $this->setLocation('Rome') ;
         $this->setVeteran(FALSE) ;
         $this->setLoyalTo(NULL) ;
     }
 
     public function disband()
     {
-        $this->setOtherLocation(NULL) ;
-        $this->setCardLocation(NULL) ;
+        $this->setLocation('Pool') ;
         $this->setVeteran(FALSE) ;
         $this->setLoyalTo(NULL) ;
     }
@@ -177,10 +186,13 @@ class Legion
      */
     public function romeMaintenance()
     {
-        if ($this->getOtherLocation()=='Pool') { return FALSE ; } 
-        if ($this->getOtherLocation()=='Rome') { return TRUE ; } 
-        if (!is_null($this->getCardLocation()) && $this->getCardLocation()->getPreciseType() == 'Senator' && !$this->getCardLocation()->getRebel()) { return TRUE; } 
-        if (!is_null($this->getCardLocation()) && $this->getCardLocation()->getPreciseType() == 'Province' ) { return TRUE; } 
+        if ($this->getLocation()=='Pool') { return FALSE ; } 
+        if ($this->getLocation()=='Rome') { return TRUE ; } 
+        if ($this->location=='Card')
+        {
+            if (!is_null($this->cardLocation) && $this->cardLocation->getPreciseType() == 'Senator' && !$this->cardLocation->getRebel()) { return TRUE; } 
+            if (!is_null($this->cardLocation) && $this->cardLocation->getPreciseType() == 'Province' ) { return TRUE; } 
+        }
         return FALSE;
     }
     

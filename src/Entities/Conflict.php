@@ -54,6 +54,9 @@ class Conflict extends Card
     /** @Column(type="integer") @var int */
     protected $spoils ;
  
+    /** @Column(type="boolean", nullable=true) @var int */
+    protected $fleetDefeated ;
+    
     /**
      * ----------------------------------------------------
      * Getters & Setters
@@ -74,7 +77,8 @@ class Conflict extends Card
     public function setDisaster ($disaster) { $this->disaster = $disaster ; }
     public function setStandoff ($standoff) { $this->standoff = $standoff ; }
     public function setSpoils ($spoils) { $this->spoils = $spoils ; }
-    
+    public function setFleetDefeated($fleetDefeated) { $this->fleetDefeated = $fleetDefeated;}
+     
     public function getMatches() { return $this->matches ; }
     public function getNbOfMatch() { return $this->nbOfMatch ; }
     public function getDescription() { return $this->description ; }
@@ -89,6 +93,7 @@ class Conflict extends Card
     public function getDisaster() { return $this->disaster ; }
     public function getStandoff() { return $this->standoff ; }
     public function getSpoils() { return $this->spoils ; }
+    public function getFleetDefeated() { return $this->fleetDefeated; }
     
     /**
      * ----------------------------------------------------
@@ -114,14 +119,15 @@ class Conflict extends Card
             $this->setDisaster ( $data[14] ) ;
             $this->setStandoff ( $data[15] ) ;
             $this->setSpoils ( $data[16] ) ;
+            $this->setFleetDefeated(($this->getFleet()>0) ? FALSE : NULL) ;
         }
         else
         {
-            parent::__construct((int)$data['id'], $data['name'] , 'Conflict' ) ;
+            parent::__construct((int)$data['cardId'], $data['name'] , 'Conflict' ) ;
             foreach ($data as $property=>$value)
             {
                 $setter = 'set'.ucfirst($property);
-                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                if (method_exists($this, $setter) && $property!='cardId' && $property!='name')
                 {
                     $this->$setter($value) ;
                 }

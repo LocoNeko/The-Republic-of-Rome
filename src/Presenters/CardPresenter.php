@@ -27,7 +27,7 @@ class CardPresenter
     {
         $this->user_id = $user_id ;
         $this->preciseType = $card->getPreciseType() ;
-        $this->id = $card->getId() ;
+        $this->id = $card->getCardId() ;
         $this->location = $card->getLocation() ;
         /*
          * What we need to display the card :
@@ -43,12 +43,12 @@ class CardPresenter
          * All cards have :
          * - Attribute card_id (and the corresponding class to display it)
          */
-        $this->addAttribute('card_id', $card->getId()) ; 
+        $this->addAttribute('card_id', $card->getCardId()) ; 
         $this->addAttribute('name', $card->getName()) ; 
         /* Padded text : CardID */
         $this->elements[] = array (
             'classes' => array('sprite-position-card-id') ,
-            'text' => sprintf("%'.03d", $card->getId())
+            'text' => sprintf("%'.03d", $card->getCardId())
         ) ;
 
         
@@ -58,12 +58,12 @@ class CardPresenter
         
         if ($card->getIsSenatorOrStatesman())
         {
-            /** @var \Entities\Senator $card */
+            /* @var $card \Entities\Senator  */
             $this->classes[] = 'sprite-Senator' ;
             /**
              * Add attributes to the card :
              * - name , SenatorID
-             * - optionally : office
+             * - optionally : office , lighter colour if away from Rome
              */
             $this->addAttribute('name', $card->getName()) ;
             $this->addAttribute('senatorID', $card->getSenatorID()) ;
@@ -71,6 +71,11 @@ class CardPresenter
             {
                 $this->addAttribute('office', $card->getOffice()) ;
             }
+            if ($card->getCommanderIn()!=NULL)
+            {
+                $this->classes[] = 'sprite-Away' ;
+            }
+
             $this->elements[] = array (
                 'classes' => array(
                     'sprite-position-name' ,

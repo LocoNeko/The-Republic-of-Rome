@@ -5,18 +5,15 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @Entity @Table(name="cards")
  * @InheritanceType("JOINED")
- * @DiscriminatorColumn(name="type", type="string")
- * @DiscriminatorMap({ "Concession" = "Concession" , "Conflict" = "Conflict" , "Senator" = "Senator" , "Leader" = "Leader" , "FactionCard" = "FactionCard" , "EraEnds" = "EraEnds" , "Province" = "Province" })
+ * @DiscriminatorColumn(name="entityClass", type="string")
+ * @DiscriminatorMap({ "Concession" = "Concession" , "Conflict" = "Conflict" , "Senator" = "Senator" , "Leader" = "Leader" , "FactionCard" = "FactionCard" , "EraEnds" = "EraEnds" , "Province" = "Province" , "Card" })
  */
-abstract class Card
+abstract class Card extends TraceableEntity
 {
     public static $VALID_TYPES = array('Concession' , 'Conflict' , 'Senator' , 'Leader' , 'FactionCard' , 'EraEnds' , 'Province') ;
     
-    /** @Id @Column(type="integer") @GeneratedValue @var int */
-    protected $internalId ;
-
     /** @Column(type="integer") @var int */
-    protected $id ;
+    protected $cardId ;
     
     // One Deck has many cards
     /** @ManyToOne(targetEntity="Deck", inversedBy="cards", cascade={"persist"}) **/
@@ -29,7 +26,7 @@ abstract class Card
     protected $name ;
 
     /** @Column(type="integer") @var int */
-    protected $position ;
+    protected $position = 0 ;
     
     // A Card can have a deck (of controlled cards)
     /** @OneToOne(targetEntity="Deck", inversedBy="controlled_by" , cascade={"persist"}) **/
@@ -58,19 +55,60 @@ abstract class Card
      * ----------------------------------------------------
      */
     
-    public function setId($id) { $this->id = (int)$id ; }
-    public function setName($name) { $this->name = (string)$name ; }
-    public function setDeck($deck) { $this->deck = $deck ; }
-    public function setPosition($position) { $this->position = $position ; }
-    public function setPreciseType($preciseType) { $this->preciseType = $preciseType ; }
+    public function setDeck($deck)
+    {
+        if ($deck!= $this->deck) 
+        {
+            $this->onPropertyChanged('deck', $this->deck, $deck);
+            $this->deck = $deck ;
+        }
+    }
+    
+    public function setPosition($position) 
+    {
+        if ($position!= $this->position) 
+        {
+            $this->onPropertyChanged('position', $this->position, $position);
+            $this->position = $position ;
+        }
+    }
 
-    public function getId() { return $this->id ; }
+    public function getCardId() { return $this->cardId ; }
     public function getName() { return $this->name ; }
     public function getDeck() { return $this->deck ; }
     public function getPosition() { return $this->position ; }
     public function getPreciseType() { return $this->preciseType ; }
     public function getWithLegions() { return $this->withLegions; }
     public function getWithFleets() { return $this->withFleets; }
+
+    /**
+     * onPropertyChanged must ultimately call game->onChange
+     * Cards don't belong to a game, they belong to a deck
+     * @param type $propertyName
+     * @param type $currentState
+     * @param type $newState
+     * @throws \Exception
+     */
+    public function onPropertyChanged($propertyName, $currentState , $newState)
+    {
+        try {
+            /** 
+             * Not all decks are directly linked to a game. In order to use game->onChange, I must first find the game this deck ultimately belongs to
+             */
+            $deck  =$this->getDeck() ;
+            if ($deck)
+            {
+                $game = $deck->findGame() ;
+                // Impossible to track changes of gameless Cards
+                if ($game)
+                {
+                    $game->onChange($this, $propertyName , $currentState, $newState) ;
+                }
+            }
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
 
     // Only create the cards_controlled deck when it becomes necessary
     /**
@@ -87,11 +125,11 @@ abstract class Card
         return $this->cards_controlled ;
     }
     
-    public function __construct($id , $name , $preciseType)
+    public function __construct($cardId , $name , $preciseType)
     {
-        $this->setId($id) ;
-        $this->setName($name) ;
-        $this->setPreciseType($preciseType) ;
+        $this->cardId = $cardId ;
+        $this->preciseType = $preciseType ;
+        $this->name = $name ;
         $this->withLegions = new ArrayCollection() ;
         $this->withFleets = new ArrayCollection() ;
         $this->battlefieldFor = new ArrayCollection() ;
@@ -141,8 +179,8 @@ abstract class Card
         return $data ;
     }
 
-    /* 
-     * TO DO 
+    /** 
+     * @todo : loadData() function
      * The saveData() functions of each child class of Card should be moved here.
      * A foreach() should go through every property (using get_object_vars()) and save them in the form $data[$propertyName] = $propertyValue
      * All properties that are an array (cards_controlled , withLegions , withFleets) should call the saveData() of the releveant target entity
@@ -161,7 +199,7 @@ abstract class Card
                     if ($this->$getter() != $value)
                     {
                         $setter = 'set'.ucfirst($key);
-                        // TO DO  : Uncomment once happy
+                        /** @todo Uncomment once happy */
                         // $this->.$setter($value) ;
                         error_log('LOAD - $card->'.$setter.' ('.$value.')') ;
                     }

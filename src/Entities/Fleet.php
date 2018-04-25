@@ -4,7 +4,7 @@ namespace Entities ;
 /**
  * @Entity  @Table(name="fleets")
  **/
-class Fleet
+class Fleet extends TraceableEntity
 {
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
@@ -20,7 +20,7 @@ class Fleet
     private $location ='Pool';
 
     // A Fleet can be located on a Card (Senator, Conflict ?) when its location is equal to 'Card'
-    /** @ManyToOne(targetEntity="Card", inversedBy="withFleets") @JoinColumn(name="locatedOn_id", referencedColumnName="internalId" , nullable=true) **/
+    /** @ManyToOne(targetEntity="Card", inversedBy="withFleets") @JoinColumn(name="locatedOn_id", referencedColumnName="id" , nullable=true) **/
     private $cardLocation ;
 
     public function setGame($game) { $this->game = $game; }

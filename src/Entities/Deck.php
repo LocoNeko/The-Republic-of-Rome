@@ -1,12 +1,11 @@
 <?php
 namespace Entities ;
 use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 
 /**
  * @Entity @Table(name="decks")
  **/
-class Deck
+class Deck extends TraceableEntity
 {
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id ;
@@ -41,11 +40,44 @@ class Deck
      */
 
     private function setCards($cards) { $this->cards = $cards; }
-    public function setName($name) { $this->name = $name ; }
+
+    public function setName($name) 
+    {
+        if ($name!= $this->name) 
+        {
+            $this->onPropertyChanged('name', $this->name, $name);
+            $this->name = $name ; 
+        }
+    }
+
     public function setGame($game) { $this->game = $game ; }
-    public function setControlled_by($card) { $this->controlled_by = $card ; }
-    public function setInParty($inParty) { $this->inParty = $inParty; }
-    public function setInHand($inHand) { $this->inHand = $inHand; }
+
+    public function setControlled_by($card) 
+    {
+        if ($card!= $this->controlled_by) 
+        {
+            $this->onPropertyChanged('controlled_by', $this->controlled_by, $card);
+            $this->controlled_by = $card ; 
+        }
+    }
+
+    public function setInParty($inParty) 
+    {
+        if ($inParty!= $this->inParty) 
+        {
+            $this->onPropertyChanged('inParty', $this->inParty, $inParty);
+            $this->inParty = $inParty ; 
+        }
+    }
+
+    public function setInHand($inHand) 
+    {
+        if ($inHand!= $this->inHand) 
+        {
+            $this->onPropertyChanged('inHand', $this->inHand, $inHand);
+            $this->inHand = $inHand ; 
+        }
+    }
  
     /** @return \Entities\Card[] */
     public function getCards()
@@ -54,6 +86,7 @@ class Deck
         $iterator->uasort(function ($a, $b) {
             return ($a->getPosition() < $b->getPosition()) ? -1 : 1;
         });
+        /** ArrayCollection was to tough to manipulate to guaranty the order of cards in a deck, so I used 'position' in the card object */
         $this->setCards(new ArrayCollection(iterator_to_array($iterator))) ;
         return $this->cards;
     }
@@ -65,6 +98,55 @@ class Deck
     public function getInParty() { return $this->inParty; }
     public function getInHand() { return $this->inHand; }
  
+    public function onPropertyChanged($propertyName, $currentState , $newState)
+    {
+        try {
+            /** 
+             * Not all decks are directly linked to a game. In order to use game->onChange, I must first find the game this deck ultimately belongs to
+             */
+            $game = $this->findGame() ;
+            // Impossible to track changes of gameless Decks
+            if ($game)
+            {
+                $game->onChange($this, $propertyName , $currentState, $newState) ;
+            }
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+    
+    /**
+     * Returns the game the deck ultimately belongs to :
+     * Directly, from a party, from a party's hand, from a card's controlled cards
+     * @return \Entities\Game
+     */
+    public function findGame()
+    {
+        // This Deck has a game defined : return it
+        if ($this->game)
+        {
+            return $this->game ;
+        }
+        // This Deck has a inParty defined : return the game of that party
+        if ($this->inParty)
+        {
+            return $this->inParty->getGame() ;
+        }
+        // This Deck has a inHand defined : return the game of that party
+        if ($this->inHand)
+        {
+            return $this->inHand->getGame() ;
+        }
+        // Otherwise, the Deck is controlled by a card, find that card, find the Deck of cards it controls, find the game of that Deck
+        $card = $this->getControlled_by() ;
+        // We do have cardless decks on occasion (when on-the-fly controlled cards are not created yet
+        if ($card)
+        {
+            return $card->getCardsControlled()->findGame() ;
+        }
+        return FALSE ;
+    }
+
     public function __construct($name)
     {
         $this->setName($name) ;
@@ -150,7 +232,7 @@ class Deck
                     if ($this->$getter() != $value)
                     {
                         $setter = 'set'.ucfirst($key);
-                        // TO DO  : Uncomment once happy
+                        /** @todo Uncomment once happy */
                         // $this->$setter($value) ;
                         error_log('LOAD - $deck->'.$setter.' ('.$value.')') ;
                     }

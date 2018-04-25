@@ -35,6 +35,10 @@ class Game
     /** @Column(type="string") @var string */
     protected $subPhase = 'PickLeaders';
     
+    // A 'tick' is a block of changes that can be rolled back
+    /** @Column(type="integer") @var int */
+    protected $tick = 0 ;
+    
     /** @Column(type="boolean") @var int */
     protected $censorIsDone = FALSE ;
     
@@ -96,6 +100,10 @@ class Game
     /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist"} ) **/
     private $messages ;
     
+    // A Game has many trace
+    /** @OneToMany(targetEntity="Trace", mappedBy="game", cascade={"persist"} ) **/
+    private $traces ;
+
     /** @Column(type="datetime")  */
     private $created;
     
@@ -115,7 +123,7 @@ class Game
     /** @Column(type="integer") @var int */
     protected $initiative = 0 ;
 
-    /** @OneToOne(targetEntity="Senator") @JoinColumn(name="persuasionTarget_id", referencedColumnName="internalId" , nullable=true) **/
+    /** @OneToOne(targetEntity="Senator") @JoinColumn(name="persuasionTarget_id", referencedColumnName="id" , nullable=true) **/
     private $persuasionTarget ;
 
     /**
@@ -185,6 +193,7 @@ class Game
     {
         $this->subPhase = $subPhase ;
         $this->log(_('Sub Phase : %1$s.') , 'alert' , array($subPhase) ) ;
+        $this->nextTick();
     }
 
     public function updatePopulationTable($key , $value)
@@ -205,6 +214,7 @@ class Game
         $this->proposals = new ArrayCollection();
         $this->assassination = new ArrayCollection();
         $this->messages = new ArrayCollection();
+        $this->traces = new ArrayCollection();
         foreach (self::$VALID_DECKS as $deckName)
         {
             $deck = new \Entities\Deck($deckName) ;
@@ -223,6 +233,7 @@ class Game
     public function getTurn() { return $this->turn ; }
     public function getPhase() { return $this->phase ; }
     public function getSubPhase() { return $this->subPhase ; }
+    public function getTick() { return $this->tick; }
     public function getInitiative() { return $this->initiative ; }
     public function getCensorIsDone() { return $this->censorIsDone ; }
     public function getSenateAdjourned() { return $this->senateAdjourned ; }
@@ -238,6 +249,7 @@ class Game
     public function getProposals() { return $this->proposals; }
     public function getAssassination() { return $this->assassination; }
     public function getMessages() { return $this->messages; }
+    public function getTraces() { return $this->traces; }
     public function getTimezone() { return $this->timezone ; }
     public function getCurrentBidder() { return $this->currentBidder; }
     /** @return \Entities\Senator | null */
@@ -252,6 +264,42 @@ class Game
         if ($this->timezone==NULL) { $this->timezone = 'UTC' ; }
         if (!$this->localised) { $this->created->setTimeZone(new \DateTimeZone($this->timezone)); }
         return $this->created;
+    }
+    
+
+    /**
+     * Creates a trace for the change of a property in a proposal
+     * @param \Entities\TraceableEntity $entity
+     * @param string $propertyName
+     * @param string $currentState serialised
+     * @param string $newState serialised
+     * @throws \Exception
+     */
+    public function onChange($entity , $propertyName, $currentState , $newState)
+    {
+        try {
+            $propertyType = gettype($newState);
+            // using getRealClass otherwise I sometimes get Proxies
+            /** @todo Check this always returns a doctrine entity, as normal classes might not like getRealClass */
+            $propertyClass = (($propertyType=='object') ? \Doctrine\Common\Util\ClassUtils::getRealClass(get_class($newState)) : '');
+            if ($propertyType=='object')
+            {
+                if ( ($currentState!==NULL) && (method_exists($currentState, 'getId')) )
+                {
+                    $currentState = $currentState->getId() ;
+                }
+                $newState = $newState->getId() ;
+            }
+            $trace = new \Entities\Trace($this , $entity , $propertyName , $propertyClass , serialize($currentState) , serialize($newState)) ;
+            $this->getTraces()->add($trace) ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+    
+    public function nextTick()
+    {
+        $this->tick++ ;
     }
     
     public function saveData()
@@ -306,7 +354,7 @@ class Game
                     if ($this->$getter() != $value)
                     {
                         $setter = 'set'.ucfirst($key);
-                        // TO DO  : Uncomment once happy
+                        /** @todo Uncomment once happy */
                         // $this->.$setter($value) ;
                         error_log('LOAD - $this->'.$setter.' ('.$value.')') ;
                     }
@@ -387,7 +435,7 @@ class Game
     public function changeTreasury($amount)
     {
         $this->treasury+=(int)$amount ;
-        // TO DO : Check game over
+        /** @todo Check game over */
     }
 
     /**
@@ -717,7 +765,7 @@ class Game
     
     /**
      * 
-     * @param boolean $presiding
+     * @param boolean $presiding Pass TRUE if we are only looking at the Presiding HRAO (which means we skip Senators who have already stepped down)
      * @return \Entities\Senator
      */
     function getHRAO($presiding=FALSE)
@@ -738,7 +786,7 @@ class Game
         if (count($rankedSenators)>0) 
         {
             // If we are looking for the presiding magistrate, The Censor must be returned during the Senate phase if the sub phase is Prosecutions
-            // TO DO : what if the all thing was interupted by a Special Assassin Prosecution ?
+            /** @todo : GetHRAO : what if the all thing was interrupted by a Special Assassin Prosecution ? */
             if ( $presiding && $this->getPhase()=='Senate' && $this->getSubPhase()=='Prosecutions' && isset($rankedSenators[3]) ) 
             {
                 return $rankedSenators[3] ;
@@ -813,7 +861,7 @@ class Game
             throw new \Exception(sprintf(_('ERROR - %1$s is not in [['.$party->getUser_id().']]\'s hand') , array($statesman->getName()))) ;
         }
         // Put the Statesman in the party
-        $party->getHand()->getFirstCardByProperty('id', $statesman->getId() , $party->getSenators()) ;
+        $party->getHand()->getFirstCardByProperty('cardId', $statesman->getCardId() , $party->getSenators()) ;
 
         // Handle the family
         $familyMessage='' ;
@@ -833,7 +881,7 @@ class Game
             // The family was found in the player's party - Play the Statesman and make him control the Family
             if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()==$party->getUser_id())
             {
-                $familyLocation['value']->getSenators()->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
+                $familyLocation['value']->getSenators()->getFirstCardByProperty('cardId', $family->getCardId() , $statesman->getCardsControlled()) ;
                 // Adjust Statesman's value that are below the Family's
                 $statesman->setPriorConsul($family->getPriorConsul()) ;
                 if ($family->getINF() > $statesman->getINF()) { $statesman->setINF($family->getINF()) ; }
@@ -850,7 +898,7 @@ class Game
             }
             elseif (($familyLocation['type']=='game') && ($familyLocation['name']=='forum') ) 
             {
-                $this->getDeck('forum')->getFirstCardByProperty('id', $family->getId() , $statesman->getCardsControlled()) ;
+                $this->getDeck('forum')->getFirstCardByProperty('cardId', $family->getCardId() , $statesman->getCardsControlled()) ;
                 $familyMessage=_(' {You take,He takes} the Family from the forum and {put,puts} it under the Statesman.');
             }
             // Move any card controlled by the Family on the Statesman
@@ -953,10 +1001,10 @@ class Game
         $result = 0 ;
         if ($province->getPreciseType() == 'Province')
         {
-            $id = $province->getId();
+            $id = $province->getCardId();
             foreach ($this->getLegions() as $legion)
             {
-                if ($legion->getCardLocation()!==NULL && $legion->getCardLocation()->getId() == $id)
+                if ($legion->isAway() && $legion->getLocation()->getId() == $id)
                 {
                     $result++;
                 }
@@ -1228,14 +1276,14 @@ class Game
                     // Concession -> Curia
                     if ($card->getPreciseType()=='Concession')
                     {
-                        $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                        $deadSenator->getCardsControlled()->getFirstCardByProperty('cardId' , $card->getCardId() , $this->getDeck('curia')) ;
                         $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
                     }
                     
                     // Province -> Forum
                     elseif ($card->getPreciseType()=='Province')
                     {
-                        $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('forum')) ;
+                        $deadSenator->getCardsControlled()->getFirstCardByProperty('cardId' , $card->getCardId() , $this->getDeck('forum')) ;
                         $message.=sprintf(_('%s goes to the forum. ') , $card->getName());
                     }
                     
@@ -1248,14 +1296,14 @@ class Game
                         {
                             // Now that the Satesman is dead, the family is the party leader
                             $party->setLeader($card) ;
-                            $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $party->getSenators()) ;
+                            $deadSenator->getCardsControlled()->getFirstCardByProperty('cardId' , $card->getCardId() , $party->getSenators()) ;
                             $message.=sprintf(_('%s stays in the party and is now leader. ') , $card->getName());
                         }
                         
                         // Was not leader -> Curia
                         else
                         {
-                            $deadSenator->getCardsControlled()->getFirstCardByProperty('id' , $card->getId() , $this->getDeck('curia')) ;
+                            $deadSenator->getCardsControlled()->getFirstCardByProperty('cardId' , $card->getCardId() , $this->getDeck('curia')) ;
                             $message.=sprintf(_('%s goes to the curia. ') , $card->getName());
                         }
                     }
@@ -1444,7 +1492,7 @@ class Game
             $this->log($killMessage[0] , $killMessage[1]);
 
             // Note : The war is now in the forum, because of the killSenator function, hence the $this->getDeck('Forum')
-            $this->getDeck('Forum')->getFirstCardByProperty('id', $province->getId() , $this->getDeck('activeWars'));
+            $this->getDeck('Forum')->getFirstCardByProperty('cardId', $province->getCardId() , $this->getDeck('activeWars'));
             $message.=sprintf(_('%s is killed %s and %s becomes an active war') , $senator->getName() , ($garrisons>0 ? _(' with all ').$garrisons._(' garrisons, ') : '') , $province->getName() ) ;
             $this->log($message , 'alert') ;
         }
@@ -1458,7 +1506,7 @@ class Game
     {
         foreach($this->getLegions() as $legion)
         {
-            if ($legion->getOtherLocation() == 'Released')
+            if ($legion->getLocation() == 'Released')
             {
                 return TRUE ;
             }
@@ -1678,13 +1726,13 @@ class Game
                         if ($ruinresult->getLocation()['name']=='forum')
                         {
                             $this->log(_('Rolled a %1$d. The %2$s concession was in the forum. It is destroyed and moved to the curia.'), 'log' , array($roll , $ruin)) ;
-                            $this->getDeck('forum')->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
+                            $this->getDeck('forum')->getFirstCardByProperty('cardId', $ruinresult->getCardId() , $this->getDeck('curia')) ;
                         }
                         // Card was on a Senator
                         elseif ($ruinresult->getLocation()['type']=='card' && $ruinresult->getLocation()['value']->getIsSenatorOrStatesman())
                         {
                             $this->log(_('Rolled a %1$d. The %2$s concession was controlled by %3$s. It is destroyed and moved to the curia.') , 'log' , array($roll , $ruin , $ruinresult->getLocation()['name'])) ;
-                            $ruinresult->getLocation()['value']->getCardsControlled()->getFirstCardByProperty('id', $ruinresult->getId() , $this->getDeck('curia')) ;
+                            $ruinresult->getLocation()['value']->getCardsControlled()->getFirstCardByProperty('cardId', $ruinresult->getCardId() , $this->getDeck('curia')) ;
                         }
                         // Card was not in play
                         else
@@ -1757,7 +1805,7 @@ class Game
         // Veteran legion : for each - its allegiance & if it's in Rome or with a commander (X , Location) where X is the allegiance
         foreach($this->getLegions() as $legion)
         {
-            $card = $legion->getCardLocation() ;
+            /* @var $legion \Entities\Legion */
             // regular
             if (!$legion->getVeteran())
             {
@@ -1765,9 +1813,9 @@ class Game
                 $result['regularsCanBeDisbanded'] += ($legion->canBeDisbanded() ? 1 : 0) ;
                 $result['regularsInRome'] += ($legion->isRegularInRome() ? 1 : 0) ;
 
-                if ($card!==NULL)
+                if ($legion->isAway())
                 {
-                    $cardId = $card->getId() ;
+                    $cardId = $legion->getCardLocationCardId() ;
                     if (array_key_exists ( $cardId , $result['regularsOnCards'] ))  { $result['regularsOnCards'][$cardId]++   ; }
                     else                                                            { $result['regularsOnCards'][$cardId] = 1 ; }
                 }
@@ -1778,8 +1826,7 @@ class Game
                 $result['veterans'][$legion->getId()] = array (
                     'name' => $legion->getName() ,
                     'loyalTo' => $legion->getLoyalToSenatorID() ,
-                    'otherLocation' => $legion->getOtherLocation() ,
-                    'cardLocation' => $legion->getCardLocationCardId()
+                    'location' => $legion->getLocation() // Note : This was changed from providing 2 locations (otherLocation & cardLocation), which might break things
                 ) ;
             }
         }
@@ -1828,7 +1875,7 @@ class Game
         foreach ($matchedConflicts as $matchedConflict)
         {
             $location = $matchedConflict->getLocation() ;
-            if ($location['type']==game && ($location['name'] == 'activeWars' || $location['name'] == 'unprosecutedWars'))
+            if ($location['type']=='game' && ($location['name'] == 'activeWars' || $location['name'] == 'unprosecutedWars'))
             {
                 $multiplier++ ;
             }
@@ -1840,7 +1887,10 @@ class Game
             if ($card->getPreciseType()=='Leader')
             {
                 $result['land'] = $result['land'] + $card->getStrength() ;
-                $result['fleet'] = $result['fleet'] + $card->getStrength() ;
+                if ($result['fleet'] > 0)
+                {
+                    $result['fleet'] = $result['fleet'] + $card->getStrength() ;
+                }
             }
         }
         return $result ;
@@ -1884,7 +1934,7 @@ class Game
             $result[] = array (
                 'description' => $province->getName().($recall ? sprintf(_(' (recall of %1$s)') , $province->getDeck()->getControlled_by()->getName()) : '') ,
                 'recall' => $recall ,
-                'cardID' => $province->getId()
+                'cardID' => $province->getCardId()
             ) ;
         }
         return $result ;

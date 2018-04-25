@@ -100,13 +100,13 @@ class MortalityControllerProvider implements ControllerProviderInterface
             $imminentWars = $game->getDeck('imminentWars')->getCards()->toArray() ;
             usort ($imminentWars , function ($a,$b)
             {
-                return ($a->getId() < $b->getId()) ;
+                return ($a->getCardId() < $b->getCardId()) ;
             });
             
             foreach ($imminentWars as $conflict)
             {
                 // Activate the first imminent War
-                $game->getDeck('imminentWars')->getFirstCardByProperty('id' , $conflict->getId() , $game->getDeck('activeWars')) ;
+                $game->getDeck('imminentWars')->getFirstCardByProperty('cardId' , $conflict->getCardId() , $game->getDeck('activeWars')) ;
                 $game->log(_('Imminent conflict %1$s has been activated.') , 'alert' , array($conflict->getName()) );
                     
                 // Remove all other matching wars from $imminentWars

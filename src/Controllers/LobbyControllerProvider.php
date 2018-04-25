@@ -23,13 +23,19 @@ class LobbyControllerProvider implements ControllerProviderInterface
          */
         $controllers->get('/List', function() use ($app)
         {
-            $app['session']->set('game_id', NULL);
-            return $app['twig']->render('Lobby/List.twig', array(
-               'layout_template' => 'layout.twig' ,
-               'list' => $this->getGamesList() ,
-               'savedGamesList' => $this->getSavedGamesList() ,
-               'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
-            ));
+            try 
+            {
+                $app['session']->set('game_id', NULL);
+                return $app['twig']->render('Lobby/List.twig', array(
+                   'layout_template' => 'layout.twig' ,
+                   'list' => $this->getGamesList() ,
+                   'savedGamesList' => $this->getSavedGamesList() ,
+                   'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
+                ));
+            } catch (Exception $ex) {
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
+                return $app->json( '' , 201 );
+            }
         })
         ->bind('ListGames');
 
@@ -38,13 +44,19 @@ class LobbyControllerProvider implements ControllerProviderInterface
          */
         $controllers->get('/Create', function() use ($app)
         {
-            $app['session']->set('game_id', NULL);
-            return $app['twig']->render('Lobby/Create.twig', array(
-               'layout_template' => 'layout.twig' ,
-               'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
-               'scenarios' => \Entities\Game::$VALID_SCENARIOS ,
-               'variants' => \Entities\Game::$VALID_VARIANTS ,
-            ));
+            try 
+            {
+                $app['session']->set('game_id', NULL);
+                return $app['twig']->render('Lobby/Create.twig', array(
+                   'layout_template' => 'layout.twig' ,
+                   'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
+                   'scenarios' => \Entities\Game::$VALID_SCENARIOS ,
+                   'variants' => \Entities\Game::$VALID_VARIANTS ,
+                ));
+            } catch (Exception $ex) {
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
+                return $app->redirect('/');
+            }
         })
         ->bind('CreateGame');
 
@@ -58,22 +70,22 @@ class LobbyControllerProvider implements ControllerProviderInterface
             {
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id , FALSE) ;
+                if ($game->gameStarted())
+                {
+                    return $app->redirect($app['BASE_URL'].'/Setup/'.$game_id) ;
+                }
+                else
+                {
+                    return $app['twig']->render('Lobby/Join.twig', array(
+                       'layout_template' => 'layout.twig' ,
+                       'game' => $game ,
+                    ));
+                }
             }
             catch (Exception $exception)
             {
                 $app['session']->getFlashBag()->add('danger', $exception->getMessage());
                 return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-            }
-            if ($game->gameStarted())
-            {
-                return $app->redirect($app['BASE_URL'].'/Setup/'.$game_id) ;
-            }
-            else
-            {
-                return $app['twig']->render('Lobby/Join.twig', array(
-                   'layout_template' => 'layout.twig' ,
-                   'game' => $game ,
-                ));
             }
         })
         ->bind('JoinGame');
@@ -173,7 +185,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 // If the game was started, save it
                 if ($game->gameStarted())
                 {
-                    $app['saveGame']($game) ;
+                    //$app['saveGame']($game) ;
                 }
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -195,18 +207,24 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/Create/Create', function(Request $request) use ($app)
         {
-            $result= $this->CreateGame($request->request->all()) ;
-            if ( $result['error'] === FALSE)
+            try 
             {
-                $app['session']->set('game_just_created' , TRUE);
-                $app['session']->set('game_id' , $result['gameId']);
-                $app['session']->getFlashBag()->add('success', 'Game created');
-                return $app->json( 'Game created' , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', $result['message']);
-                return $app->json( $result , 201);
+                $result= $this->CreateGame($request->request->all()) ;
+                if ( $result['error'] === FALSE)
+                {
+                    $app['session']->set('game_just_created' , TRUE);
+                    $app['session']->set('game_id' , $result['gameId']);
+                    $app['session']->getFlashBag()->add('success', 'Game created');
+                    return $app->json( 'Game created' , 201);
+                }
+                else
+                {
+                    $app['session']->getFlashBag()->add('danger', $result['message']);
+                    return $app->json( $result , 201);
+                }
+            } catch (Exception $ex) {
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
+                return $app->redirect('/');
             }
         })
         ->bind('verb_Create');
@@ -247,9 +265,13 @@ class LobbyControllerProvider implements ControllerProviderInterface
      */
     public function getGamesList()
     {
-        $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g');
-        $result = $query->getResult() ;
-        return $result ;
+        try {
+            $query = $this->entityManager->createQuery('SELECT g FROM Entities\Game g');
+            $result = $query->getResult() ;
+            return $result ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
     }
 
     public function getSavedGamesList()
@@ -285,7 +307,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         }
         catch (Exception $e)
         {
-            throw new \Exception($e->getMessage()) ;
+            throw new \Exception($e) ;
         }
     }
     
@@ -296,61 +318,67 @@ class LobbyControllerProvider implements ControllerProviderInterface
      */
     private function CreateGame($data)
     {
-        $result = array() ;
-        $result['error'] = FALSE ;
-        $data['gameName'] = strip_tags($data['gameName']) ;
-        $query = $this->entityManager->createQuery('SELECT COUNT(g.id) FROM Entities\Game g WHERE g.name = ?1');
-        $query->setParameter(1, $data['gameName']);
-        if ($query->getSingleScalarResult() > 0)
+        try
         {
-            $result['error'] = TRUE ;
-            $result['message'] = _('ERROR - A game with the same name already exists.') ;
-        }
-        elseif (strlen($data['gameName']) <1 )
-        {
-            $result['error'] = TRUE ;
-            $result['message'] = _('ERROR - Game name too short.') ;
-        }
-        elseif (!in_array($data['scenario'], \Entities\Game::$VALID_SCENARIOS) )
-        {
-            $result['error'] = TRUE ;
-            $result['message'] = sprintf(_('ERROR - %1$s is not a valid Scenario.') , $data['scenario']) ;
-        }
-        elseif (isset($data['variants']))
-        {
-            foreach((array)$data['variants'] as $variant)
-            {
-                if (!in_array($variant , \Entities\Game::$VALID_VARIANTS))
-                {
-                    $result['error'] = TRUE ;
-                    $result['message'] = sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
-                }
-            }
-        } else {
-            $data['variants']=array();
-        }
-        if ($result['error'] === FALSE )
-        {
-            try 
-            {
-                $game = new \Entities\Game();
-                $game->setName($data['gameName']) ;
-                $game->setTreasury(100) ;
-                $game->setUnrest(0) ;
-                $game->setScenario($data['scenario']) ;
-                $game->setVariants($data['variants']) ;
-                $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                $result['gameId'] = $game->getId() ;
-            }
-            catch (Exception $e)
+            $result = array() ;
+            $result['error'] = FALSE ;
+            $data['gameName'] = strip_tags($data['gameName']) ;
+            $query = $this->entityManager->createQuery('SELECT COUNT(g.id) FROM Entities\Game g WHERE g.name = ?1');
+            $query->setParameter(1, $data['gameName']);
+            if ($query->getSingleScalarResult() > 0)
             {
                 $result['error'] = TRUE ;
-                $result['message'] = _('Error') . $e->getMessage() ;
+                $result['message'] = _('ERROR - A game with the same name already exists.') ;
             }
+            elseif (strlen($data['gameName']) <1 )
+            {
+                $result['error'] = TRUE ;
+                $result['message'] = _('ERROR - Game name too short.') ;
+            }
+            elseif (!in_array($data['scenario'], \Entities\Game::$VALID_SCENARIOS) )
+            {
+                $result['error'] = TRUE ;
+                $result['message'] = sprintf(_('ERROR - %1$s is not a valid Scenario.') , $data['scenario']) ;
+            }
+            elseif (isset($data['variants']))
+            {
+                foreach((array)$data['variants'] as $variant)
+                {
+                    if (!in_array($variant , \Entities\Game::$VALID_VARIANTS))
+                    {
+                        $result['error'] = TRUE ;
+                        $result['message'] = sprintf(_('ERROR - %1$s is not a valid Variant.') , $variant) ;
+                    }
+                }
+            } else {
+                $data['variants']=array();
+            }
+            if ($result['error'] === FALSE )
+            {
+                try 
+                {
+                    $game = new \Entities\Game();
+                    $game->setName($data['gameName']) ;
+                    $game->setTreasury(100) ;
+                    $game->setUnrest(0) ;
+                    $game->setScenario($data['scenario']) ;
+                    $game->setVariants($data['variants']) ;
+                    $game->log(_('Game "%1$s" created. Scenario : %2$s') , 'log' , array($data['gameName'] , $data['scenario']) ) ;
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                    $result['gameId'] = $game->getId() ;
+                }
+                catch (Exception $e)
+                {
+                    throw new \Exception($e) ;
+                }
+            }
+            return $result ;
         }
-        return $result ;
+        catch (Exception $ex)
+        {
+            throw new \Exception($ex) ;
+        }
     }
     
     /**
@@ -391,20 +419,25 @@ class LobbyControllerProvider implements ControllerProviderInterface
      * @param \Entities\Game $game
      * @param int $user_id
      * @return boolean
+     * @throws \Exception
      */
     public function setPartyToReady($game , $user_id)
     {
-        foreach($game->getParties() as $party)
-        {
-            if ($party->getUser_id() == $user_id)
+        try {
+            foreach($game->getParties() as $party)
             {
-                $party->setReadyToStart() ;
-                if ($game->gameStarted())
+                if ($party->getUser_id() == $user_id)
                 {
-                    $this->doSetup($game) ;
+                    $party->setReadyToStart() ;
+                    if ($game->gameStarted())
+                    {
+                        $this->doSetup($game) ;
+                    }
+                    return TRUE ;
                 }
-                return TRUE ;
             }
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
         }
         return FALSE ;
     }
@@ -433,9 +466,9 @@ class LobbyControllerProvider implements ControllerProviderInterface
         
         // Handle special cards : The First Punic war & Era ends
         $game->log(_('The First Punic War goes to the "Inactive" Wars deck.') , 'alert' ) ;
-        $earlyRepublicDeck->getFirstCardByProperty('id' , 1 , $game->getDeck('inactiveWars')) ;
+        $earlyRepublicDeck->getFirstCardByProperty('cardId' , 1 , $game->getDeck('inactiveWars')) ;
         $game->log(_('The "Era Ends" card goes to the discard. (MUST FIX)') , 'error' ) ;
-        $earlyRepublicDeck->getFirstCardByProperty('id' , 65 , $game->getDeck('discard')) ;
+        $earlyRepublicDeck->getFirstCardByProperty('cardId' , 65 , $game->getDeck('discard')) ;
         
         // Then create 4 legions in Rome, the rest of the legions and all the fleets are non-existent (Legions and Fleet objects should never be created during a game)
         for($i=1;$i<=25;$i++) 
@@ -444,7 +477,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $game->getLegions()->add($legion) ;
             if ($i<=4) 
             {
-                $legion->setOtherLocation('Rome') ;
+                $legion->setLocation('Rome') ;
             }
             $fleet = new \Entities\Fleet($game,$i) ;
             $game->getFleets()->add($fleet) ;

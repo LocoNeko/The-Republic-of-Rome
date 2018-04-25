@@ -64,12 +64,29 @@ class SenatePhasePresenter
 	        ) ;
         }
 
-        /* @var $currentProposal \Entities\Proposal  */
-        $currentProposal = $game->getProposals()->last() ;
         /**
          * There is a proposal underway
          */
-        if ($currentProposal!==FALSE && $currentProposal->getCurrentStep()!='done')
+        /**
+         * @todo : A proposal can be interrupted in the following cases :
+         *
+         * - Unanimous defeat
+         * - Assassination
+         * - Special assassination prosecution
+         * - Repopulating Rome
+         */
+        /**
+         * Look through all proposals that are not done, this should get the latest one
+         */
+        foreach($game->getProposals() as $proposal)
+        {
+            if ($proposal->getCurrentStep()!='done')
+            {
+                /* @var $currentProposal \Entities\Proposal  */
+                $currentProposal = $proposal ;
+            }
+        }
+        if (isset($currentProposal) && $currentProposal->getCurrentStep()!='done')
         {
             $this->header['description'] .= _(' - Proposal underway');
             $this->header['list'] = array (
@@ -285,7 +302,7 @@ class SenatePhasePresenter
         {
             foreach ($cardsToApplyItTo as $targetCard)
             {
-                if ($targetCard->getId() == $card->id)
+                if ($targetCard->getCardId() == $card->id)
                 {
                     foreach ($toAdd as $value)
                     {
@@ -354,7 +371,7 @@ class SenatePhasePresenter
             ) ;
             $this->interface['proposalType']= 'Dictator' ;
             /*
-             * TO DO : HERE NOW
+             * TO DO
             $this->interface['senators']= array
             (
 		    'description' => _('Senator') ,
@@ -490,7 +507,7 @@ class SenatePhasePresenter
             {
                 foreach ($deck->cards as $card)
                 {
-					// Do not look at cards in the unplayedProvinces, drawDeck, and discard decks
+                    // Do not look at cards in the unplayedProvinces, drawDeck, and discard decks
                     if (!in_array($deck->name , array ('unplayedProvinces' , 'drawDeck' , 'discard')))
                     {
                         if ($card->preciseType == 'Senator')
@@ -575,8 +592,13 @@ class SenatePhasePresenter
             **/
             foreach ($allCards as $card)
             {
-                $cardModel = $game->getFilteredCards(array('cardID' => $card->id))->first();
-                if ($card->preciseType==='Concession')
+                /* @var $cardModel \Entities\Card */
+                $cardModel = $game->getFilteredCards(array('cardId' => $card->cardId))->first();
+                // Add the deck as an attribute to all cards, so it can be used and displayed (for example in a drop down to show where the card is)
+                $card->addAttribute('deck' , $card->location['name']);
+                // Only add the concession if it's not flipped
+                /* @var $cardModel \Entities\Concession */
+                if ($card->preciseType==='Concession' && $cardModel->getFlipped())
                 {
                     $card->addAttribute('OtherBusiness' , 'concession' , TRUE);
                     $availableOtherBusiness = $this->addAvailableOtherBusiness($availableOtherBusiness , 'concession' , _('Assign concessions') ) ;
@@ -584,7 +606,6 @@ class SenatePhasePresenter
                 elseif ($card->preciseType==='Conflict')
                 {
                     $card->addAttribute('OtherBusiness' , 'commander' , TRUE);
-                    $card->addAttribute('deck' , $card->location['name']);
                 }
                 elseif ($card->preciseType==='Province')
                 {
@@ -644,7 +665,7 @@ class SenatePhasePresenter
     /**
      * Content when :
      * - A proposal is underway 
-     * - The surrent step is "decision"
+     * - The current step is "decision"
      * @param \Entities\Game $game
      * @param \Entities\Proposal $proposal
      * @param int $user_id
@@ -666,7 +687,7 @@ class SenatePhasePresenter
             
             for ($i=1 ; $i<=2 ; $i++)
             {
-                $senator[$i] = $game->getFilteredCards(array('id'=>$proposal->getContent()[($i==1 ? 'First Senator' : 'Second Senator' )]))->first() ;
+                $senator[$i] = $game->getFilteredCards(array('cardId'=>$proposal->getContent()[($i==1 ? 'First Senator' : 'Second Senator' )]))->first() ;
                 $party[$i] = $senator[$i]->getLocation()['value'] ;
             }
 
@@ -688,7 +709,7 @@ class SenatePhasePresenter
                 /**
                  * The choice was already made
                  */
-                if ( ($party[$i]->getUser_id()==$user_id) && ($senator[$i]->getId() == $proposal->getDecision()[($i==1 ? 'First Senator' : 'Second Senator' )]) )
+                if ( ($party[$i]->getUser_id()==$user_id) && ($senator[$i]->getCardId() == $proposal->getDecision()[($i==1 ? 'First Senator' : 'Second Senator' )]) )
                 {
                     $this->header['list'][] = _('You have already decided for '.$senator[$i]->getName()) ;
                 }
@@ -704,7 +725,7 @@ class SenatePhasePresenter
                         'description' => $senator[$i]->getName() ,
                         'action' => array (
                             'type' => 'select' ,
-                            'class' => $senator[$i]->getId() ,
+                            'class' => $senator[$i]->getCardId() ,
                             'items' => array (
                                 0 => array ('description' => 'Rome Consul') ,
                                 1 => array ('description' => 'Field Consul')
@@ -768,6 +789,7 @@ class SenatePhasePresenter
                 return TRUE ;
             }
         }
+        
         /**
          * commander - Must agree to go if forces sent are below minimum forces
          */
@@ -777,7 +799,7 @@ class SenatePhasePresenter
             foreach ($proposal->getContent() as $item)
             {
                 $commander = $game->getFilteredCards(array('SenatorID'=>$item['commander']))->first() ;
-                $conflict = $game->getFilteredCards(array('id'=>$item['conflict']))->first() ;
+                $conflict = $game->getFilteredCards(array('cardId'=>$item['conflict']))->first() ;
                 // The commander is in this user's party
                 if ($commander->getLocation()['type']=='party' && $commander->getLocation()['value']->getUser_id() == $user_id)
                 {
@@ -808,6 +830,43 @@ class SenatePhasePresenter
             else
             {
                 $this->header['list'][] = _('Waiting for commanders without adequate forces to decide if they chiken out.') ;
+            }
+        }
+        
+        /**
+         * Unanimous defeat
+         * The HRAO was unanimously defeated and must decide to either step down or lose 1 INF
+         */
+        if ($proposal->getType()=='UnanimousDefeat')
+        {
+            $this->interface['description'] = _('The HRAO must decide how to handle unanimous defeat') ;
+            if ((int)$game->getHRAO(TRUE)->getLocation()['value']->getUser_id() == $user_id)
+            {
+                $this->interface['description'] = _('HRAO unanimous defeat') ;
+                $this->interface['choices'][] = array (
+                    'description' => _('Decision') ,
+                    'action' => array (
+                        'type'  => 'toggle' ,
+                        'name' => 'unanimousDefeatName' ,
+                        'class' => 'toggleUnanimousDefeatDecision' ,
+                        'default' => 'NO' ,
+                        'items' => array(
+                            array('value' => 'YES' , 'description' =>_('STEP DOWN')) ,
+                            array('value' => 'NO'  , 'description' =>_('LOSE 1 INFLUENCE'))
+                        )
+                    )
+                ) ;
+                $this->interface['senateDecision'] = array (
+                    'type' => 'button' ,
+                    'verb' => 'senateDecide' ,
+                    'style'=> 'danger' ,
+                    'text' => _('DONE')
+                ) ;
+
+            }
+            else
+            {
+                $this->header['list'][] = _('Waiting for the HRAO to decide.') ;
             }
         }
     }
@@ -904,7 +963,7 @@ class SenatePhasePresenter
         {
             if ($senator->getFreeTribune() == 1)
             {
-                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'value' =>$senator->getId() , 'description' => _('Free tribune from ').$senator->getName()) ;
+                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'value' =>$senator->getCardId() , 'description' => _('Free tribune from ').$senator->getName()) ;
             }
         }
         return $result ;
@@ -922,7 +981,7 @@ class SenatePhasePresenter
         {
             if ($card->getName()=='TRIBUNE')
             {
-                $result[] = array ('type' => 'tribune' , 'code' => $card->getId() , 'value' =>$card->getId() , 'description' => 'Tribune card') ;
+                $result[] = array ('type' => 'tribune' , 'code' => $card->getCardId() , 'value' =>$card->getCardId() , 'description' => 'Tribune card') ;
             }
         }
         return $result ;
@@ -1124,7 +1183,7 @@ class SenatePhasePresenter
                 {
                     $result[] = array (
                         'prosecutionType' => 'Minor' ,
-                        'prosecutionReason' => $card->getId() ,
+                        'prosecutionReason' => $card->getCardId() ,
                         'description' => sprintf(_('Minor prosecution of %1$s for profiting from %2$s') , $senator->getFullName() , $card->getName())
                     ) ;
                 }

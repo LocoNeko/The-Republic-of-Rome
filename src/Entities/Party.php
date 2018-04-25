@@ -5,7 +5,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @Entity @Table(name="parties")
  **/
-class Party
+class Party extends TraceableEntity
 {
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $id;
@@ -67,41 +67,119 @@ class Party
 
     /**
      * ----------------------------------------------------
-     * Getters & Setters
+     * Setters
      * ----------------------------------------------------
+     * Most setters call $this->onPropertyChanged to create a trace
      */
    
+    /**
+     * @param \Entities\Game $game
+     */
     public function setGame($game) { $this->game = $game ; }
-    public function setName($name) { $this->name = $name ; }
-    public function setUser_id($user_id) { $this->user_id = $user_id ; }
-    public function setUserName($userName) { $this->userName = $userName; }
-    public function setReadyToStart() { $this->readyToStart = TRUE ; }
+
+    public function setReadyToStart() 
+    {
+        if (!$this->readyToStart) 
+        {
+            $this->onPropertyChanged('readyToStart', $this->readyToStart, TRUE);
+            $this->readyToStart = TRUE ; 
+        }
+    }
+    
     public function setLastUpdate($lastUpdate) { $this->lastUpdate = $lastUpdate ; }
-    public function setAssassinationAttempt($assassinationAttempt) { $this->assassinationAttempt = $assassinationAttempt; }
-    public function setAssassinationTarget($assassinationTarget) {  $this->assassinationTarget = $assassinationTarget; }
+    
+    public function setAssassinationAttempt($assassinationAttempt) 
+    {
+        if ($assassinationAttempt!= $this->assassinationAttempt) 
+        {
+            $this->onPropertyChanged('assassinationAttempt', $this->assassinationAttempt, $assassinationAttempt);
+            $this->assassinationAttempt = $assassinationAttempt ; 
+        }
+    }
+    
+    public function setAssassinationTarget($assassinationTarget) 
+    {
+        if ($assassinationTarget!= $this->assassinationTarget) 
+        {
+            $this->onPropertyChanged('assassinationTarget', $this->assassinationTarget, $assassinationTarget);
+            $this->assassinationTarget = $assassinationTarget ; 
+        }
+    }
+    
     public function setLeader($leader)
     {
         if ($this->getLeader()!=NULL)
         {
             $this->getLeader()->setLeaderOf(NULL) ;
         }
+        $this->onPropertyChanged('leader', $this->leader, $leader);
         $this->leader = $leader;
         $leader->setLeaderOf($this) ;
     }
-    public function setTreasury($treasury) { $this->treasury = $treasury; }
-    public function setIsDone($isDone) { $this->isDone = $isDone; }
-    public function setInitiativeWon($initiativeWon) { $this->initiativeWon = $initiativeWon; }
-    public function setBid($bid) { $this->bid = $bid; }
-    public function setBidWith($bidWith) {
-        $this->bidWith = $bidWith ;
-        foreach($this->getSenators()->getCards() as $senator) 
+    
+    public function setTreasury($treasury) 
+    {
+        if ($treasury!= $this->treasury) 
         {
-            $senator->setBiddingFor(NULL) ;
+            $this->onPropertyChanged('treasury', $this->treasury, $treasury);
+            $this->treasury = $treasury ; 
         }
-        $bidWith->setBiddingFor($this) ;
     }
 
-    public function getId() { return $this->id; }
+    public function setIsDone($isDone) 
+    {
+        if ($isDone!= $this->isDone) 
+        {
+            $this->onPropertyChanged('isDone', $this->isDone, $isDone);
+            $this->isDone = $isDone ; 
+        }
+    }
+
+    public function setInitiativeWon($initiativeWon) 
+    {
+        if ($initiativeWon!= $this->initiativeWon) 
+        {
+            $this->onPropertyChanged('initiativeWon', $this->initiativeWon, $initiativeWon);
+            $this->initiativeWon = $initiativeWon ; 
+        }
+    }
+
+    public function setBid($bid) 
+    {
+        if ($bid!= $this->bid) 
+        {
+            $this->onPropertyChanged('bid', $this->bid, $bid);
+            $this->bid = $bid ; 
+        }
+    }
+
+    public function setBidWith($bidWith) {
+        if ($bidWith!= $this->bidWith) 
+        {
+            $this->onPropertyChanged('bidWith', $this->bidWith, $bidWith);
+            $this->bidWith = $bidWith ;
+            foreach($this->getSenators()->getCards() as $senator) 
+            {
+                $senator->setBiddingFor(NULL) ;
+            }
+            $bidWith->setBiddingFor($this) ;
+        }
+    }
+
+    public function onPropertyChanged($propertyName, $currentState , $newState)
+    {
+        try {
+            $this->game->onChange($this, $propertyName , $currentState, $newState) ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+
+    /**
+     * ----------------------------------------------------
+     * Getters
+     * ----------------------------------------------------
+     */
     public function getGame() { return $this->game ; }
     public function getName() { return $this->name ; }
     public function getUser_id() { return $this->user_id ; }
@@ -129,9 +207,9 @@ class Party
         {
             throw new \Exception(_('Party name is too short')) ;
         }
-        $this->setName($name) ;
-        $this->setUser_id($user_id) ;
-        $this->setUserName($userName) ;
+        $this->name = $name ;
+        $this->user_id = $user_id ;
+        $this->userName = $userName ;
         $this->messages = new ArrayCollection();
         $this->hand = new \Entities\Deck($this->getName().' - Cards in hand') ;
         $this->hand->setInHand($this) ;
@@ -249,12 +327,20 @@ class Party
     
     public function changeTreasury($amount)
     {
-        $this->treasury+=(int)$amount ;
+        if ((int)$amount!= 0) 
+        {
+            $this->onPropertyChanged('treasury', $this->treasury, $this->treasury+$amount);
+            $this->treasury+=(int)$amount ;
+        }
     }
         
     public function changeBid($amount)
     {
-        $this->bid += (int)$amount ;
+        if ((int)$amount!= 0) 
+        {
+            $this->onPropertyChanged('bid', $this->bid, $this->bid+$amount);
+            $this->bid+=(int)$amount ;
+        }
     }
     
     public function setLastUpdateToNow()
@@ -339,7 +425,7 @@ class Party
                 $legionList = array() ;
                 foreach($legions as $legion)
                 {
-                    if ($legion->getCardLocation()!==NULL && $legion->getCardLocation()->getId() == $senator->getId())
+                    if ($legion->isAway() && $legion->getLocation()->getCardId() == $senator->getCardId())
                     {
                         $result['flag']['rebel'] = TRUE ;
                         array_push($legionList , $legion) ;

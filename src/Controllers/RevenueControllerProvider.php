@@ -28,7 +28,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 $user_id = (int)$app['user']->getId() ;
 
                 //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
-                // TO DO : See how to handle this update better (service ?)
+                /** @todo: See how to handle this update better (service ?) */
                 $game->getParty($user_id)->setLastUpdateToNow() ;
                 
                 $view = new \Presenters\RevenuePhasePresenter($game , $user_id) ;
@@ -208,8 +208,8 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201);
             }
             $user_id = (int)$app['user']->getId() ;
-            // TO DO : Offer an interface to the HRAO for disbanding legions that were released by rebels
-            // The HRAO cannot setDone to TRUE as long as there is released legions
+            /** @todo Offer an interface to the HRAO for disbanding legions that were released by rebels 
+             The HRAO cannot setDone to TRUE as long as there is released legions */
             $game->getParty($user_id)->setIsDone(TRUE) ;
             if ($game->isEveryoneDone())
             {
@@ -257,8 +257,8 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $droughtLevel = $game->getEventProperty('name' , 'Drought') ;
             if ($droughtLevel>0)
             {
-                $choice = $data[$concession['card']->getId()] ;
-                unset($data[$concession['card']->getId()]) ;
+                $choice = $data[$concession['card']->getCardId()] ;
+                unset($data[$concession['card']->getCardId()]) ;
                 if ($choice == 'YES')
                 {
                     $concession['senator']->changeTreasury($droughtLevel*$concession['card']->getIncome()) ;
@@ -279,7 +279,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                     );
                 }
             }
-            // TO DO : Figure out what this error was about. Shouldn't it be an elseif with a test on $data[$concession['card']->getId()] ?
+            /**  @todo : Figure out what this error was about. Shouldn't it be an elseif with a test on $data[$concession['card']->getCardId()] ? */
             /*
             else
             {
@@ -291,8 +291,8 @@ class RevenueControllerProvider implements ControllerProviderInterface
         // Handle Provincial spoils, choice should be in 'data'
         foreach($base['provinces'] as $province)
         {
-            $choice = $data[$province['card']->getId()] ;
-            unset($data[$province['card']->getId()]) ;
+            $choice = $data[$province['card']->getCardId()] ;
+            unset($data[$province['card']->getCardId()]) ;
             // Check if province was overrun by barbarians / internal disorder
             if (!$province['card']->getOverrun())
             {
@@ -387,7 +387,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
             // Province was overrun by Barbarians and/or internal disorder. No revenue nor development this turn.
             else
             {
-                // TO DO
+                /** @todo Province was overrun by Barbarians and/or internal disorder. No revenue nor development this turn. */
             }
 
         }
@@ -645,7 +645,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                         if ($card->getMandate() == 3) {
                             $game->log(_('%1$s returns from %2$s which is placed in the Forum.') , 'log' , array($senator->getName() , $card->getName())) ;
                             $card->setMandate(0);
-                            $senator->getCardsControlled()->getFirstCardByProperty('id' , $card->getID() , $game->getDeck('forum')) ;
+                            $senator->getCardsControlled()->getFirstCardByProperty('cardId' , $card->getID() , $game->getDeck('forum')) ;
                             $senator->setReturningGovernor(TRUE);
                         } else {
                             $game->log(_('%1$s spends %2$s game turn in %3$s') , 'log' , array($senator->getName() , ( ($card->getMandate()==1) ? _('First') : _('Second') ) , $card->getName())) ;

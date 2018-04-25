@@ -1,5 +1,6 @@
 <?php
 namespace Entities ;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * @var bool corrupt : This is only used for Provincial spoils corruption
@@ -62,7 +63,7 @@ class Senator extends Card
     /** @Column(type="boolean") @var int */
     protected $returningGovernor = FALSE ;
     //the card where this Senator is fighting (conflict or Province) or NULL
-    /** @ManyToOne(targetEntity="Card" , inversedBy="battlefieldFor") @JoinColumn(name="Id", referencedColumnName="internalId", nullable=true) **/
+    /** @ManyToOne(targetEntity="Card" , inversedBy="battlefieldFor") @JoinColumn(name="commanderIn_id", referencedColumnName="id", nullable=true) **/
     protected $commanderIn = NULL ;
     /** @OneToOne(targetEntity="Party" , inversedBy="leader") **/
     private $leaderOf ;
@@ -77,35 +78,178 @@ class Senator extends Card
      * Getters & Setters
      * ----------------------------------------------------
      */
+    public function setMIL ($MIL) 
+    {
+        if ($MIL!= $this->MIL) 
+        {
+            $this->onPropertyChanged('MIL', $this->MIL, $MIL);
+            $this->MIL = $MIL ;
+        }
+    }
 
-    public function setSenatorID($senatorID) { $this->senatorID = $senatorID ; }
-    public function setBaseMIL($baseMIL) { $this->baseMIL = $baseMIL ; }
-    public function setBaseORA($baseORA) { $this->baseORA = $baseORA ; }
-    public function setBaseLOY($baseLOY) { $this->baseLOY = $baseLOY ; }
-    public function setBaseINF($baseINF) { $this->baseINF = $baseINF ; }
-    public function setMIL ($MIL) { $this->MIL = $MIL ; }
-    public function setORA ($ORA) { $this->ORA = $ORA ; }
-    public function setLOY ($LOY) { $this->LOY = $LOY ; }
-    public function setINF ($INF) { $this->INF = $INF ; }
-    public function setSpecialLOY ($specialLOY) { $this->specialLOY = $specialLOY ; }
-    public function setSpecialAbility ($specialAbility) { $this->specialAbility = $specialAbility ; }
-    public function setHasStatesman ($hasStatesman) { $this->hasStatesman = $hasStatesman ; }
-    public function setKnights ($knights) { $this->knights = $knights ; }
-    public function setTreasury ($treasury) { $this->treasury = $treasury ; }
-    public function setPOP ($POP) { $this->POP = $POP ; }
-    public function setOffice ($office) { $this->office = $office ; }
-    public function setPriorConsul ($priorConsul) { $this->priorConsul = $priorConsul ; }
-    public function setCorrupt ($corrupt) { $this->corrupt = $corrupt ; } 
-    public function setMajor ($major) { $this->major = $major ; }
-    public function setRebel ($rebel) { $this->rebel = $rebel ; }
-    public function setCaptive ($captive) { $this->captive = $captive ; }
-    public function setFreeTribune ($freeTribune) { $this->freeTribune = $freeTribune ; }
-    public function setReturningGovernor ($returningGovernor) { $this->returningGovernor = $returningGovernor ; }   
-    public function setCommanderIn($commanderIn) { $this->commanderIn = $commanderIn; }
-    public function setLeaderOf($leaderOf) { $this->leaderOf = $leaderOf; }
-    public function setBiddingFor($biddingFor) { $this->biddingFor = $biddingFor; }
-    public function setSteppedDown($steppedDown) { $this->steppedDown = $steppedDown; }
+    public function setORA ($ORA) 
+    {
+        if ($ORA!= $this->ORA) 
+        {
+            $this->onPropertyChanged('ORA', $this->ORA, $ORA);
+            $this->ORA = $ORA ;
+        }
+    }
 
+    public function setLOY ($LOY) 
+    {
+        if ($LOY!= $this->LOY) 
+        {
+            $this->onPropertyChanged('LOY', $this->LOY, $LOY);
+            $this->LOY = $LOY ;
+        }
+    }
+
+    public function setINF ($INF) 
+    {
+        if ($INF!= $this->INF) 
+        {
+            $this->onPropertyChanged('INF', $this->INF, $INF);
+            $this->INF = $INF ;
+        }
+    }
+
+    public function setKnights ($knights) 
+    {
+        if ($knights!= $this->knights) 
+        {
+            $this->onPropertyChanged('knights', $this->knights, $knights);
+            $this->knights = $knights ;
+        }
+    }
+
+    public function setTreasury ($treasury) 
+    {
+        if ($treasury!= $this->treasury) 
+        {
+            $this->onPropertyChanged('treasury', $this->treasury, $treasury);
+            $this->treasury = $treasury ;
+        }
+    }
+
+    public function setPOP ($POP) 
+    {
+        if ($POP!= $this->POP) 
+        {
+            $this->onPropertyChanged('POP', $this->POP, $POP);
+            $this->POP = $POP ;
+        }
+    }
+
+    public function setOffice ($office) 
+    {
+        if ($office!= $this->office) 
+        {
+            $this->onPropertyChanged('office', $this->office, $office);
+            $this->office = $office ;
+        }
+    }
+
+    public function setPriorConsul ($priorConsul) 
+    {
+        if ($priorConsul!= $this->priorConsul) 
+        {
+            $this->onPropertyChanged('priorConsul', $this->priorConsul, $priorConsul);
+            $this->priorConsul = $priorConsul ;
+        }
+    }
+
+    public function setCorrupt ($corrupt) 
+    {
+        if ($corrupt!= $this->corrupt) 
+        {
+            $this->onPropertyChanged('corrupt', $this->corrupt, $corrupt);
+            $this->corrupt = $corrupt ;
+        }
+    }
+
+    public function setMajor ($major) 
+    {
+        if ($major!= $this->major) 
+        {
+            $this->onPropertyChanged('major', $this->major, $major);
+            $this->major = $major ;
+        }
+    }
+
+    public function setRebel ($rebel) 
+    {
+        if ($rebel!= $this->rebel) 
+        {
+            $this->onPropertyChanged('rebel', $this->rebel, $rebel);
+            $this->rebel = $rebel ;
+        }
+    }
+
+    public function setCaptive ($captive) 
+    {
+        if ($captive!= $this->captive) 
+        {
+            $this->onPropertyChanged('captive', $this->captive, $captive);
+            $this->captive = $captive ;
+        }
+    }
+
+    public function setFreeTribune ($freeTribune) 
+    {
+        if ($freeTribune!= $this->freeTribune) 
+        {
+            $this->onPropertyChanged('freeTribune', $this->freeTribune, $freeTribune);
+            $this->freeTribune = $freeTribune ;
+        }
+    }
+
+    public function setReturningGovernor ($returningGovernor) 
+    {
+        if ($returningGovernor!= $this->returningGovernor) 
+        {
+            $this->onPropertyChanged('returningGovernor', $this->returningGovernor, $returningGovernor);
+            $this->returningGovernor = $returningGovernor ;
+        }
+    }
+
+    public function setCommanderIn($commanderIn) 
+    {
+        if ($commanderIn!= $this->commanderIn) 
+        {
+            $this->onPropertyChanged('commanderIn', $this->commanderIn, $commanderIn);
+            $this->commanderIn = $commanderIn ;
+        }
+    }
+
+    public function setLeaderOf($leaderOf) 
+    {
+        if ($leaderOf!= $this->leaderOf) 
+        {
+            $this->onPropertyChanged('leaderOf', $this->leaderOf, $leaderOf);
+            $this->leaderOf = $leaderOf ;
+        }
+    }
+
+    public function setBiddingFor($biddingFor) 
+    {
+        if ($biddingFor!= $this->biddingFor) 
+        {
+            $this->onPropertyChanged('biddingFor', $this->biddingFor, $biddingFor);
+            $this->biddingFor = $biddingFor ;
+        }
+    }
+
+    public function setSteppedDown($steppedDown) 
+    {
+        if ($steppedDown!= $this->steppedDown) 
+        {
+            $this->onPropertyChanged('steppedDown', $this->steppedDown, $steppedDown);
+            $this->steppedDown = $steppedDown ;
+        }
+    }
+
+    
     public function getSenatorID() { return $this->senatorID ; }      
     public function getBaseMIL() { return $this->baseMIL ; }
     public function getBaseORA() { return $this->baseORA ; }
@@ -140,6 +284,11 @@ class Senator extends Card
      * ----------------------------------------------------
      */
 
+    /**
+     * Constructors generally set properties directly and don't use setters, since setters invoke trace creation
+     * @param array $data
+     * @param bool $fromcsv
+     */
     public function __construct($data , $fromcsv = TRUE) {
         if ($fromcsv)
         {
@@ -148,29 +297,30 @@ class Senator extends Card
                 ( is_string($data[1]) ? $data[1] : NULL ) ,
                 ( preg_match('/\d{1,2}[a-cA-C]/' , (string)$data[3]) == 0 ? 'Senator' : 'Statesman')
             ) ;
-            $this->setSenatorID( (string)( preg_match('/\d?\d\w?/i',$data[3]) ? $data[3] : NULL) ) ;
-            $this->setBaseMIL ( (int)($data[4]) ) ;
-            $this->setBaseORA ( (int)($data[5]) ) ;
-            $this->setBaseLOY ( (int)($data[6]) ) ;
-            $this->setBaseINF ( (int)($data[7]) ) ;
-            $this->setMIL ( $this->baseMIL ) ;
-            $this->setORA ( $this->baseORA ) ;
-            $this->setLOY ( $this->baseLOY ) ;
-            $this->setINF ( $this->baseINF ) ;
-            $this->setSpecialLOY( ( is_string($data[8]) ? $data[8] : NULL ) ) ; /* A list of senatorID with + or - separated by ,. +X means : only loyal if X exists and is in the same party, -X : means loyalty 0 if in the same party as X*/
-            $this->setSpecialAbility ( ( is_string($data[9]) ? $data[9] : NULL ) ) ; /* A list of abilities separated by ,  */
-            $this->setHasStatesman ( (bool)($data[10]) ) ;
-            $this->setKnights (0);
-            $this->setTreasury (0) ;
-            $this->setPOP (0) ;
+            $this->senatorID = (string)( preg_match('/\d?\d\w?/i',$data[3]) ? $data[3] : NULL) ;
+            $this->baseMIL = (int)($data[4]) ;
+            $this->baseORA = (int)($data[5]) ;
+            $this->baseLOY = (int)($data[6]) ;
+            $this->baseINF = (int)($data[7]) ;
+            $this->MIL = $this->baseMIL ;
+            $this->ORA = $this->baseORA ;
+            $this->LOY = $this->baseLOY ;
+            $this->INF = $this->baseINF ;
+            $this->specialLOY = ( is_string($data[8]) ? $data[8] : NULL ) ; /* A list of senatorID with + or - separated by ,. +X means : only loyal if X exists and is in the same party, -X : means loyalty 0 if in the same party as X*/
+            $this->specialAbility = ( is_string($data[9]) ? $data[9] : NULL ) ; /* A list of abilities separated by ,  */
+            $this->hasStatesman = (bool)($data[10]) ;
+            $this->knights = 0 ;
+            $this->treasury = 0 ;
+            $this->POP = 0 ;
+            $this->loyalLegions = new ArrayCollection() ;
         }
         else
         {
-            parent::__construct((int)$data['id'], $data['name'] , $data['preciseType'] ) ;
+            parent::__construct((int)$data['cardId'], $data['name'] , $data['preciseType'] ) ;
             foreach ($data as $property=>$value)
             {
                 $setter = 'set'.ucfirst($property);
-                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                if (method_exists($this, $setter) && $property!='cardId' && $property!='name')
                 {
                     $this->$setter($value) ;
                 }
@@ -322,8 +472,8 @@ class Senator extends Card
             $result = FALSE ;
         }
         // Governor
-        // TO DO : What about legates ?
-        if ($this->getCardsControlled()!=NULL) 
+        /** @todo Senator->inRome() : How to deal with legates ? */
+        if ($this->getCardsControlled()!==NULL) 
         {
             foreach ($this->getCardsControlled()->getCards() as $card) 
             {
@@ -334,12 +484,10 @@ class Senator extends Card
             }
         }
         // Commander of an army & Proconsul
-        // TO DO
-        /*
-        if ($this->getConflict!=FALSE) {
+        if ($this->getCommanderIn()!=FALSE)
+        {
             $result = FALSE ;
         }
-        */
         return $result ;
     }
     
@@ -438,10 +586,10 @@ class Senator extends Card
      */
     public function resetSenator()
     {
-        $this->setMIL($this->getBaseMIL()) ;
-        $this->setORA($this->getBaseORA()) ;
-        $this->setLOY($this->getBaseLOY()) ;
-        $this->setINF($this->getBaseINF()) ;
+        $this->setMIL ($this->getBaseMIL()) ;
+        $this->setORA ($this->getBaseORA()) ;
+        $this->setLOY ($this->getBaseLOY()) ;
+        $this->setINF ($this->getBaseINF()) ;
         $this->setKnights(0) ;
         $this->setTreasury(0) ;
         $this->setPOP(0) ;

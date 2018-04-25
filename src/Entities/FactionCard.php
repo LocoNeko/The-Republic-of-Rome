@@ -19,7 +19,7 @@ class FactionCard extends Card
         }
         else
         {
-            parent::__construct((int)$data['id'], $data['name'] , 'Faction card' ) ;
+            parent::__construct((int)$data['cardId'], $data['name'] , 'Faction card' ) ;
         }
     }
 

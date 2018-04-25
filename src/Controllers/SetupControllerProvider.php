@@ -39,7 +39,7 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
                 return $app->redirect('/') ;
             }
         })
@@ -53,11 +53,12 @@ class SetupControllerProvider implements ControllerProviderInterface
         {
             try 
             {
-                /** @var \Entities\Game $game */
+                /** @var $game \Entities\Game  */
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 $leader = $game->getFilteredCards(array('senatorID'=>$json_data['to']['senatorID']))->first() ;
+                /** @var $party \Entities\Party */
                 $party = $game->getParty($user_id) ;
                 $party->setLeader($leader) ;
                 $game->log( _('%1$s is appointed leader of %2$s').' ([['.$user_id.']])' , 'log' , array($leader->getName() , $party->getName()) );
@@ -81,8 +82,8 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('alert', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201);
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_PickLeader');
@@ -106,8 +107,8 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201);
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_setupPlayStatesman');
@@ -126,8 +127,8 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 $recipient = $game->getParty($user_id)->getSenators()->getFirstCardByProperty('senatorID', $json_data['to']['senatorID']) ;
-                $concession = $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $json_data['from']['card_id']) ;
-                $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $json_data['from']['card_id'] , $recipient->getCardsControlled()) ;
+                $concession = $game->getParty($user_id)->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id']) ;
+                $game->getParty($user_id)->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id'] , $recipient->getCardsControlled()) ;
                 $game->log(_('[['.$user_id.']]'.' {play,plays} %1$s on %2$s.') , 'log' , array($concession->getName() , $recipient->getName()));
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
@@ -135,8 +136,8 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201);
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_setupPlayConcession');
@@ -169,8 +170,8 @@ class SetupControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->json( $exception->getMessage() , 201);
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
             }
         })
         ->bind('verb_DonePlayingCards');

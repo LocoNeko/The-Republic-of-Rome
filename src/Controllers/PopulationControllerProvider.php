@@ -94,7 +94,7 @@ class PopulationControllerProvider implements ControllerProviderInterface
                         else
                         {
                             $game->changeUnrest($effect) ;
-                            $game->log( _('Unrest is %1$s by %2$d') , 'log' , array( ( $effect>0 ? _('increased') : _('decreased') ) , $effect) ) ;
+                            $game->log( _('Unrest is %1$s by %2$d') , 'log' , array( ( $effect>0 ? _('increased') : _('decreased') ) , abs($effect)) ) ;
                         }
                     }
                 }

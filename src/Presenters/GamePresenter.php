@@ -38,7 +38,7 @@ class GamePresenter
         $this->legionsDescription['Rome'] = '' ;
         foreach ($game->getLegions() as $legion)
         {
-            if ($legion->getOtherLocation()=='Rome')
+            if ($legion->getLocation()=='Rome')
             {
                 $this->legionsDescription['Rome'].=$legion->getName().',';
             }

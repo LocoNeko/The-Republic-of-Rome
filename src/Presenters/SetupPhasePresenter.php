@@ -163,7 +163,7 @@ class SetupPhasePresenter
         {
             if ( $card->getPreciseType()=='Statesman' && $card->statesmanPlayable($user_id)['flag'])
             {
-                $result[$card->getId()]=$card ;
+                $result[$card->getCardId()]=$card ;
             }
             elseif ($card->getPreciseType()=='Concession')
             {
@@ -172,7 +172,7 @@ class SetupPhasePresenter
                 }
                 else
                 {
-                    $result[$card->getId()]=$card ;
+                    $result[$card->getCardId()]=$card ;
                 }
             }
         }

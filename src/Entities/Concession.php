@@ -59,11 +59,11 @@ class Concession extends Card
         }
         else
         {
-            parent::__construct((int)$data['id'], $data['name'] , 'Concession' ) ;
+            parent::__construct((int)$data['cardId'], $data['name'] , 'Concession' ) ;
             foreach ($data as $property=>$value)
             {
                 $setter = 'set'.ucfirst($property);
-                if (method_exists($this, $setter) && $property!='id' && $property!='name')
+                if (method_exists($this, $setter) && $property!='cardId' && $property!='name')
                 {
                     $this->$setter($value) ;
                 }

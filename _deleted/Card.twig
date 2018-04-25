@@ -4,7 +4,7 @@ This template gets the following parameters :
 - 'action' as per the card->getAction() function
 #}
 {% if card.getPreciseType()=='Senator' or card.getPreciseType()=='Statesman'%}
-    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getId()}}' treasury='{{card.getTreasury()}}' item_name='{{ card.getName() }}'>
+    <div class="span3 sprite sprite-Senator col-md-1" card_id='{{card.getCardId()}}' treasury='{{card.getTreasury()}}' item_name='{{ card.getName() }}'>
         {# Senator's name :
             - In red if the Senator is the party leader. 'leader' must be passed to the template to work or will default to FALSE
             - If the Statesman is in hand, 'playable' should be set (returns a boolean flag and a message), otherwise, defaults to an empty message
@@ -40,10 +40,10 @@ This template gets the following parameters :
         {% if card.getOffice() != null %}
             <div class="sprite sprite-Office_{{card.getOffice()|replace({' ': '-'})}} sprite-position-office"></div>
         {% endif %}
-        <div class="sprite-position-card-id">{{"%03d"|format(card.getId())}}</div>
+        <div class="sprite-position-card-id">{{"%03d"|format(card.getCardId())}}</div>
         {#
 {% elseif card.getPreciseType()=='Conflict' %}
-    <div class="span3 sprite sprite-Card" card_id='{{card.getId()}}'>
+    <div class="span3 sprite sprite-Card" card_id='{{card.getCardId()}}'>
         <div class="sprite-position-card-name">{{card.name}}</div>
         <div class="sprite-position-card-subname">{{card.description}} (1 of {{card.nbOfMatch}} {{card.matches}})</div>
         <div class="sprite-position-card-text">Inactive until attacked or Matched.
@@ -54,7 +54,7 @@ This template gets the following parameters :
     </div>
 #}
 {% elseif card.getPreciseType()=='Concession' %}
-    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb='{{action['drag']|default()}}'>
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getCardId()}}' verb='{{action['drag']|default()}}'>
         <div class="sprite-position-card-name">{{card.getName()}}</div>
         <div class="sprite-position-card-subname">Income : {{card.getIncome()}}</div>
         {% if card.getSpecial()!=NULL %}
@@ -64,7 +64,7 @@ This template gets the following parameters :
             <div class="sprite sprite-Marker_Corrupt sprite-position-corrupt"></div>
         {% endif %}
 {% else %}
-    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getId()}}' verb=''>
+    <div class="span3 sprite sprite-Card col-md-1" card_id='{{card.getCardId()}}' verb=''>
         <div class="sprite-position-card-name">{{card.getName()}}</div>
 {% endif %}
 
@@ -73,13 +73,13 @@ This template gets the following parameters :
 #}
 {% if action['menu']|default(FALSE) != FALSE %}
     <div class="sprite-position-topright dropdown" style="z-index:50; opacity: 0.9;">
-        <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.getId()}}" data-toggle="dropdown" aria-expanded="true">
+        <button class="btn btn-default dropdown-toggle" type="button" id="cardMenu_{{card.getCardId()}}" data-toggle="dropdown" aria-expanded="true">
             <span class="glyphicon glyphicon-collapse-down" aria-hidden="true" style="font-size: 1.5em;"></span>
         </button>
-        <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.getId()}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
+        <ul class="sprite-position-topright dropdown-menu" role="menu" aria-labelledby="cardMenu_{{card.getCardId()}}" style="background: transparent; border: 0; box-shadow: 0px 0px 0px; padding-top: 21px;">
             <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='{{action['menu']|default()}}'>
                 <li role="presentation">
-                    <input type="hidden" name="card_id" value="{{card.getId()}}">
+                    <input type="hidden" name="card_id" value="{{card.getCardId()}}">
                     <button role="menuitem" tabindex="-1" type="submit" class="btn btn-lg btn-primary">{{action['menu']}}</button>
                 </li>
             </form>
@@ -92,10 +92,10 @@ This template gets the following parameters :
 #}
 {% if card.hasControlledCards() %}
     <div class="sprite-position-topleft">
-        <a href="#CardsControlledBy_{{card.getId()}}" class="btn btn-default" data-toggle="collapse">
+        <a href="#CardsControlledBy_{{card.getCardId()}}" class="btn btn-default" data-toggle="collapse">
             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
         </a>
-        <div id="CardsControlledBy_{{card.getId()}}" class="row collapse sprite-modal">
+        <div id="CardsControlledBy_{{card.getCardId()}}" class="row collapse sprite-modal">
             {% for controlledCard in card.getCardsControlled().getCards() %}
                 {% embed "BoardElements/Card.twig" with
                     {

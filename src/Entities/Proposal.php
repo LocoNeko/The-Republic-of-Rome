@@ -1,7 +1,5 @@
 <?php
 namespace Entities ;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Criteria;
 
 /**
  * @Entity @Table(name="proposals")
@@ -9,14 +7,11 @@ use Doctrine\Common\Collections\Criteria;
  * > keys are integer from 0 and give the order of vote
  * > values are arrays of 'user_id' , 'votes' , 'description'
  **/
-class Proposal
+class Proposal extends TraceableEntity
 {
     const ERROR_NO_VOTER = 1;
     
-    /** @Id @Column(type="integer") @GeneratedValue @var int */
-    protected $id ;
-
-    /** @ManyToOne(targetEntity="Game", inversedBy="proposals" , cascade={"persist"}) **/
+    /** @ManyToOne(targetEntity="Game", inversedBy="proposals" , cascade={"persist"}) */
     private $game ;
 
     /** @Column(type="string") @var string */
@@ -52,7 +47,7 @@ class Proposal
     private $decision = array() ;
 
     /**
-     * TO DO : Implement / remove all this below.  
+     * @todo Implement / remove constraints & conditions (they should be unused and covered by the checkConstraints function)
      */
     
     /** @Column(type="array") @var array */
@@ -79,100 +74,213 @@ class Proposal
         try
         {
             $this->checkConstraints($type, $game , $json_data) ;
-            $this->proposedBy = $game->getParty($user_id) ;
+            $this->setProposedBy ($game->getParty($user_id)) ;
         }
         catch (\Exception $ex)
         {
-            throw new \Exception(_('WRONG PROPOSAL - ').$ex->getMessage()) ;
+            throw new \Exception(_('Error with Proposal - ').$ex->getMessage().' , Line : '.$ex->getLine()) ;
         }
         
         /**
          * Second, check & set the voting order
+         * Some proposals have no voting order, as they are special 
          */
-        try 
+        $this->vote = [] ;
+        if (($json_data!==NULL) && (array_key_exists('senateListVotingOrder', $json_data)))
         {
-            $this->vote = array() ;
-            $i = 0 ;
-            foreach ($json_data['senateListVotingOrder'] as $votingOrderUser_id)
+            try 
             {
-                $this->vote[$i++] = array (
-                    'user_id' => (int)$votingOrderUser_id ,
-                    'votes' => NULL ,
-                    'description' => ''
-                );
+                $i = 0 ;
+                foreach ($json_data['senateListVotingOrder'] as $votingOrderUser_id)
+                {
+                    $this->vote[$i++] = array (
+                        'user_id' => (int)$votingOrderUser_id ,
+                        'votes' => NULL ,
+                        'description' => ''
+                    );
+                }
+            } catch (Exception $ex) {
+                throw new \Exception(_('Error with Proposal - Problem with voting order')) ;
             }
-        } catch (Exception $ex) {
-            throw new \Exception(_('ERROR - Problem with voting order')) ;
         }
 
         /**
-         * Type-specific setup : flow, etc
+         * -------------------
+         * Type-specific setup : 
+         * - type itself
+         * - flow
+         * - decision
+         * - step = 0
+         * -------------------
+         */
+        
+        /**
+         * Consuls
          */
         if ($type=='Consuls')
         {
-            $this->type = 'Consuls' ;
-            $this->flow = array (
-                0 => 'vote' ,
-                1 => 'decision' , // Consuls must decide who becomes what
-                2 => 'done'
+            $this->setType('Consuls') ;
+            $this->setFlow(
+                array  (
+                    0 => 'vote' ,
+                    1 => 'decision' , // Consuls must decide who becomes what
+                    2 => 'done'
+                )
             ) ;
-            $this->step = 0 ;
-            $this->decision = array ('First Senator' => NULL , 'Second Senator' => NULL);
+            $this->setStep(0) ;
+            $this->setDecision('First Senator' , NULL) ;
+            $this->setDecision('Second Senator' , NULL) ;
         }
+        /**
+         * @todo : Pontifex Maximus 
+         */
+
+        /**
+         * @todo : Dictator
+         */
+
         /**
          * Censor
          */
         if ($type=='Censor')
         {
-            $this->type = 'Censor' ;
-            $this->flow = array (
-                0 => 'vote' ,
-                1 => 'done'
+            $this->setType('Censor') ;
+            $this->setFlow(
+                array  (
+                    0 => 'vote' ,
+                    1 => 'done'
+                )
             ) ;
-            $this->step = 0 ;
+            $this->setStep(0) ;
         }
         /**
          * Prosecutions
          */
         if ($type=='Prosecutions')
         {
-            $this->type = 'Prosecutions' ;
-            $this->flow = array (
-                0 => 'decision' , // Prosecutor must agree
-                1 => 'vote' ,
-                2 => 'done'
+            $this->setType('Prosecutions') ;
+            $this->setFlow(
+                array  (
+                    0 => 'decision' , // Prosecutor must agree
+                    1 => 'vote' ,
+                    2 => 'done'
+                )
             ) ;
-            $this->step = 0 ;
+            $this->setStep(0) ;
         }
         /**
-         * OtherBusiness - recruit
+         * -------------------
+         * Proposals below are all "Other Business"
+         * -------------------
+         */
+
+        /**
+         * @todo : Rhodes - Not exactly a proposal, but handled as such
+         */
+
+        /**
+         * concessions
+         */
+        if ($type=='concession')
+        {
+            $this->setType('concession') ;
+            $this->setFlow(
+                array  (
+                    0 => 'vote' ,
+                    1 => 'done'
+                )
+            ) ;
+            $this->setStep(0) ;
+        }
+        
+        /**
+         * @todo : Land bill
+         */
+
+        /**
+         * recruit
          */
         if ($type=='recruit')
         {
-            $this->type = 'recruit' ;
-            $this->flow = array (
-                0 => 'vote' ,
-                1 => 'done'
+            $this->setType('recruit') ;
+            $this->setFlow(
+                array  (
+                    0 => 'vote' ,
+                    1 => 'done'
+                )
             ) ;
-            $this->step = 0 ;
+            $this->setStep(0) ;
         }
+
         /**
-         * OtherBusiness - commander
+         * @todo : Garrisons
+         */
+
+        /**
+         * commander
          */
         if ($type=='commander')
         {
-            $this->type = 'commander' ;
-            $this->flow = array (
-                0 => 'decision' , // Commander must agree to go if forces are inadequate
-                1 => 'vote' ,
-                2 => 'done'
+            $this->setType('commander') ;
+            $this->setFlow(
+                array  (
+                    0 => 'decision' , // Commander must agree to go if forces are inadequate
+                    1 => 'vote' ,
+                    2 => 'done'
+                )
             ) ;
-            $this->step = 0 ;
+            $this->setStep(0) ;
         }
-        // TO DO : all other types of proposals
-    }
 
-    public function getId()         { return $this->id; }
+        /**
+         * @todo : Recall
+         */
+
+        /**
+         * @todo : Reinforce
+         */
+
+        /**
+         * @todo : Recall Pontifex
+         */
+
+        /**
+         * @todo : Priests
+         */
+
+        /**
+         * @todo : Consul for life
+         */
+
+        /**
+         * @todo : Minor
+         */
+
+        /**
+         * @todo : Assassin's prosecution
+         */
+
+        /**
+         * @todo : Automatic Recall
+         */
+
+        /**
+         * Unanimous defeat
+         */
+        if ($type=='UnanimousDefeat')
+        {
+            $this->setType('UnanimousDefeat') ;
+            $this->setFlow(
+                array  (
+                    0 => 'decision' , // HRAO must decided to step down or not
+                    1 => 'done'
+                )
+            ) ;
+            $this->setStep(0) ;
+            $this->setDecision('stepDown' , NULL) ;
+        }
+    }
+   
     public function getType()       { return $this->type ; }
     public function getFlow()       { return $this->flow; }
     public function getStep()       { return $this->step; }
@@ -181,8 +289,87 @@ class Proposal
     public function getOutcome()    { return $this->outcome ; }
     public function getVote()       { return $this->vote; }
     public function getDecision()      { return $this->decision; }
+    
+    public function onPropertyChanged($propertyName, $currentState , $newState)
+    {
+        try {
+            $this->game->onChange($this, $propertyName , $currentState, $newState) ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+    
+    public function setType($type)
+    {
+        if ($type!= $this->type) 
+        {
+            $this->onPropertyChanged('type', $this->type, $type);
+            $this->type = $type;
+        }
+    }
 
-    public function setOutcome($outcome) { $this->outcome = $outcome; }
+    public function setFlow($flow) 
+    {
+        if ($flow!= $this->flow) 
+        {
+            $this->onPropertyChanged('flow', $this->flow, $flow);
+            $this->flow = $flow;
+        }
+    }
+
+    public function setStep($step) 
+    {
+        if ($step!== $this->step) 
+        {
+            $this->onPropertyChanged('step', $this->step, $step);
+            $this->step = $step;
+        }
+    }
+
+    public function setContent($content) 
+    {
+        if ($content!= $this->content) 
+        {
+            $this->onPropertyChanged('content', $this->content, $content);
+            $this->content = $content;
+        }
+    }
+
+    public function setProposedBy($proposedBy) 
+    {
+        if ($proposedBy!= $this->proposedBy) 
+        {
+            $this->onPropertyChanged('proposedBy', $this->proposedBy, $proposedBy);
+            $this->proposedBy = $proposedBy;
+        }
+    }
+
+    public function setConstraints($constraints) 
+    {
+        if ($constraints!= $this->constraints) 
+        {
+            $this->onPropertyChanged('constraints', $this->constraints, $constraints);
+            $this->constraints = $constraints;
+        }
+    }
+
+    public function setConditions($conditions) 
+    {
+        if ($conditions!= $this->conditions) 
+        {
+            $this->onPropertyChanged('conditions', $this->conditions, $conditions);
+            $this->conditions = $conditions;
+        }
+    }
+
+    public function setOutcome($outcome) 
+    { 
+        if ($outcome!= $this->outcome) 
+        {
+            $this->onPropertyChanged('outcome', $this->outcome, $outcome);
+            $this->outcome = $outcome; 
+        }
+    }
 
      /**
      * Check constraints and if passed, sets content of the proposal
@@ -222,14 +409,28 @@ class Proposal
             } catch (Exception $ex) {
                 throw new \Exception(_('Senator doesn\'t exist or is not in Rome')) ;
             }
-            // REMINDER : the content array has card ids, NOT senator ids...
-            // TO DO : Which is RETARDED. Change to SenatorID
-            $this->content = array ( 
-                'First Senator' => $First_Senator->getId() , 
-                'Second Senator' => $Second_Senator->getId() 
-            ) ;
-            // TO DO : Check already proposed pairs
+            /** @todo: the content array has card ids, it must be changed to SenatorID */
+            $this->setContent(
+                array ( 
+                    'First Senator' => $First_Senator->getCardId() , 
+                    'Second Senator' => $Second_Senator->getCardId() 
+                )
+            );
+            /** @todo : Check already proposed pairs */
         }
+        
+        /**
+         * @todo : Check constraints for Pontifex Maximus 
+         */
+        
+        /**
+         * @todo : Check constraints for Dictator
+         */
+        
+        /**
+         * @todo : Check constraints for Censor 
+         */
+        
         /**
          * Prosecutions :
          * specific json :
@@ -238,26 +439,98 @@ class Proposal
          */
         if ($type=='Prosecutions')
         {
-            $this->content = [] ;
+            $content = [] ;
             try {
                 $prosecutor = $game->getFilteredCards(array('senatorID'=>$json_data['Prosecutor']))->first() ;
-                $this->content['Prosecutor'] = $prosecutor->getSenatorID() ;
+                $content['Prosecutor'] = $prosecutor->getSenatorID() ;
             } catch (Exception $ex) {
                 throw new \Exception(_('Could not retrieve the Prosecutor. He might be hiding.')) ;
             }
             try {
                 $prosecution = json_decode($json_data['Prosecution'],TRUE) ;
                 $accused = $game->getFilteredCards(array('senatorID'=>$prosecution['senatorID']))->first() ;
-                $this->content['Accused'] = $accused->getSenatorID() ;
-                $this->content['Type'] = $prosecution['Type'] ;
+                $content['Accused'] = $accused->getSenatorID() ;
+                $content['Type'] = $prosecution['Type'] ;
                 if (array_key_exists('cardId' , $prosecution))
                 {
-                    $this->content['Card'] = $prosecution['cardId'] ;
+                    $content['Card'] = $prosecution['cardId'] ;
                 }
             } catch (Exception $ex) {
                 throw new \Exception(_('Error in the prosecution.')) ;
             }
+            $this->setContent($content) ;
         }
+        /**
+         * @todo : Check constraints for Governors
+         */
+
+        /**
+         * -------------------
+         * Proposals below are all "Other Business"
+         * -------------------
+         */
+
+        /**
+         * @todo : Check constraints for Rhodes - Not exactly a proposal, but handled as such
+         */
+
+        /**
+         * concessions
+         */
+        if ($type=='concession')
+        {
+            try {
+                $data = $json_data['dynamicSections']['concession'] ;
+            } catch (Exception $ex) {
+                throw new \Exception(_('ERROR - Problem with Concessionproposal data.')) ;
+            }
+            $content = [] ;
+            foreach ($data as $key=>$item)
+            {
+                $concessionID = $item['otherBusinessConcessionCard'] ;
+                /* @var $concession \Entities\Concession */
+                $concession = $game->getFilteredCards(array('cardId'=>$concessionID))->first() ;
+                // Check if this card is indeed a concession
+                if ($concession->getPreciseType()!='Concession')
+                {
+                    throw new \Exception(sprintf(_('%1$s is not a concession.') , $concession->getName())) ;
+                }
+                // Check if concessions is indeed in the Forum
+                if ($concession->getLocation()['name']!='forum')
+                {
+                    throw new \Exception(sprintf(_('Concession %1$s is not in the Forum.') , $concession->getName())) ;
+                }
+                // If concession is Land Commissioner, check whether a land bill is active
+                if (($concession->getSpecial()=='land bill') && ($game->getLandBillsTotalCost()['total']==0) )
+                {
+                    throw new \Exception(sprintf(_('Cannot assign Land commissioner : no land bill in play.') , $concession->getName())) ;
+                }
+                // Check if the concession appears only once
+                $count = 0 ;
+                foreach ($data as $item2)
+                {
+                    if ($item2['otherBusinessConcessionCard'] == $concessionID )
+                    {
+                        $count++ ;
+                    }
+                }
+                if ($count>1)
+                {
+                    throw new \Exception(sprintf(_('Cannot assign %1$s more than once.') , $concession->getName())) ;
+                }
+                // Set the content of the proposal
+                $content[$key] = array(
+                    'concession' => $concessionID ,
+                    'senator' => $item['otherBusinessConcessionSenator']
+                ) ;
+            }
+            $this->setContent($content) ;
+        }
+
+        /**
+         * @todo : Check constraints for Land bill
+         */
+
         /**
          * Recruit
          */
@@ -271,7 +544,7 @@ class Proposal
                     throw new \Exception(_('ERROR - Not enough fleet to recruit.')) ;
                 }
             } catch (Exception $ex) {
-                throw new \Exception(_('ERROR - '.$ex->getTraceAsString())) ;
+                throw new \Exception($ex) ;
             }
             try {
                 $legionStatus = $game->getLegionsStatus() ;
@@ -285,13 +558,21 @@ class Proposal
             }
             if ( ( ($regularsToRecruit*$legionStatus['cost']) + ($fleetsToRecruit*$fleetStatus['cost']) ) > $game->getTreasury() )
             {
-                throw new \Exception(_('ERROR - Not enough money in Rome treasury.')) ;
+                throw new \Exception($ex) ;
             }
-            $this->content = array (
-                'fleetsToRecruit' => $fleetsToRecruit ,
-                'regularsToRecruit' => $regularsToRecruit
+            $this->setContent(
+                array 
+                (
+                    'fleetsToRecruit' => $fleetsToRecruit ,
+                    'regularsToRecruit' => $regularsToRecruit
+                )
             );
         }
+
+        /**
+         * @todo : Check constraints for Garrisons
+         */
+
         /**
          * Commander
          */
@@ -303,7 +584,6 @@ class Proposal
                 throw new \Exception(_('ERROR - Problem with Commander proposal data.')) ;
             }
             $content = array() ;
-            $decision = array() ;
             // Go through each item in the proposal
             $totalFleetsInRome = $game->getFleetStatus()['inRome'];
             $totalRegularsInRome = $game->getLegionsStatus()['regularsInRome'];
@@ -318,10 +598,10 @@ class Proposal
                     'conflict' => $item['otherBusinessCommanderConflict'] ,
                     'fleets' => (int)$item['otherBusinessCommanderFleets'] ,
                     'regulars' => (int)$item['otherBusinessCommanderRegulars']
-                    // TO DO : Veterans
+                    /** @todo constraint for commander proposal : veterans content */
                 ) ;
                 // decision are in an array of the form senatorID => decision (initialised to NULL)
-                $decision[$item['otherBusinessCommanderSenator']] = NULL ;
+                $this->setDecision($item['otherBusinessCommanderSenator'] , NULL) ;
             }
             // Check if there are enough fleets
             if ($totalFleetsInRome<0)
@@ -338,17 +618,69 @@ class Proposal
             {
                 throw new \Exception(_('ERROR - The same commander has been sent to fight more than once')) ;
             }
-            // TO DO :
-            // Check whether Correct veterans are sent
-            // Check whether there are enough support fleets when legions are sent
-            // Check whether conflict is attackable : right deck, attacked in the right sequence (e.g. First Punic beofre or at the same time as Second Punic)
-            // Check whether commanders are sent in the right order (Field Consul before or at the same time as Rome Consul). In other words : can't send Rome Consul, except if Field Consul has already been sent OR will be sent in the same proposal
-            $this->content = $content ;
-            $this->decision = $decision ;
-            // TO DO : Set decision to agreed automatically if minimum forces are met. Reember that Fleet-only battles are possible
+            /**
+             * @todo constraint for commander proposal : Check whether Correct veterans are sent
+             * @todo constraint for commander proposal : Check whether there are enough support fleets when legions are sent
+             * @todo constraint for commander proposal : Check whether conflict is attackable : right deck, attacked in the right sequence (e.g. First Punic before or at the same time as Second Punic)
+             * @todo constraint for commander proposal : Check whether commanders are sent in the right order (Field Consul before or at the same time as Rome Consul). In other words : can't send Rome Consul, except if Field Consul has already been sent OR will be sent in the same proposal
+             */
+            $this->setContent($content) ;
+            foreach ($content as $item)
+            {
+                /** @var $conflict \Entities\Conflict */
+                $conflict = $this->game->getFilteredCards(array('cardId'=>$item['conflict'] ))->first() ;
+                $modifiedConflictStrength = $this->game->getModifiedConflictStrength($conflict) ;
+                /**
+                 * @todo Check if the Conflict has a non-defeated fleet, in which case it's acceptable to send 0 legions and only check adequate forces for fleets
+                 */
+                if ($modifiedConflictStrength['fleet']>0 && $conflict->getFleetDefeated()===FALSE)
+                {
+                    
+                }
+                /**
+                 * @todo Check the conflict land strength against legions
+                 */
+            }
+            
+            /** @todo Set decision to agreed automatically if minimum forces are met. Remember that Fleet-only battles are possible */
             
         }
-        // TO DO : Check constraints of all other proposals
+
+        /**
+         * @todo : Check constraints for Recall
+         */
+
+        /**
+         * @todo : Check constraints for Reinforce
+         */
+
+        /**
+         * @todo : Check constraints for Recall Pontifex
+         */
+
+        /**
+         * @todo : Check constraints for Priests
+         */
+
+        /**
+         * @todo : Check constraints for Consul for life
+         */
+
+        /**
+         * @todo : Check constraints for Minor
+         */
+
+        /**
+         * @todo : Check constraints for Assassin's prosecution
+         */
+
+        /**
+         * @todo : Check constraints for Automatic Recall
+         */
+
+        /**
+         * @todo : Check constraints for Unanimous defeat
+         */
     }
     
     /**
@@ -359,10 +691,7 @@ class Proposal
     {
         if (is_array($newContent))
         {
-            foreach ($newContent as $key => $value)
-            {
-                $this->content[$key] = $value ;
-            }
+            $this->setContent(array_merge($this->getContent() , $newContent)) ;
         }
     }
     /**
@@ -370,23 +699,45 @@ class Proposal
      */
     public function getDescription()
     {
-        $content = $this->content ;
-        if ($this->type=='Consuls')
+        $content = $this->getContent() ;
+        
+        /**
+         * Consuls
+         */
+
+        if ($this->getType()=='Consuls')
         {
-            $FirstSenatorName = $this->game->getFilteredCards(array('id'=>$content['First Senator']))->first()->getFullName() ;
-            $SecondSenatorName = $this->game->getFilteredCards(array('id'=>$content['Second Senator']))->first()->getFullName() ;
+            $FirstSenatorName = $this->game->getFilteredCards(array('cardId'=>$content['First Senator']))->first()->getFullName() ;
+            $SecondSenatorName = $this->game->getFilteredCards(array('cardId'=>$content['Second Senator']))->first()->getFullName() ;
             return sprintf(_('%1$s is proposing %2$s and %3$s as Consuls.') , $this->proposedBy->getFullName() , $FirstSenatorName , $SecondSenatorName) ;
         }
-        if ($this->type=='Censor')
+        /**
+         * @todo : Pontifex Maximus 
+         */
+        
+        /**
+         * @todo : Dictator
+         */
+        
+        /**
+         * @todo : Censor 
+         */
+
+        if ($this->getType()=='Censor')
         {
             return ('PROPOSAL DESCRIPTION - TO DO');
         }
-        if ($this->type=='Prosecutions')
+
+        /**
+         * Prosecutions
+         */
+
+        if ($this->getType()=='Prosecutions')
         {
             $accused = $this->game->getFilteredCards(array('SenatorID'=>$content['Accused']))->first()->getFullName() ;
             if (array_key_exists('Card', $content))
             {
-                $card = $this->game->getFilteredCards(array('id'=>$content['Card']))->first() ;
+                $card = $this->game->getFilteredCards(array('cardId'=>$content['Card']))->first() ;
                 $reason = sprintf(_('profiting from %1$s') , $card->getName()) ;
             }
             else
@@ -396,25 +747,112 @@ class Proposal
             $prosecutor = $this->game->getFilteredCards(array('SenatorID'=>$content['Prosecutor']))->first()->getFullName() ;
             return sprintf(_('%1$s faces a %2$s prosecution for %3$s. The prosecutor is %4$s.') , $accused , $content['Type'] , $reason , $prosecutor);
         }
-        if ($this->type=='recruit')
+        
+        /**
+         * @todo : Governors
+         */
+
+        /**
+         * -------------------
+         * Proposals below are all "Other Business"
+         * -------------------
+         */
+
+        /**
+         * @todo : Rhodes - Not exactly a proposal, but handled as such
+         */
+        
+        /**
+         * @todo : Concessions
+         */
+
+        if ($this->getType()=='concession')
+        {
+            $message='' ;
+            foreach ($content as $item)
+            {
+                /* @var $concession \Entities\Concession */
+                $concession = $this->game->getFilteredCards(array('cardId'=>$item['concession']))->first() ;
+                /* @var $senator \Entities\Senator */
+                $senator = $this->game->getFilteredCards(array('SenatorID'=>$item['senator']))->first() ;
+                $message.=sprintf(_('%1$s to %2$s , ') , $concession->getName() , $senator->getFullName());
+            }
+            return sprintf(_('%1$s is proposing to assign %2$s.') , $this->proposedBy->getFullName() , substr($message , 0 , -3) ) ;
+        }
+
+        
+        /**
+         * @todo : Land bill
+         */
+        
+        /**
+         * Recruit
+         */
+        if ($this->getType()=='recruit')
         {
             $fleetMessage = ((array_key_exists ('fleetsToRecruit' , $content) && $content['fleetsToRecruit'] > 0 )  ? sprintf(ngettext('%1$d fleet' , '%1$d fleets' , $content['fleetsToRecruit']) , $content['fleetsToRecruit'] ) : '') ;
             $regularMessage = ((array_key_exists ('regularsToRecruit' , $content) && $content['regularsToRecruit'] > 0 )? sprintf(ngettext('%1$d regular legion' , '%1$d regular legions' , $content['regularsToRecruit']) , $content['regularsToRecruit'] ) : '') ;
             return sprintf(_('%1$s is proposing to recruit %2$s%3$s%4$s.') , $this->proposedBy->getFullName() , $fleetMessage , ( (($fleetMessage!='') && ($regularMessage!='')) ? _('and') : '' ) , $regularMessage ) ;
         }
-        if ($this->type=='commander')
+        
+        /**
+         * @todo : Garrisons
+         */
+        
+        if ($this->getType()=='commander')
         {
             $message='' ;
             foreach ($content as $item)
             {
                 $commander = $this->game->getFilteredCards(array('SenatorID'=>$item['commander']))->first() ;
-                $conflict = $this->game->getFilteredCards(array('id'=>$item['conflict']))->first() ;
+                $conflict = $this->game->getFilteredCards(array('cardId'=>$item['conflict']))->first() ;
                 $veteransMessage = 'no veterans' ;
                 $message.=sprintf(_('%1$s (%2$s - MIL: %3$d) to fight %4$s with %5$d fleets, %6$d regular legions and %7$s, and ') , $commander->getFullName() , $commander->getOffice() , $commander->getMIL() , $conflict->getName() , $item['fleets'] , $item['regulars'] , $veteransMessage);
             }
             $message = substr($message , 0 , -6) ;
             return sprintf(_('%1$s is proposing to send %2$s.') , $this->proposedBy->getFullName() , $message ) ;
         }
+        
+        /**
+         * @todo : Recall
+         */
+
+        /**
+         * @todo : Reinforce
+         */
+
+        /**
+         * @todo : Recall Pontifex
+         */
+
+        /**
+         * @todo : Priests
+         */
+
+        /**
+         * @todo : Consul for life
+         */
+
+        /**
+         * @todo : Minor
+         */
+
+        /**
+         * @todo : Assassin's prosecution
+         */
+
+        /**
+         * @todo : Automatic Recall
+         */
+
+        /**
+         * @todo : Unanimous defeat
+         */
+        if ($this->getType()=='UnanimousDefeat')
+        {
+            return _('The Presiding Magistrate has been unanimously defeated and must decide whether to step down or lose 1 INF.');
+        }        
+        
         return ('PROPOSAL DESCRIPTION - TO DO');
     }
  
@@ -426,7 +864,7 @@ class Proposal
     public function getCurrentStep()
     {
         try {
-            return $this->flow[$this->step] ;
+            return $this->getFlow()[$this->getStep()] ;
         } catch (Exception $ex) {
             throw new \Exception(_('Invalid step for this proposal')) ;
         }
@@ -439,13 +877,13 @@ class Proposal
      */
     public function getCurrentVoter()
     {
-        if ($this->outcome!='underway')
+        if ($this->getOutcome()!='underway')
         {
             throw new \Exception(_('No vote underway')) ;
         }
-        foreach ($this->vote as $vote)
+        foreach ($this->getVote() as $vote)
         {
-            if ($vote['votes']==NULL)
+            if ($vote['votes']===NULL)
             {
                 return $vote['user_id'] ;
             }
@@ -527,8 +965,8 @@ class Proposal
                        'data-trigger' => 'hover' ,
                        'data-placement' => 'bottom'
                     ) ;
-                    // TO DO  : Add INF for Prosecutions & Consul for life
-                    // Dropdown for spedning talents
+                    /** @todo in Vote tally, add INF for Prosecutions & Consul for life */
+                    // Dropdown for spending talents
                     $treasury = $senator->getTreasury() ;
                     if ($treasury>0)
                     {
@@ -584,21 +1022,25 @@ class Proposal
     }
 
     /**
-     * Sets the votes and their description for this proposal and this user_id
+     * Sets the votes and their description for this proposal and this user_id, as well as whether the vote was unanimous FOR or AGAINST in the party
      * @param int $user_id
      * @param int $votes
      * @param string $description
+     * @param boolean $unanimous
      * @return TRUE
      * @throws \Exception
      */
-    public function setVote($user_id , $votes , $description) 
+    public function setVote($user_id , $votes , $description , $unanimous) 
     {
+        $currentVote = $this->getVote() ;
         foreach ($this->getVote() as $i=>$vote)
         {
             if ($vote['user_id']==$user_id)
             {
                 $this->vote[$i]['votes'] = $votes ;
                 $this->vote[$i]['description'] = $description ;
+                $this->vote[$i]['unanimous'] = $unanimous ;
+                $this->onPropertyChanged('vote', $currentVote , $this->getVote());
                 return TRUE ;
             }
         }
@@ -608,15 +1050,18 @@ class Proposal
     /**
      * Sets this->decision[$key] to be equal to $value
      * @param mixed $key
-     * @param mixed  $value
+     * @param mixed $value
      * @throws \Exception
      */
     public function setDecision($key , $value)
     {
         try {
+            $currenState = $this->getDecision() ;
+            $newState = array_merge($currenState , array($key=>$value)) ;
+            $this->onPropertyChanged('decision', $currenState , $newState);
             $this->decision[$key] = $value ;
         } catch (Exception $ex) {
-            throw new \Exception(_('ERROR - user not found')) ;
+            throw new \Exception(_('ERROR - Proposal-.setDecision')) ;
         }
     }
             
@@ -643,12 +1088,50 @@ class Proposal
         return ($totalVotes>0) ;
     }
     
+    /*
+     * Whether or not this was a unanimous defeat of the HRAO's proposal
+     * @return bool
+     */
+    public function isHRAOunanimousDefeat()
+    {
+        $partyOfHRAO_userID = (int)$this->game->getHRAO(TRUE)->getLocation()['value']->getUser_id() ;
+        if ((int)$this->getProposedBy()->getUser_id() != $partyOfHRAO_userID)
+        {
+            // This was not proposed by the HRAO's party
+            return FALSE ;
+        }
+        if ($this->getOutcome()=='fail')
+        {
+            foreach ($this->getVote() as $vote)
+            {
+                // Only check the parties that are not the HRAO's
+                if ((int)$vote['user_id']!=$partyOfHRAO_userID)
+                {
+                    if (!$vote['unanimous'] || $vote['votes']>=0)
+                    {
+                        /*
+                         *  Unanimous is FALSE if :
+                         * - A party's vote was not unanimous
+                         * - A party's vote was not against
+                         */
+                        return FALSE ;
+                    }
+                }
+            }
+        }
+        else
+        {
+            return FALSE ;
+        }
+        return TRUE ;
+    }
+    
     /**
      * Adds 1 to this proposal flow
      */
     public function incrementStep()
     {
-        $this->step++;
+        $this->setStep($this->getStep()+1) ;
     }
     
     /**
@@ -664,7 +1147,7 @@ class Proposal
             return [] ;
         }
         $result = array() ;
-        foreach ($this->content as $key=>$item)
+        foreach ($this->getContent() as $key=>$item)
         {
             $commander = $this->game->getFilteredCards(array('SenatorID'=>$item['commander']))->first() ;
             if ($commander->getOffice() == 'Dictator') 
@@ -676,16 +1159,16 @@ class Proposal
             {
                 $MoHMIL = 0 ;
             }
-            $conflict = $this->game->getFilteredCards(array('id'=>$item['conflict']))->first() ;
+            $conflict = $this->game->getFilteredCards(array('cardId'=>$item['conflict']))->first() ;
             $modifiedConflictStrength = $this->game->getModifiedConflictStrength($conflict) ;
             $result[$key] = array (
                 'fleets' => $item['fleets'] ,
                 'regulars' => $item['regulars'] ,
-                'veterans' => 0 , // TO DO
+                'veterans' => 0 , /** @todo veterans for getCommanderProposalDetails */
                 'MIL' => $commander->getMIL() ,
                 'MoH MIL' => $MoHMIL ,
                 'totalSea' => $item['fleets'] + $commander->getMIL() + $MoHMIL ,
-                'totalLand' => $item['regulars'] + 0 + $commander->getMIL() + $MoHMIL , // TO DO : Add veterans
+                'totalLand' => $item['regulars'] + 0 + $commander->getMIL() + $MoHMIL , /** @todo add veterans for getCommanderProposalDetails */
                 'conflictSea' => $modifiedConflictStrength['fleet'] ,
                 'conflictLand' => $modifiedConflictStrength['land']
             ) ;

@@ -19,7 +19,7 @@ class EraEnds extends Card
         }
         else
         {
-            parent::__construct((int)$data['id'], $data['name'] , 'Era ends' ) ;
+            parent::__construct((int)$data['cardId'], $data['name'] , 'Era ends' ) ;
         }
     }
         

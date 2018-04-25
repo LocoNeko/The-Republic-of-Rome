@@ -507,10 +507,10 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
             $data = $request->request->all();
-            $fromCard = $game->getFilteredCards(array('id' => $data['FromCard'])) ;
+            $fromCard = $game->getFilteredCards(array('cardId' => $data['FromCard'])) ;
             $fromLocation = $fromCard->first()->getDeck();
             $toDeck = $game->getFilteredDecks(array('id' => $data['ToDeck'])) ;
-            $fromLocation->getFirstCardByProperty('id' , $fromCard->first()->getId() , $toDeck->first()) ;
+            $fromLocation->getFirstCardByProperty('cardId' , $fromCard->first()->getCardId() , $toDeck->first()) ;
             $game->log('DEBUG - Moving card '.$fromCard->first()->getName().' from '.$fromLocation->getName().' to '.$toDeck->first()->getName() , 'alert');
             $this->entityManager->persist($game);
             $this->entityManager->flush();
@@ -780,7 +780,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                         elseif ($matchedInactive !== FALSE)
                         {
                             $game->getDeck('imminentWars')->putCardOnTop($card) ;
-                            $game->getDeck('inactiveWars')->getFirstCardByProperty('id', $matchedCards[$matchedInactive]->getId() , $game->getDeck('activeWars'));
+                            $game->getDeck('inactiveWars')->getFirstCardByProperty('cardId', $matchedCards[$matchedInactive]->getCardId() , $game->getDeck('activeWars'));
                                 $game->log(
                                     _('[['.$user_id.']] {draw,draws} %1$s, the card goes to the imminent deck and the inactive card %2$s is now active.') ,
                                     'log' ,
@@ -807,12 +807,12 @@ class ForumControllerProvider implements ControllerProviderInterface
                         {
                             if ($curiaCard->getPreciseType()=='Leader' && $curiaCard->getMatches()==$card->getMatches())
                             {
-                                $pickedLeader = $game->getDeck('curia')->getFirstCardByProperty('id' , $curiaCard->getId() , $card->getCardsControlled()) ;
+                                $pickedLeader = $game->getDeck('curia')->getFirstCardByProperty('cardId' , $curiaCard->getCardId() , $card->getCardsControlled()) ;
                                 // A leader activates an inactive conflict
                                 $activationMessage='' ;
                                 if ( ($card->getLocation()['type'] == 'game') && ($card->getLocation()['value'] == 'inactiveWars') )
                                 {
-                                    $game->getDeck('inactiveWars')->getFirstCardByProperty('id', $card->getId() , $game->getDeck('activeWars')) ;
+                                    $game->getDeck('inactiveWars')->getFirstCardByProperty('cardId', $card->getCardId() , $game->getDeck('activeWars')) ;
                                     $activationMessage = _(' This activates the conflict.'); 
                                 }
                                 $game->log(
@@ -856,7 +856,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                             $activationMessage='' ;
                             if (reset($matchedWar)->getLocation()['name']=='inactiveWars')
                             {
-                                $game->getDeck('inactiveWars')->getFirstCardByProperty('id', reset($matchedWar)->getId() , $game->getDeck('activeWars')) ;
+                                $game->getDeck('inactiveWars')->getFirstCardByProperty('cardId', reset($matchedWar)->getCardId() , $game->getDeck('activeWars')) ;
                                 $activationMessage = _(' This activates the conflict.'); 
                             }
                             $game->log(
@@ -925,7 +925,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         $target = $game->getFilteredCards(array('senatorID'=>$target)) ;
         $persuader= $game->getFilteredCards(array('senatorID'=>$persuader)) ;
         $bribe = (int)$bribe ;
-        $persuasionCard = $game->getFilteredCards(array('id'=>$cardID)) ;
+        $persuasionCard = $game->getFilteredCards(array('cardId'=>$cardID)) ;
         /*
          * Validation
          */
@@ -967,7 +967,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             {
                 throw new \Exception(_('ERROR - Wrong persuasion card'));
             }
-            $this->persuasionRoll($game, $user_id , $persuasionCard->first()->getId()) ;
+            $this->persuasionRoll($game, $user_id , $persuasionCard->first()->getCardId()) ;
         }
     }
     
@@ -1012,7 +1012,7 @@ class ForumControllerProvider implements ControllerProviderInterface
         $blackmail = FALSE ;
         if ($persuasion_cardId!==NULL)
         {
-            $persuasionCard = $game->getFilteredCards(array('id'=>$persuasion_cardId))->first();
+            $persuasionCard = $game->getFilteredCards(array('cardId'=>$persuasion_cardId))->first();
             if ($persuasionCard->getName()!=='SEDUCTION' && $persuasionCard->getName()!=='BLACKMAIL')
             {
                 throw new \Exception(_('ERROR - Wrong persuasion card')) ;
@@ -1023,7 +1023,7 @@ class ForumControllerProvider implements ControllerProviderInterface
             }
             $persuasionDescription.=_(' He plays the '.$persuasionCard->getName().' card. ');
             $blackmail = ($persuasionCard->getName()==='BLACKMAIL') ;
-            $game->getParty($user_id)->getHand()->getFirstCardByProperty('id', $persuasion_cardId, $game->getDecks('discard')) ;
+            $game->getParty($user_id)->getHand()->getFirstCardByProperty('cardId', $persuasion_cardId, $game->getDecks('discard')) ;
         }
         else
         {
@@ -1263,12 +1263,12 @@ class ForumControllerProvider implements ControllerProviderInterface
                     elseif ($ruinedConcessionLocation['type'] == 'game' && $ruinedConcessionLocation['name'] == 'forum')
                     {
                         $ruinMessage.=_('the ruined tax farmer is removed from the forum and placed in the curia.') ;
-                        $ruinedConcessionLocation['deck'] -> getFirstCardByProperty('id' , $ruinedConcession->getId() , $game->getDeck('curia')) ;
+                        $ruinedConcessionLocation['deck'] -> getFirstCardByProperty('cardId' , $ruinedConcession->getCardId() , $game->getDeck('curia')) ;
                     }
                     elseif ($ruinedConcessionLocation['type'] == 'card')
                     {
                         $ruinMessage.=_('the ruined tax farmer is removed from %3$s and placed in the curia.') ;
-                        $ruinedConcessionLocation['deck'] -> getFirstCardByProperty('id' , $ruinedConcession->getId() , $game->getDeck('curia')) ;
+                        $ruinedConcessionLocation['deck'] -> getFirstCardByProperty('cardId' , $ruinedConcession->getCardId() , $game->getDeck('curia')) ;
                     }
                     else
                     {
@@ -1290,12 +1290,12 @@ class ForumControllerProvider implements ControllerProviderInterface
                     }
                     elseif ($card->getPreciseType()=='Concession' || $card->getIsSenatorOrStatesman())
                     {
-                        $game->getDeck('curia')->getFirstCardByProperty('id' , $card->getId() , $game->getDeck('forum')) ;
+                        $game->getDeck('curia')->getFirstCardByProperty('cardId' , $card->getCardId() , $game->getDeck('forum')) ;
                         $ruinMessage=_('it comes back to the Forum.') ;
                     }
                     elseif ($card->getPreciseType()=='Leader')
                     {
-                        $game->getDeck('curia')->getFirstCardByProperty('id' , $card->getId() , $game->getDeck('discard')) ;
+                        $game->getDeck('curia')->getFirstCardByProperty('cardId' , $card->getCardId() , $game->getDeck('discard')) ;
                         $ruinMessage=_('he is discarded.') ;
                     }
                     $game->log(_('%1$s : A %2$d%3$s is rolled, %4$s') , 'log' , array($card->getName() , $roll , $game->getEvilOmensMessage(-1) , $ruinMessage));

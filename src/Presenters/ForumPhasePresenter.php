@@ -445,7 +445,7 @@ class ForumPhasePresenter
             /**
              * Can't attract knights if some have already been pressured
              */
-            // TO DO : Check if Class is necessary
+            /** @todo Check if Class is necessary */
             if (!$game->getParty($this->user_id)->getIsDone()) {
                 $senator->addMenuItem(
                     array (
@@ -700,7 +700,7 @@ class ForumPhasePresenter
         {
             if (($card->getName()=='SEDUCTION') || ($card->getName()=='BLACKMAIL')) {
                 $result[] = array (
-                    'value' => $card->getId() ,
+                    'value' => $card->getCardId() ,
                     'description' => $card->getName()
                 );
             }
