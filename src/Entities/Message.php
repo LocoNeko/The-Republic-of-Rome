@@ -38,7 +38,7 @@ class Message
     /** @Column(type="datetime")  */
     protected $time ;
     
-    /** @OneToOne(targetEntity="Trace", cascade={"persist"}) @JoinColumn(name="traceId", referencedColumnName="traceId") **/
+    /** @OneToOne(targetEntity="Trace", cascade={"persist" , "remove"}) @JoinColumn(name="traceId", referencedColumnName="traceId" , onDelete="CASCADE") **/
     protected $trace = NULL ;
     
     public function getId() { return $this->id; }
@@ -49,6 +49,7 @@ class Message
     public function getRecipients() { return $this->recipients; }
     public function getFrom() { return $this->from; }
     public function getTime() { return $this->time ; }
+    public function getTrace() { return $this->trace ; }
 
     /**
      * @param Entity\Game $game The Entity\Game to which this message belongs to
@@ -230,7 +231,9 @@ class Message
     }
     
     /**
-     * Trace related
+     * ------------------------------
+     *        Trace related
+     * ------------------------------
      */
     
     /**
@@ -257,5 +260,14 @@ class Message
         $trace = $this->trace ;
         return ($trace!==NULL ? $trace->describe() : FALSE);
     }
-
+    
+    /**
+     * @return string|bool
+     */
+    public function getTraceOperation()
+    {
+        /* @var $trace \Entities\Trace */
+        $trace = $this->trace ;
+        return ($trace!==NULL ? $trace->getOperation() : FALSE);
+    }
 }

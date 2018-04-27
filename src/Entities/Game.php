@@ -97,7 +97,7 @@ class Game
     private $assassination = array() ;
 
     // A Game has many messages
-    /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist"} ) **/
+    /** @OneToMany(targetEntity="Message", mappedBy="game", cascade={"persist" , "remove"} ) **/
     private $messages ;
     
     // A Game has many trace

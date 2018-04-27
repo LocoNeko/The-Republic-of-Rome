@@ -156,6 +156,11 @@ class Party extends TraceableEntity
             $bidWith->setBiddingFor($this) ;
         }
     }
+    
+    public function resetLeader()
+    {
+        $this->leader = NULL ;
+    }
 
     /**
      * ----------------------------------------------------

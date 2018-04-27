@@ -7,6 +7,8 @@ use Doctrine\Common\Collections\ArrayCollection;
  **/
 class Trace
 {
+    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' ) ;
+
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $traceId ;
     
@@ -25,6 +27,11 @@ class Trace
     /** @Column(type="array") @var array */
     protected $parameters ;
 
+    public static function isValidOperation($operation)
+    {
+        return in_array($operation , self::$VALID_OPERATIONS) ;
+    }
+
     /**
      * 
      * @param \Entities\Game $game
@@ -39,12 +46,19 @@ class Trace
         $this->entities = $entities ;
     }
     
-    /**
+    public function getOperation() 
+    {
+        return (self::isValidOperation($this->operation) ? $this->operation : FALSE) ;
+    }
+    
+    public function getEntities() { return $this->entities ; }
+    public function getParameters() { return $this->parameters ; }
+
+        /**
      * describe() calls function with the format describe{operation}
      * Describe traces.
      * 
      * Traces format - For every type of $trace->operation, list the format of $parameters and $entities. Then the trace can be shown
-     * 
      * 
      * 'PlayStatesman' 
      * parameters : array ('familyLocation' , 'familyLocationName' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
@@ -75,7 +89,7 @@ class Trace
     /**
      * 'PickLeader'
      * parameters : array(finished -> boolean)
-     * entities : ArrayCollection($party , $leader) ;
+     * entities : ArrayCollection($party , $leader)
      * @return string
      * @throws \Exception
      */    
