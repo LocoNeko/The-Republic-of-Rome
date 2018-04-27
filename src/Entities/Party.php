@@ -125,7 +125,6 @@ class Party extends TraceableEntity
     {
         if ($isDone!= $this->isDone) 
         {
-            $this->game->recordTrace('isDone' , NULL , new ArrayCollection(array($this))) ;
             $this->isDone = $isDone ; 
         }
     }

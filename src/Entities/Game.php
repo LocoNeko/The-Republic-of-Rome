@@ -300,21 +300,6 @@ class Game
     }
      */
     
-    /**
-     * @param string $operation
-     * @param array $parameters
-     * @param \ArrayCollection $entities
-     * @throws \Exception
-     */
-    public function recordTrace($operation , $parameters=NULL , $entities=NULL)
-    {
-        try {
-            new \Entities\Trace($this , $operation , $parameters , $entities) ;
-        } catch (Exception $ex) {
-            throw new \Exception($ex) ;
-        }
-    }
-    
     public function nextTick()
     {
         $this->tick++ ;
@@ -570,7 +555,6 @@ class Game
             $message = new \Entities\Message($this, 'ERROR creating message', 'error') ;
         }
         $this->getMessages()->add($message) ;
-        $this->recordTrace('log' , NULL , new ArrayCollection(array($message))) ;
         return $message ;
     }
     
@@ -947,8 +931,8 @@ class Game
                 $entitiesTrace->add($statesman->getCardsControlled()) ;
             }
         }
-        $this->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()));
-        $this->recordTrace('PlayStatesman' , $familyTrace , $entitiesTrace) ;
+        $this   ->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()))
+                ->recordTrace('PlayStatesman' , $familyTrace , $entitiesTrace) ;
         return $statesman ;
     }
 

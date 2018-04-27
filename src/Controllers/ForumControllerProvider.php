@@ -121,7 +121,7 @@ class ForumControllerProvider implements ControllerProviderInterface
                 return $app->json( $exception->getMessage() , 201 );
             }
         })
-            ->bind('verb_RollEvent');
+        ->bind('verb_RollEvent');
 
         /*
         * POST target

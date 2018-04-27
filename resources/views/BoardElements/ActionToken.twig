@@ -73,4 +73,6 @@
     </div>
 {% elseif action['type']=='disabledInput' %}
     <input type="text" class="form-control {{action['class']|default('')}}" disabled="disabled">
+{% elseif action['type']=='tinyIcon' %}
+    <span class="glyphicon glyphicon-{{action['glyphicon']|default('ok')}} text-{{action['textStyle']|default('danger')}} submitWithVerb" verb="{{action['verb']}}" title="{{action['description']|default('ok')}}"></span>
 {% endif %}

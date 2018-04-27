@@ -1,0 +1,3 @@
+#!/bin/bash
+
+../../vendor/doctrine/orm/bin/doctrine "$@"

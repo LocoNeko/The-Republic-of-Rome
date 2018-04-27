@@ -335,8 +335,23 @@ function submitJSON(json)
 
     socket.emit('Update', $("title").attr('realm'));
 
+    var pathname = window.location.pathname ;
+    /*
+     * This ugly hack saves me a ton of pain : just replace the phase name by 'Trace' when submitting the 'undoTrace' verb
+     */
+    if (json['verb']==='undoTrace')
+    {
+        pathname = pathname
+            .replace('Setup' , 'Trace')
+            .replace('Mortality' , 'Trace')
+            .replace('Revenue' , 'Trace')
+            .replace('Forum' , 'Trace')
+            .replace('Population' , 'Trace')
+            .replace('Senate' , 'Trace') ;
+    }
+    
     $.post(
-       window.location.pathname + '/' + json['verb'] ,
+       pathname + '/' + json['verb'] ,
        json ,
        function() {
            window.location.reload(true) ;

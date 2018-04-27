@@ -5,7 +5,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 /**
  * @Entity @Table(name="messages")
  **/
-class Message extends TraceableEntity
+class Message
 {
     public static $VALID_TYPES = array ('log' , 'alert' , 'error' , 'chat');
     public static $FLASH_TYPES = array ('log' => 'info' , 'alert' => 'warning' , 'error' => 'danger' , 'chat' => 'success') ;
@@ -16,6 +16,9 @@ class Message extends TraceableEntity
     // One Game has many messages
     /** @ManyToOne(targetEntity="Game", inversedBy="messages", cascade={"persist"}) **/
     private $game ;
+    
+    /** @Column(type="integer") @var int */
+    protected $tick ;
     
     /** @Column(type="text") @var text */
     protected $text ;
@@ -34,6 +37,9 @@ class Message extends TraceableEntity
     
     /** @Column(type="datetime")  */
     protected $time ;
+    
+    /** @OneToOne(targetEntity="Trace", cascade={"persist"}) @JoinColumn(name="traceId", referencedColumnName="traceId") **/
+    protected $trace = NULL ;
     
     public function getId() { return $this->id; }
     public function getGame() { return $this->game; }
@@ -98,6 +104,7 @@ class Message extends TraceableEntity
             $this->recipients = NULL ;
         }
         $this->game = $game ;
+        $this->tick = $game->getTick() ;
         $this->text = $text ;
         if (is_array($parameters)) {
             $this->parameters = $parameters ;
@@ -222,4 +229,33 @@ class Message extends TraceableEntity
         return FALSE ;
     }
     
+    /**
+     * Trace related
+     */
+    
+    /**
+     * @param string $operation
+     * @param array $parameters
+     * @param \ArrayCollection $entities
+     * @throws \Exception
+     */
+    public function recordTrace($operation , $parameters=NULL , $entities=NULL)
+    {
+        try {
+            $this->trace = new \Entities\Trace($operation , $parameters , $entities) ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+    
+    /**
+     * @return string|bool
+     */
+    public function getTraceDescription()
+    {
+        /* @var $trace \Entities\Trace */
+        $trace = $this->trace ;
+        return ($trace!==NULL ? $trace->describe() : FALSE);
+    }
+
 }

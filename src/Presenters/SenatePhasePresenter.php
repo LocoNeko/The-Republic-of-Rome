@@ -56,12 +56,12 @@ class SenatePhasePresenter
         */
         if ($game->getParty($user_id)->getAssassinationAttempt() === FALSE)
         {
-	        $this->header['actions'][] = array(
-	        	'type'=> 'button' ,
-	            'verb' => 'senateAssassinate' ,
-	            'style' => 'danger' ,
-	            'text'=> _('ATTEMPT')
-	        ) ;
+            $this->header['actions'][] = array(
+                'type'=> 'button' ,
+                'verb' => 'senateAssassinate' ,
+                'style' => 'danger' ,
+                'text'=> _('ATTEMPT')
+            ) ;
         }
 
         /**

@@ -93,34 +93,4 @@
 
     {% endfor %}
 
-    {# DEBUG - : show all cards & decks, and allow moving a card to a deck #}
-{#
-    <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='MoveCard' gameId='{{game.getId()}}'>
-        <h3>Debug - Cards</h3>
-        <div class="btn-group" data-toggle="radio">
-            {% for card in game.getFilteredCards()%}
-                <div class="row">
-                    <label>
-                        <input type="radio" class="toggle" value="{{card.getCardId()}}" name="FromCard">
-                        {{card.getName()}} [{{card.getLocation()['name']}}]
-                    </label>
-                </div>
-            {% endfor %}
-        </div>
-        <h3>Debug - Decks</h3>
-        <div class="btn-group" data-toggle="radio">
-            {% for deck in game.getFilteredDecks()%}
-                <div class="row">
-                    <label>
-                        <input type="radio" value="{{deck.getId()}}" name="ToDeck">
-                        {{deck.getName()}}
-                    </label>
-                </div>
-            {% endfor %}
-        </div>
-        <div class="row">
-            <button type="submit" class="btn btn-warning">MOVE CARD</button>
-        </div>
-    </form>
-  #}      
 {% endblock %}

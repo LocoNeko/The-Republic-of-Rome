@@ -5,7 +5,7 @@ namespace Entities ;
  * @Entity @Table(name="traceableEntities")
  * @InheritanceType("JOINED")
  * @DiscriminatorColumn(name="entityClass", type="string")
- * @DiscriminatorMap({ "Card" = "Card" , "Proposal" = "Proposal"  , "Party" = "Party" , "Deck" = "Deck" , "Fleet" = "Fleet" , "Legion" = "Legion" ,"Message" = "Message"})
+ * @DiscriminatorMap({ "Card" = "Card" , "Proposal" = "Proposal"  , "Party" = "Party" , "Deck" = "Deck" , "Fleet" = "Fleet" , "Legion" = "Legion" , "Senator" = "Senator" })
  */
 abstract class TraceableEntity
 {
