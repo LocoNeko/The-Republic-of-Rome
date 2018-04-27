@@ -485,6 +485,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $game->log(_('Rome starts with 4 regular Legions.') ) ;
         
         // Give initial senators & cards to parties
+        $earlyRepublicDeck->shuffle() ;
         foreach ($game->getParties() as $party)
         {
             
@@ -492,7 +493,6 @@ class LobbyControllerProvider implements ControllerProviderInterface
             $senatorsList = '' ;
             for ($i=1 ; $i<=3 ; $i++)
             {
-                $earlyRepublicDeck->shuffle() ;
                 $card = $earlyRepublicDeck->getFirstCardByProperty('preciseType' , 'Senator' , $party->getSenators()) ;
                 $senatorsList.=$card->getName() ;
                 switch($i) {

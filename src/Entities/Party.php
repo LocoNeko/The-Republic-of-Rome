@@ -81,7 +81,6 @@ class Party extends TraceableEntity
     {
         if (!$this->readyToStart) 
         {
-            $this->onPropertyChanged('readyToStart', $this->readyToStart, TRUE);
             $this->readyToStart = TRUE ; 
         }
     }
@@ -92,7 +91,6 @@ class Party extends TraceableEntity
     {
         if ($assassinationAttempt!= $this->assassinationAttempt) 
         {
-            $this->onPropertyChanged('assassinationAttempt', $this->assassinationAttempt, $assassinationAttempt);
             $this->assassinationAttempt = $assassinationAttempt ; 
         }
     }
@@ -101,7 +99,6 @@ class Party extends TraceableEntity
     {
         if ($assassinationTarget!= $this->assassinationTarget) 
         {
-            $this->onPropertyChanged('assassinationTarget', $this->assassinationTarget, $assassinationTarget);
             $this->assassinationTarget = $assassinationTarget ; 
         }
     }
@@ -112,7 +109,6 @@ class Party extends TraceableEntity
         {
             $this->getLeader()->setLeaderOf(NULL) ;
         }
-        $this->onPropertyChanged('leader', $this->leader, $leader);
         $this->leader = $leader;
         $leader->setLeaderOf($this) ;
     }
@@ -121,7 +117,6 @@ class Party extends TraceableEntity
     {
         if ($treasury!= $this->treasury) 
         {
-            $this->onPropertyChanged('treasury', $this->treasury, $treasury);
             $this->treasury = $treasury ; 
         }
     }
@@ -130,7 +125,7 @@ class Party extends TraceableEntity
     {
         if ($isDone!= $this->isDone) 
         {
-            $this->onPropertyChanged('isDone', $this->isDone, $isDone);
+            $this->game->recordTrace('isDone' , NULL , new ArrayCollection(array($this))) ;
             $this->isDone = $isDone ; 
         }
     }
@@ -139,7 +134,6 @@ class Party extends TraceableEntity
     {
         if ($initiativeWon!= $this->initiativeWon) 
         {
-            $this->onPropertyChanged('initiativeWon', $this->initiativeWon, $initiativeWon);
             $this->initiativeWon = $initiativeWon ; 
         }
     }
@@ -148,7 +142,6 @@ class Party extends TraceableEntity
     {
         if ($bid!= $this->bid) 
         {
-            $this->onPropertyChanged('bid', $this->bid, $bid);
             $this->bid = $bid ; 
         }
     }
@@ -156,22 +149,12 @@ class Party extends TraceableEntity
     public function setBidWith($bidWith) {
         if ($bidWith!= $this->bidWith) 
         {
-            $this->onPropertyChanged('bidWith', $this->bidWith, $bidWith);
             $this->bidWith = $bidWith ;
             foreach($this->getSenators()->getCards() as $senator) 
             {
                 $senator->setBiddingFor(NULL) ;
             }
             $bidWith->setBiddingFor($this) ;
-        }
-    }
-
-    public function onPropertyChanged($propertyName, $currentState , $newState)
-    {
-        try {
-            $this->game->onChange($this, $propertyName , $currentState, $newState) ;
-        } catch (Exception $ex) {
-            throw new \Exception($ex) ;
         }
     }
 
@@ -329,7 +312,6 @@ class Party extends TraceableEntity
     {
         if ((int)$amount!= 0) 
         {
-            $this->onPropertyChanged('treasury', $this->treasury, $this->treasury+$amount);
             $this->treasury+=(int)$amount ;
         }
     }
@@ -338,7 +320,6 @@ class Party extends TraceableEntity
     {
         if ((int)$amount!= 0) 
         {
-            $this->onPropertyChanged('bid', $this->bid, $this->bid+$amount);
             $this->bid+=(int)$amount ;
         }
     }

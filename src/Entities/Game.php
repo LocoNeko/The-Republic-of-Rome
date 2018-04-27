@@ -275,12 +275,14 @@ class Game
      * @param string $newState serialised
      * @throws \Exception
      */
+    /**
+     * @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers 
     public function onChange($entity , $propertyName, $currentState , $newState)
     {
         try {
             $propertyType = gettype($newState);
             // using getRealClass otherwise I sometimes get Proxies
-            /** @todo Check this always returns a doctrine entity, as normal classes might not like getRealClass */
+            // @todo Check this always returns a doctrine entity, as normal classes might not like getRealClass
             $propertyClass = (($propertyType=='object') ? \Doctrine\Common\Util\ClassUtils::getRealClass(get_class($newState)) : '');
             if ($propertyType=='object')
             {
@@ -292,6 +294,22 @@ class Game
             }
             $trace = new \Entities\Trace($this , $entity , $propertyName , $propertyClass , serialize($currentState) , serialize($newState)) ;
             $this->getTraces()->add($trace) ;
+        } catch (Exception $ex) {
+            throw new \Exception($ex) ;
+        }
+    }
+     */
+    
+    /**
+     * @param string $operation
+     * @param array $parameters
+     * @param \ArrayCollection $entities
+     * @throws \Exception
+     */
+    public function recordTrace($operation , $parameters=NULL , $entities=NULL)
+    {
+        try {
+            new \Entities\Trace($this , $operation , $parameters , $entities) ;
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
@@ -552,6 +570,7 @@ class Game
             $message = new \Entities\Message($this, 'ERROR creating message', 'error') ;
         }
         $this->getMessages()->add($message) ;
+        $this->recordTrace('log' , NULL , new ArrayCollection(array($message))) ;
         return $message ;
     }
     
@@ -851,6 +870,7 @@ class Game
     {
         $party=$this->getParty($user_id) ;
         $statesman = $this->getParty($user_id)->getHand()->getFirstCardByProperty('senatorID', $statesmanId) ;
+        $entitiesTrace = new ArrayCollection(array($party , $statesman)) ;
         if ($statesman->getPreciseType()!=='Statesman') 
         {
             throw new \Exception(sprintf(_('ERROR - %1$s is not a Statesman') , array($statesman->getName()))) ;
@@ -865,11 +885,13 @@ class Game
 
         // Handle the family
         $familyMessage='' ;
+        $familyTrace = array() ;
         $familyID = $statesman->statesmanFamily() ;
         foreach($this->getAllSenators() as $aSenator) 
         {
             if ($aSenator->getSenatorID()==$familyID) 
             {
+                /* @var $family \Entities\Senator */
                 $family=$aSenator ;
                 break ;
             }
@@ -877,11 +899,24 @@ class Game
         
         if (isset($family)) {
             $familyLocation = $family->getLocation() ;
-
+            $familyTrace = array ('familyLocation' => $familyLocation['type'] , 'familyLocationName' => $familyLocation['name']) ; 
+            
             // The family was found in the player's party - Play the Statesman and make him control the Family
             if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()==$party->getUser_id())
             {
                 $familyLocation['value']->getSenators()->getFirstCardByProperty('cardId', $family->getCardId() , $statesman->getCardsControlled()) ;
+                $familyTrace = array_merge( $familyTrace , array(
+                    'priorConsul' => $family->getPriorConsul() ,
+                    'INF' => $family->getINF() ,
+                    'statesmanINF' => $statesman->getINF() ,
+                    'POP' => $family->getPOP() ,
+                    'statesmanPOP' => $statesman->getPOP() ,
+                    'Treasury' => $family->getTreasury() ,
+                    'Knights' => $family->getKnights() ,
+                    'Office' => $family->getOffice() ,
+                    'isLeader' => ($party->getLeader()->getSenatorID() == $family->getSenatorID())
+                ))  ;
+                
                 // Adjust Statesman's value that are below the Family's
                 $statesman->setPriorConsul($family->getPriorConsul()) ;
                 if ($family->getINF() > $statesman->getINF()) { $statesman->setINF($family->getINF()) ; }
@@ -904,13 +939,16 @@ class Game
             // Move any card controlled by the Family on the Statesman
             if ($family->hasControlledCards())
             {
+                $entitiesTrace->add($family->getCardsControlled()) ;
                 while($family->getCardsControlled()->getNumberOfCards()>0)
                 {
                     $statesman->getCardsControlled()->putCardOnTop($family->getCardsControlled()->drawFirstCard()) ;
                 }
+                $entitiesTrace->add($statesman->getCardsControlled()) ;
             }
         }
         $this->log(_('[['.$user_id.']]'.' {play,plays} Statesman %1$s.'.$familyMessage) , 'log' , array($statesman->getName()));
+        $this->recordTrace('PlayStatesman' , $familyTrace , $entitiesTrace) ;
         return $statesman ;
     }
 

@@ -1,10 +1,7 @@
 <?php
 namespace Entities ;
 use Doctrine\Common\Collections\ArrayCollection;
-/**
- * Description of Message
- *
- */
+
 /**
  * @Entity @Table(name="messages")
  **/

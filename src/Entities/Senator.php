@@ -82,7 +82,8 @@ class Senator extends Card
     {
         if ($MIL!= $this->MIL) 
         {
-            $this->onPropertyChanged('MIL', $this->MIL, $MIL);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('MIL', $this->MIL, $MIL);
             $this->MIL = $MIL ;
         }
     }
@@ -91,7 +92,8 @@ class Senator extends Card
     {
         if ($ORA!= $this->ORA) 
         {
-            $this->onPropertyChanged('ORA', $this->ORA, $ORA);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('ORA', $this->ORA, $ORA);
             $this->ORA = $ORA ;
         }
     }
@@ -100,7 +102,8 @@ class Senator extends Card
     {
         if ($LOY!= $this->LOY) 
         {
-            $this->onPropertyChanged('LOY', $this->LOY, $LOY);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('LOY', $this->LOY, $LOY);
             $this->LOY = $LOY ;
         }
     }
@@ -109,7 +112,8 @@ class Senator extends Card
     {
         if ($INF!= $this->INF) 
         {
-            $this->onPropertyChanged('INF', $this->INF, $INF);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('INF', $this->INF, $INF);
             $this->INF = $INF ;
         }
     }
@@ -118,7 +122,8 @@ class Senator extends Card
     {
         if ($knights!= $this->knights) 
         {
-            $this->onPropertyChanged('knights', $this->knights, $knights);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('knights', $this->knights, $knights);
             $this->knights = $knights ;
         }
     }
@@ -127,7 +132,8 @@ class Senator extends Card
     {
         if ($treasury!= $this->treasury) 
         {
-            $this->onPropertyChanged('treasury', $this->treasury, $treasury);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('treasury', $this->treasury, $treasury);
             $this->treasury = $treasury ;
         }
     }
@@ -136,7 +142,8 @@ class Senator extends Card
     {
         if ($POP!= $this->POP) 
         {
-            $this->onPropertyChanged('POP', $this->POP, $POP);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('POP', $this->POP, $POP);
             $this->POP = $POP ;
         }
     }
@@ -145,7 +152,8 @@ class Senator extends Card
     {
         if ($office!= $this->office) 
         {
-            $this->onPropertyChanged('office', $this->office, $office);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('office', $this->office, $office);
             $this->office = $office ;
         }
     }
@@ -154,7 +162,8 @@ class Senator extends Card
     {
         if ($priorConsul!= $this->priorConsul) 
         {
-            $this->onPropertyChanged('priorConsul', $this->priorConsul, $priorConsul);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('priorConsul', $this->priorConsul, $priorConsul);
             $this->priorConsul = $priorConsul ;
         }
     }
@@ -163,7 +172,8 @@ class Senator extends Card
     {
         if ($corrupt!= $this->corrupt) 
         {
-            $this->onPropertyChanged('corrupt', $this->corrupt, $corrupt);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('corrupt', $this->corrupt, $corrupt);
             $this->corrupt = $corrupt ;
         }
     }
@@ -172,7 +182,8 @@ class Senator extends Card
     {
         if ($major!= $this->major) 
         {
-            $this->onPropertyChanged('major', $this->major, $major);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('major', $this->major, $major);
             $this->major = $major ;
         }
     }
@@ -181,7 +192,8 @@ class Senator extends Card
     {
         if ($rebel!= $this->rebel) 
         {
-            $this->onPropertyChanged('rebel', $this->rebel, $rebel);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('rebel', $this->rebel, $rebel);
             $this->rebel = $rebel ;
         }
     }
@@ -190,7 +202,8 @@ class Senator extends Card
     {
         if ($captive!= $this->captive) 
         {
-            $this->onPropertyChanged('captive', $this->captive, $captive);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('captive', $this->captive, $captive);
             $this->captive = $captive ;
         }
     }
@@ -199,7 +212,8 @@ class Senator extends Card
     {
         if ($freeTribune!= $this->freeTribune) 
         {
-            $this->onPropertyChanged('freeTribune', $this->freeTribune, $freeTribune);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('freeTribune', $this->freeTribune, $freeTribune);
             $this->freeTribune = $freeTribune ;
         }
     }
@@ -208,7 +222,8 @@ class Senator extends Card
     {
         if ($returningGovernor!= $this->returningGovernor) 
         {
-            $this->onPropertyChanged('returningGovernor', $this->returningGovernor, $returningGovernor);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('returningGovernor', $this->returningGovernor, $returningGovernor);
             $this->returningGovernor = $returningGovernor ;
         }
     }
@@ -217,7 +232,8 @@ class Senator extends Card
     {
         if ($commanderIn!= $this->commanderIn) 
         {
-            $this->onPropertyChanged('commanderIn', $this->commanderIn, $commanderIn);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('commanderIn', $this->commanderIn, $commanderIn);
             $this->commanderIn = $commanderIn ;
         }
     }
@@ -226,7 +242,8 @@ class Senator extends Card
     {
         if ($leaderOf!= $this->leaderOf) 
         {
-            $this->onPropertyChanged('leaderOf', $this->leaderOf, $leaderOf);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('leaderOf', $this->leaderOf, $leaderOf);
             $this->leaderOf = $leaderOf ;
         }
     }
@@ -235,7 +252,8 @@ class Senator extends Card
     {
         if ($biddingFor!= $this->biddingFor) 
         {
-            $this->onPropertyChanged('biddingFor', $this->biddingFor, $biddingFor);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('biddingFor', $this->biddingFor, $biddingFor);
             $this->biddingFor = $biddingFor ;
         }
     }
@@ -244,7 +262,8 @@ class Senator extends Card
     {
         if ($steppedDown!= $this->steppedDown) 
         {
-            $this->onPropertyChanged('steppedDown', $this->steppedDown, $steppedDown);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('steppedDown', $this->steppedDown, $steppedDown);
             $this->steppedDown = $steppedDown ;
         }
     }

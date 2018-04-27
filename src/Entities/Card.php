@@ -59,18 +59,19 @@ abstract class Card extends TraceableEntity
     {
         if ($deck!= $this->deck) 
         {
-            $this->onPropertyChanged('deck', $this->deck, $deck);
+            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
+            //$this->onPropertyChanged('deck', $this->deck, $deck);
             $this->deck = $deck ;
         }
     }
     
+    /**
+     * This function doesn't call onPropertyChanged, but each calling function should store a trace of the order of cards when it has changed
+     * @param type $position
+     */
     public function setPosition($position) 
     {
-        if ($position!= $this->position) 
-        {
-            $this->onPropertyChanged('position', $this->position, $position);
-            $this->position = $position ;
-        }
+        $this->position = $position ;
     }
 
     public function getCardId() { return $this->cardId ; }
@@ -89,12 +90,12 @@ abstract class Card extends TraceableEntity
      * @param type $newState
      * @throws \Exception
      */
+     /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers > Have to delete this once happy
+
     public function onPropertyChanged($propertyName, $currentState , $newState)
     {
         try {
-            /** 
-             * Not all decks are directly linked to a game. In order to use game->onChange, I must first find the game this deck ultimately belongs to
-             */
+             // Not all decks are directly linked to a game. In order to use game->onChange, I must first find the game this deck ultimately belongs to
             $deck  =$this->getDeck() ;
             if ($deck)
             {
@@ -109,6 +110,7 @@ abstract class Card extends TraceableEntity
             throw new \Exception($ex) ;
         }
     }
+    */
 
     // Only create the cards_controlled deck when it becomes necessary
     /**
