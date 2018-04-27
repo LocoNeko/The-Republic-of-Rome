@@ -61,8 +61,8 @@ class Trace
      * Traces format - For every type of $trace->operation, list the format of $parameters and $entities. Then the trace can be shown
      * 
      * 'PlayStatesman' 
-     * parameters : array ('familyLocation' , 'familyLocationName' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
-     * entities : ArrayCollection($party , $statesman , $family->getCardsControlled() , $statesman->getCardsControlled()) 
+     * parameters : array ('familyLocation' , 'familyLocationName' , 'wasInTheParty' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
+     * entities : ArrayCollection($party , $statesman , $family , $family->getCardsControlled() , $statesman->getCardsControlled()) 
      * 
      * 'PlayConcession'
      * parameters : NULL
@@ -105,4 +105,28 @@ class Trace
             throw new \Exception($ex);
         }
     }
+
+    /**
+     * 'PlayStatesman' 
+     * parameters : array ('familyLocation' , 'familyLocationName' , 'wasInTheParty' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
+     * entities : ArrayCollection($party , $statesman , $family , $family->getCardsControlled() , $statesman->getCardsControlled()) 
+     * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
+     * @return string
+     * @throws \Exception
+     */
+    function describePlayStatesman()
+    {
+        try 
+        {
+            $party = $this->entities->first() ;
+            /* @var $statesman \Entities\Senator */
+            $statesman = $this->entities->next() ;
+            return sprintf(_('%1$s played statesman %2$s') , $party->getName() , $statesman->getName());
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+    
 }

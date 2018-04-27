@@ -884,12 +884,14 @@ class Game
         if (isset($family)) {
             $familyLocation = $family->getLocation() ;
             $familyTrace = array ('familyLocation' => $familyLocation['type'] , 'familyLocationName' => $familyLocation['name']) ; 
+            $entitiesTrace->add($family);
             
             // The family was found in the player's party - Play the Statesman and make him control the Family
             if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()==$party->getUser_id())
             {
                 $familyLocation['value']->getSenators()->getFirstCardByProperty('cardId', $family->getCardId() , $statesman->getCardsControlled()) ;
                 $familyTrace = array_merge( $familyTrace , array(
+                    'wasInTheParty' => TRUE ,
                     'priorConsul' => $family->getPriorConsul() ,
                     'INF' => $family->getINF() ,
                     'statesmanINF' => $statesman->getINF() ,

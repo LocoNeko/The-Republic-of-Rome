@@ -88,4 +88,62 @@ class TraceControllerProvider implements ControllerProviderInterface
             throw new \Exception($ex);
         }
     }
+    
+    /**
+     * 'PlayStatesman' 
+     * parameters : array ('familyLocation' , 'familyLocationName' , 'wasInTheParty' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
+     * entities : ArrayCollection($party , $statesman , $family , $family->getCardsControlled() , $statesman->getCardsControlled()) 
+     * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
+     * @return string
+     * @throws \Exception
+     */
+    private function undoPlayStatesman($game , $message)
+    {
+        try {
+            $trace = $message->getTrace() ;
+            $entities = $trace->getEntities() ;
+            $parameters = $trace->getParameters() ;
+            $party = $entities->first() ;
+            /* @var $statesman \Entities\Senator */
+            $statesman = $entities->next() ;
+            /* @var $family \Entities\Senator */
+            $family = $entities->next() ;
+            $familyCardControlled = $entities->next() ;
+            $statesmanCardControlled = $entities->next() ;
+            // The family was in the party
+            if (array_key_exists('familyLocation' , $parameters))
+            {
+                if ($parameters['familyLocation'] && $parameters['familyLocation']=='party' && $parameters['wasInTheParty'])
+                {
+                    $family->setPriorConsul($parameters['priorConsul']) ;
+                    $family->setINF($parameters['INF']);
+                    $family->setPOP($parameters['POP']);
+                    $family->setTreasury($parameters['Treasury']);
+                    $family->setKnights($parameters['Knights']);
+                    $family->setOffice($parameters['Office']);
+                    if ($parameters['isLeader'])
+                    {
+                        $party->setLeader($family) ;
+                    }
+                    // Put the family back in the party
+                    $statesman->getCardsControlled()->getFirstCardByProperty('senatorID', $family->getSenatorID() , $party->getSenators()) ;
+                    $statesman->resetSenator();
+                }
+                if ($parameters['familyLocation'] && $parameters['familyLocation']=='game' && $parameters['familyLocationName']=='forum')
+                {
+
+                }
+            }
+            // Put the statesman back in the hand
+            $party->getSenators()->getFirstCardByProperty('senatorID', $statesman->getSenatorID() , $party->getHand()) ;
+            $this->entityManager->remove($trace) ;
+            $this->entityManager->remove($message) ;
+            $this->entityManager->flush();
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+
 }
