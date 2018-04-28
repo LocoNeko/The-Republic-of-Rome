@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  **/
 class Trace
 {
-    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' , 'DonePlayingCards' ) ;
+    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' , 'DonePlayingCards' , 'RevenueRedistribute' , 'RevenueContributions') ;
 
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $traceId ;
@@ -160,4 +160,42 @@ class Trace
             throw new \Exception($ex);
         }
     }    
+    
+    /**
+     * 'RevenueRedistribute'
+     * parameters : array('user_id' , 'fromName' , 'amount' , 'fromParty' , 'toParty')
+     * entities : ArrayCollection($fromEntity , $toEntity)
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    function describeRevenueRedistribute()
+    {
+        try {
+            $fromEntity = $this->entities->first() ;
+            $toEntity = $this->entities->next() ;
+            return sprintf(_('%1$s transfers %2$d T. from %3$s to %4$s') , $this->parameters['fromName'] , $this->parameters['amount'] , $fromEntity->getName() , $toEntity->getName() );
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+    
+    /**
+     * 'RevenueContributions'
+     * parameters : array('amount' , 'INFgain')
+     * entities : ArrayCollection($giver)
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    function describeRevenueContributions()
+    {
+        try {
+            $giver = $this->entities->first() ;
+            return sprintf(_('%1$s gives %2$d T. toRome') , $giver->getName() , $this->parameters['amount']);
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+    
 }

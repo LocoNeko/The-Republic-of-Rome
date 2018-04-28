@@ -189,6 +189,8 @@ class TraceControllerProvider implements ControllerProviderInterface
      * parameters : NULL
      * entities : ArrayCollection($party)
      * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
      * @return string
      * @throws \Exception
      */
@@ -217,4 +219,61 @@ class TraceControllerProvider implements ControllerProviderInterface
         }
     }
 
+    /**
+     * 'RevenueRedistribute'
+     * parameters : array('user_id' , 'fromName' , 'amount' , 'fromParty' , 'toParty')
+     * entities : ArrayCollection($fromEntity , $toEntity)
+     * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
+     * @return string
+     * @throws \Exception
+     */
+    private function undoRevenueRedistribute($game , $message)
+    {
+        try {
+            $trace = $message->getTrace() ;
+            $entities = $trace->getEntities() ;
+            $parameters = $trace->getParameters() ;
+            $entities->first()->changeTreasury($parameters['amount']) ;
+            $entities->next()->changeTreasury(-$parameters['amount']) ;
+            $this->entityManager->remove($trace) ;
+            $this->entityManager->remove($message) ;
+            $this->entityManager->flush();
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+
+    /**
+     * 'RevenueContributions'
+     * parameters : array('amount' , 'INFgain')
+     * entities : ArrayCollection($giver)
+     * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
+     * @return string
+     * @throws \Exception
+     */
+    private function undoRevenueContributions($game , $message)
+    {
+        try {
+            $trace = $message->getTrace() ;
+            $entities = $trace->getEntities() ;
+            $parameters = $trace->getParameters() ;
+            $giver = $entities->first() ;
+            $amount = $parameters['amount'] ;
+            $INFgain = $parameters['INFgain'] ;
+            $giver->changeTreasury($amount) ;
+            $giver->changeINF(-$INFgain) ;
+            $game->changeTreasury(-$amount) ;
+            $this->entityManager->remove($trace) ;
+            $this->entityManager->remove($message) ;
+            $this->entityManager->flush();
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+
+    
 }

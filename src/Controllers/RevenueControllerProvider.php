@@ -392,7 +392,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
         // Handle rebel legions maintenance, choice should be in 'data'
         foreach($base['rebels'] as $rebel)
         {
-            //TO DO
+            /** @todo Handle rebel legions maintenance */
         }
         
         $party->setIsDone(TRUE) ;
@@ -463,7 +463,8 @@ class RevenueControllerProvider implements ControllerProviderInterface
         }
         $fromEntity->changeTreasury(-$amount) ;
         $toEntity->changeTreasury($amount) ;
-        $game->log(_('[['.$user_id.']] {transfer '.(int)$amount.'T , transfers money} from '.($fromParty ? _('party treasury') : $fromEntity->getName()).' to '.($toParty ? _('party treasury') : $toEntity->getName())) , 'log' ) ;
+        $game   ->log(_('[['.$user_id.']] {transfer '.(int)$amount.'T , transfers money} from '.($fromParty ? _('party treasury') : $fromEntity->getName()).' to '.($toParty ? _('party treasury') : $toEntity->getName())) , 'log' )
+                ->recordTrace('RevenueRedistribute', array('user_id' => $user_id , 'fromName' => $game->getParty($user_id)->getName() , 'amount' => $amount , 'fromParty' => $fromParty , 'toParty' => $toParty) , array($fromEntity , $toEntity));
     }
     
     /**
@@ -521,7 +522,8 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 $amount ,
                 $INFgainMessage
             ) 
-        ) ;
+        )
+        ->recordTrace('RevenueContributions', array('amount' => $amount , 'INFgain' => $INFgain) , array($giver));
     }
 
     
