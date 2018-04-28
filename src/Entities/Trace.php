@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  **/
 class Trace
 {
-    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' ) ;
+    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' , 'DonePlayingCards' ) ;
 
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $traceId ;

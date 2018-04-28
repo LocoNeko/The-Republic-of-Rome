@@ -4,7 +4,6 @@ namespace Controllers ;
 use Silex\Application;
 use Silex\Api\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Doctrine\Common\Collections\ArrayCollection;
 
 class SetupControllerProvider implements ControllerProviderInterface
 {
@@ -133,7 +132,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $concession = $party->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id']) ;
                 $game->getParty($user_id)->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id'] , $recipient->getCardsControlled()) ;
                 $game   ->log(_('[['.$user_id.']]'.' {play,plays} %1$s on %2$s.') , 'log' , array($concession->getName() , $recipient->getName()))
-                        ->recordTrace('PlayConcession' , NULL , new ArrayCollection(array($party , $recipient , $concession))) ;
+                        ->recordTrace('PlayConcession' , NULL , array($party , $recipient , $concession)) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -167,7 +166,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                 {
                     $game->log(_('Everyone is done playing cards.'));
                     $game->setPhase('Mortality') ;
-                    $app['saveGame']($game) ;
+                    //$app['saveGame']($game) ;
                     $game->resetAllIsDone() ;
                 }
                 $this->entityManager->persist($game);

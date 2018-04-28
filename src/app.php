@@ -218,7 +218,7 @@
             /** @var \Entities\Game $game */
             $game = $app['getGame']((int)$app['session']->get('game_id')) ;
         }
-        catch (Exception $exception)
+        catch (Exception $ex)
         {
             return FALSE ;
         }

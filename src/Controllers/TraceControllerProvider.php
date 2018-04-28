@@ -38,6 +38,9 @@ class TraceControllerProvider implements ControllerProviderInterface
             if (method_exists($this , $methodName))
             {
                 try {
+                    $trace = $message->getTrace() ;
+                    $entities = $trace->getEntities() ;
+                    $parameters = $trace->getParameters() ;
                     $this->$methodName($game , $message);
                     $this->entityManager->persist($game);
                     $this->entityManager->flush();
@@ -66,7 +69,7 @@ class TraceControllerProvider implements ControllerProviderInterface
      * @return string
      * @throws \Exception
      */
-    private function undoPickLeader($game , $message)
+    private function undoPickLeader($game , $message) 
     {
         try {
             $trace = $message->getTrace() ;
@@ -168,6 +171,7 @@ class TraceControllerProvider implements ControllerProviderInterface
         try {
             $trace = $message->getTrace() ;
             $entities = $trace->getEntities() ;
+            $parameters = $trace->getParameters() ;
             $party = $entities->first() ;
             $recipient= $entities->next() ;
             $concession = $entities->next() ;
@@ -193,13 +197,21 @@ class TraceControllerProvider implements ControllerProviderInterface
         try {
             $trace = $message->getTrace() ;
             $entities = $trace->getEntities() ;
-            $party = $entities->first() ;
-            $party->setIsDone(FALSE) ;
+            $parameters = $trace->getParameters() ;
             if ($game->getPhase()=='Mortality')
             {
                 $game->setPhase('Setup') ;
                 $game->setSubPhase('PlayCards') ;
+                foreach ($game->getParties() as $aParty)
+                {
+                    $aParty->setIsDone(TRUE) ;
+                }
             }
+            $party = $entities->first() ;
+            $party->setIsDone(FALSE) ;
+            $this->entityManager->remove($trace) ;
+            $this->entityManager->remove($message) ;
+            $this->entityManager->flush();
         } catch (Exception $ex) {
             throw new \Exception($ex);
         }

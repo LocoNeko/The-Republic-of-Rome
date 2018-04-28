@@ -123,10 +123,7 @@ class Party extends TraceableEntity
 
     public function setIsDone($isDone) 
     {
-        if ($isDone!= $this->isDone) 
-        {
-            $this->isDone = $isDone ; 
-        }
+        $this->isDone = $isDone ; 
     }
 
     public function setInitiativeWon($initiativeWon) 

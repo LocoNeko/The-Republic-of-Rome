@@ -39,7 +39,7 @@ class MortalityControllerProvider implements ControllerProviderInterface
             }
             catch (\Exception $exception)
             {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
                 return $app->redirect('/') ;
             }
         })
