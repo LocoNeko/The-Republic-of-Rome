@@ -4,6 +4,7 @@ namespace Controllers ;
 use Silex\Application;
 use Silex\Api\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class TraceControllerProvider implements ControllerProviderInterface
 {
@@ -42,12 +43,11 @@ class TraceControllerProvider implements ControllerProviderInterface
                     $this->entityManager->flush();
                 } catch (Exception $ex) {
                     do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
-                    return $app->redirect('/') ;
                 }
             }
-            return $app->redirect('/') ;
+            return $app->json( 'SUCCESS' , 201);
         })
-        ->bind('trace');
+        ->bind('undoTrace');
 
         return $controllers ;
     }
@@ -92,7 +92,7 @@ class TraceControllerProvider implements ControllerProviderInterface
     /**
      * 'PlayStatesman' 
      * parameters : array ('familyLocation' , 'familyLocationName' , 'wasInTheParty' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
-     * entities : ArrayCollection($party , $statesman , $family , $family->getCardsControlled() , $statesman->getCardsControlled()) 
+     * entities : ArrayCollection($party , $statesman , $family) 
      * 
      * @param \Entities\Game $game
      * @param \Entities\Message $message
@@ -129,18 +129,77 @@ class TraceControllerProvider implements ControllerProviderInterface
                     }
                     // Put the family back in the party
                     $statesman->getCardsControlled()->getFirstCardByProperty('senatorID', $family->getSenatorID() , $party->getSenators()) ;
-                    $statesman->resetSenator();
                 }
+                // Put the family back in the forum
                 if ($parameters['familyLocation'] && $parameters['familyLocation']=='game' && $parameters['familyLocationName']=='forum')
                 {
+                    $statesman->getCardsControlled()->getFirstCardByProperty('senatorID', $family->getSenatorID() , $game->getDeck('forum')) ;
 
                 }
             }
             // Put the statesman back in the hand
             $party->getSenators()->getFirstCardByProperty('senatorID', $statesman->getSenatorID() , $party->getHand()) ;
+            // If the statesman has controlled cards, they belonged to the family. Put them back
+            while($statesman->getCardsControlled()->getNumberOfCards()>0)
+            {
+                $family->getCardsControlled()->putCardOnTop($statesman->getCardsControlled()->drawFirstCard()) ;
+            }
+            $statesman->resetSenator();
             $this->entityManager->remove($trace) ;
             $this->entityManager->remove($message) ;
             $this->entityManager->flush();
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+
+    /**
+     * 'PlayConcession' 
+     * parameters : NULL
+     * entities : ArrayCollection($recipient , $concession)
+     * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
+     * @return string
+     * @throws \Exception
+     */
+    private function undoPlayConcession($game , $message)
+    {
+        try {
+            $trace = $message->getTrace() ;
+            $entities = $trace->getEntities() ;
+            $party = $entities->first() ;
+            $recipient= $entities->next() ;
+            $concession = $entities->next() ;
+            $recipient->getCardsControlled()->getFirstCardByProperty('cardId' , $concession->getCardId() , $party->getHand()) ;
+            $this->entityManager->remove($trace) ;
+            $this->entityManager->remove($message) ;
+            $this->entityManager->flush();
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+    
+    /**
+     * 'DonePlayingCards'
+     * parameters : NULL
+     * entities : ArrayCollection($party)
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    private function undoDonePlayingCards($game , $message)
+    {
+        try {
+            $trace = $message->getTrace() ;
+            $entities = $trace->getEntities() ;
+            $party = $entities->first() ;
+            $party->setIsDone(FALSE) ;
+            if ($game->getPhase()=='Mortality')
+            {
+                $game->setPhase('Setup') ;
+                $game->setSubPhase('PlayCards') ;
+            }
         } catch (Exception $ex) {
             throw new \Exception($ex);
         }

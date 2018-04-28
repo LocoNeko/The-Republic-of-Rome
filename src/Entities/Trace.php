@@ -34,7 +34,6 @@ class Trace
 
     /**
      * 
-     * @param \Entities\Game $game
      * @param string $operation
      * @param array $parameters
      * @param \ArrayCollection $entities These entities should only be used when a trace is recorded for a new entity. Without this, there's no way to know the Entity ID, since the operation occurs within the constructor, before persisting, hence before the id is known
@@ -60,14 +59,11 @@ class Trace
      * 
      * Traces format - For every type of $trace->operation, list the format of $parameters and $entities. Then the trace can be shown
      * 
+     * 'PickLeader'
      * 'PlayStatesman' 
-     * parameters : array ('familyLocation' , 'familyLocationName' , 'wasInTheParty' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
-     * entities : ArrayCollection($party , $statesman , $family , $family->getCardsControlled() , $statesman->getCardsControlled()) 
-     * 
      * 'PlayConcession'
-     * parameters : NULL
-     * entities : ArrayCollection($recipient , $concession)
-     * @throws \Exception
+     * 'DonePlayingCards'
+     * 
      */
     public function describe()
     {
@@ -109,10 +105,8 @@ class Trace
     /**
      * 'PlayStatesman' 
      * parameters : array ('familyLocation' , 'familyLocationName' , 'wasInTheParty' , 'priorConsul' , 'INF' , 'statesmanINF' , 'POP' , 'statesmanPOP' , 'Treasury' , 'Knights' , 'Office' , 'isLeader' )
-     * entities : ArrayCollection($party , $statesman , $family , $family->getCardsControlled() , $statesman->getCardsControlled()) 
+     * entities : ArrayCollection($party , $statesman , $family) 
      * 
-     * @param \Entities\Game $game
-     * @param \Entities\Message $message
      * @return string
      * @throws \Exception
      */
@@ -129,4 +123,41 @@ class Trace
         }
     }
     
+    /**
+     * 'PlayConcession' 
+     * parameters : NULL
+     * entities : ArrayCollection($recipient , $concession , $party)
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    function describePlayConcession()
+    {
+        try {
+            $recipient = $this->entities->first() ;
+            $concession = $this->entities->next() ;
+            $party = $this->entities->next() ;
+            return sprintf(_('%1$s plays concession %2$s on %3$s') , $party->getName() , $concession->getName() , $recipient->getName());
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+
+    /**
+     * 'DonePlayingCards'
+     * parameters : NULL
+     * entities : ArrayCollection($party)
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    function describeDonePlayingCards()
+    {
+        try {
+            $party = $this->entities->first() ;
+            return sprintf(_('%1$s is done playing cards') , $party->getName());
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }    
 }

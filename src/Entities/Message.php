@@ -239,13 +239,26 @@ class Message
     /**
      * @param string $operation
      * @param array $parameters
-     * @param \ArrayCollection $entities
+     * @param array $entities
      * @throws \Exception
      */
     public function recordTrace($operation , $parameters=NULL , $entities=NULL)
     {
         try {
-            $this->trace = new \Entities\Trace($operation , $parameters , $entities) ;
+            // $entities is passed as an array to allow for control of the order in which the Trace->entities ArrayCollection will be created
+            if ($entities)
+            {
+                $entitiesArrayCollection = new ArrayCollection() ;
+                foreach ($entities as $entity)
+                {
+                    $entitiesArrayCollection->add($entity) ;
+                }
+            }
+            else
+            {
+                $entitiesArrayCollection = NULL ;
+            }
+            $this->trace = new \Entities\Trace($operation , $parameters , $entitiesArrayCollection) ;
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }

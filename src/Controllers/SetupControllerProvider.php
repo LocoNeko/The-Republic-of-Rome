@@ -4,7 +4,6 @@ namespace Controllers ;
 use Silex\Application;
 use Silex\Api\ControllerProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class SetupControllerProvider implements ControllerProviderInterface
@@ -73,7 +72,7 @@ class SetupControllerProvider implements ControllerProviderInterface
                     }
                 }
                 $game   ->log( _('%1$s is appointed leader of %2$s').' ([['.$user_id.']])' , 'log' , array($leader->getName() , $party->getName()) )
-                        ->recordTrace('PickLeader' , array('finished' => $finished ) , new ArrayCollection(array($party , $leader))) ;
+                        ->recordTrace('PickLeader' , array('finished' => $finished ) , array($party , $leader)) ;
                 if ($finished)
                 {
                     $game->setSubPhase('PlayCards') ;
@@ -129,11 +128,12 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $recipient = $game->getParty($user_id)->getSenators()->getFirstCardByProperty('senatorID', $json_data['to']['senatorID']) ;
-                $concession = $game->getParty($user_id)->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id']) ;
+                $party = $game->getParty($user_id) ;
+                $recipient = $party->getSenators()->getFirstCardByProperty('senatorID', $json_data['to']['senatorID']) ;
+                $concession = $party->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id']) ;
                 $game->getParty($user_id)->getHand()->getFirstCardByProperty('cardId', $json_data['from']['card_id'] , $recipient->getCardsControlled()) ;
                 $game   ->log(_('[['.$user_id.']]'.' {play,plays} %1$s on %2$s.') , 'log' , array($concession->getName() , $recipient->getName()))
-                        ->recordTrace('PlayConcession' , NULL , new ArrayCollection(array($recipient , $concession))) ;
+                        ->recordTrace('PlayConcession' , NULL , new ArrayCollection(array($party , $recipient , $concession))) ;
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 return $app->json( 'SUCCESS' , 201);
@@ -161,7 +161,8 @@ class SetupControllerProvider implements ControllerProviderInterface
                 $user_id = (int)$json_data['user_id'] ;
                 $party = $game->getParty($user_id) ;
                 $party->setIsDone(TRUE) ;
-                $game->log('[['.$user_id.']] '._('{are,is} done playing cards.')) ;
+                $game   ->log('[['.$user_id.']] '._('{are,is} done playing cards.')) 
+                        ->recordTrace('DonePlayingCards' , NULL , array($party)) ;
                 if ($game->isEveryoneDone())
                 {
                     $game->log(_('Everyone is done playing cards.'));

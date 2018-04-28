@@ -171,14 +171,6 @@
         'password' => $config_php['MYSQL_PASSWORD'],
     );
     
-      
-    // Create a simple "default" Doctrine ORM configuration for Annotations
-    $isDevMode = true;
-    
-    // obtaining the entity manager
-    //$config = Setup::createAnnotationMetadataConfiguration(array(__DIR__."/../src/Entities"), $isDevMode);
-    //$entityManager = EntityManager::create($app['db.options'], $config);
-    
     // Doctrine ORM
     $app->register(new DoctrineOrmServiceProvider , array(
         "orm.proxies_dir" => __DIR__."/../src/Entities/Proxies",
@@ -242,7 +234,7 @@
      * @param boolean $checkStarted Check whther or not the game has started
      * @param array $checkSubPhases Fail if the game's subPhase is not in this array, 
      * @return \Entities\Game|boolean
-     * @throws Exception not found , not started , wrong sub phase
+     * @throws \Exception not found , not started , wrong sub phase
      */
     $app['getGame'] = $app->protect(function ($game_id , $checkStarted = TRUE , $checkSubPhases = NULL) use ($app) {
         $query = $app['orm.em']->createQuery('SELECT g FROM Entities\Game g WHERE g.id = '.(int)$game_id);
@@ -280,8 +272,9 @@
             $app['orm.em']->persist($game) ;
             $app['orm.em']->flush() ;
         }
-        catch (Exception $exception)
+        catch (Exception $ex)
         {
+            do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
         }
     });
     
