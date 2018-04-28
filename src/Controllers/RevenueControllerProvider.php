@@ -68,7 +68,6 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $this->doRevenue($game , $user_id , $request->request->all()) ;
             if ($game->isEveryoneDone())
             {
-                $app['saveGame']($game) ;
                 $game->setSubPhase('Redistribution') ;
                 $game->resetAllIsDone() ;
             }
@@ -101,7 +100,6 @@ class RevenueControllerProvider implements ControllerProviderInterface
             {
                 $game->setSubPhase('StateExpenses') ;
                 $this->doStateExpenses($game) ;
-                $app['saveGame']($game) ;
                 $game->resetAllIsDone() ;
                 $game->setPhase('Forum') ;
                 // Remove events that expire at the beginning of the forum phase
@@ -213,7 +211,6 @@ class RevenueControllerProvider implements ControllerProviderInterface
             $game->getParty($user_id)->setIsDone(TRUE) ;
             if ($game->isEveryoneDone())
             {
-                $app['saveGame']($game) ;
                 $this->doRomeRevenue($game) ;
                 $game->setSubPhase('Contributions') ;
                 $game->resetAllIsDone() ;

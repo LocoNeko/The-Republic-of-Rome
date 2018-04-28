@@ -29,7 +29,6 @@ class LobbyControllerProvider implements ControllerProviderInterface
                 return $app['twig']->render('Lobby/List.twig', array(
                    'layout_template' => 'layout.twig' ,
                    'list' => $this->getGamesList() ,
-                   'savedGamesList' => $this->getSavedGamesList() ,
                    'is_admin' => in_array('ROLE_ADMIN', $app['user']->getRoles()) ,
                 ));
             } catch (Exception $ex) {
@@ -118,29 +117,6 @@ class LobbyControllerProvider implements ControllerProviderInterface
         ->bind('PlayGame');
 
         /*
-         * Save game
-         */
-        $controllers->get('/SaveGame/{game_id}', function($game_id) use ($app)
-        {
-            $app['session']->set('game_id', $game_id);
-            try 
-            {
-                /** @var \Entities\Game $game */
-                $game = $app['getGame']((int)$game_id) ;
-            }
-            catch (Exception $exception)
-            {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-            }
-            return $app['twig']->render('Lobby/GameData.twig', array(
-               'layout_template' => 'layout.twig' ,
-               'gameData' => $game->saveData() ,
-            ));
-        })
-        ->bind('SaveGame');
-
-        /*
         * POST target
         * Verb : Join
         * JSON data : "partyName"
@@ -182,11 +158,6 @@ class LobbyControllerProvider implements ControllerProviderInterface
             }
             if ($this->setPartyToReady($game, $app['user']->getId()) )
             {
-                // If the game was started, save it
-                if ($game->gameStarted())
-                {
-                    //$app['saveGame']($game) ;
-                }
                 $this->entityManager->persist($game);
                 $this->entityManager->flush();
                 $app['session']->getFlashBag()->add('success', _('You are ready to start'));
@@ -272,26 +243,6 @@ class LobbyControllerProvider implements ControllerProviderInterface
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
-    }
-
-    public function getSavedGamesList()
-    {
-        $query = $this->entityManager->createQuery('SELECT s FROM Entities\SavedGame s ORDER BY s.savedTime DESC');
-        $result = array() ;
-        foreach ($query->getResult() as $savedGame)
-        {
-            if (!isset($result[$savedGame->getGame_id()]))
-            {
-                $result[$savedGame->getGame_id()] = array() ;
-            }
-            array_push(
-                $result[$savedGame->getGame_id()] ,
-                array (
-                    'savedGameId' => $savedGame->getSavedGameId() ,
-                    'name' => $savedGame->getSavedTime()->format('Y-m-d H:i:s').', Turn '.$savedGame->getTurn().' - '.$savedGame->getPhase().($savedGame->getSubPhase()!='' ? ' - '.$savedGame->getSubPhase() : ''))
-                );
-        }
-        return $result ;
     }
 
     private function joinGame($game_id , $user_id , $userName , $partyName) {

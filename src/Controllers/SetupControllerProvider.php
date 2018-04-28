@@ -166,7 +166,6 @@ class SetupControllerProvider implements ControllerProviderInterface
                 {
                     $game->log(_('Everyone is done playing cards.'));
                     $game->setPhase('Mortality') ;
-                    //$app['saveGame']($game) ;
                     $game->resetAllIsDone() ;
                 }
                 $this->entityManager->persist($game);

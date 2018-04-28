@@ -256,12 +256,6 @@
         return $result[0];
     });
 
-    $app['saveGame'] = $app->protect(function ($game) use ($app) {
-        $savedGame = new \Entities\SavedGame($game) ;
-        $app['orm.em']->persist($savedGame) ;
-        $app['orm.em']->flush() ;
-    });
-
     // Persist & Flush the Game entity, as it might have been updated during rendering (e.g. when updating the LastUpdate of each Party)
     $app->after(function (Request $request) use ($app)
     {

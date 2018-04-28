@@ -36,7 +36,7 @@
                 {% endfor %}
                 <tr>
                     <th scope="row">{{ game.getId() }}</th>
-                    <td><strong><a href="{{ path('SaveGame', {game_id: game.getId()}) }}">{{ game.getName() }}</a></strong></td>
+                    <td><strong>{{ game.getName() }}</strong></td>
                     <td>{{ game.getScenario() }}</td>
                     <td>
                         <button data-toggle="tooltip" data-html="true" href="#" title="{{partieslist}}" class="btn btn-primary btn-xs LobbyListNbPlayers">{{game.getNumberOfPlayers()}}</button>
@@ -47,26 +47,10 @@
                     <td>{{ game.getTurn() }}</td>
                     <td>{{ game.getPhase() }}</td>
                     <td>
-                        {% if savedGamesList[game.getId()] is defined %}
-                            <form class='form-inline json-submit' user_id='{{app.user.id}}' verb='LoadGame' gameId='{{game.getId()}}'>
-                                <select class="form-control" name="savedGameId">
-                                    {% for gameId , savedGame in savedGamesList[game.getId()] %}
-                                        <option value="{{savedGame['savedGameId']}}">{{savedGame['name']}}</option>
-                                    {% endfor %}
-                                </select>
-                        {% else %}
-                            -
-                        {% endif %}
+                        -
                     </td>
                     <td>
-                        {% if savedGamesList[game.getId()] is defined %}
-                                <button type="submit" class="btn">
-                                    <span class="glyphicon glyphicon-floppy-open" aria-hidden="true" style="font-size: 16px;"></span>
-                                </button>
-                            </form>
-                        {% else %}
-                            -
-                        {% endif %}
+                        -
                     </td>
                     <td>{{ game.getCreated()|date('Y/m/d H:i') }}</td>
                     <td>
