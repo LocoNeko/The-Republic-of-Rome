@@ -45,8 +45,6 @@ class Deck extends TraceableEntity
     {
         if ($name!= $this->name) 
         {
-            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-            //$this->onPropertyChanged('name', $this->name, $name);
             $this->name = $name ; 
         }
     }
@@ -57,8 +55,6 @@ class Deck extends TraceableEntity
     {
         if ($card!= $this->controlled_by) 
         {
-            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-            //$this->onPropertyChanged('controlled_by', $this->controlled_by, $card);
             $this->controlled_by = $card ; 
         }
     }
@@ -67,8 +63,6 @@ class Deck extends TraceableEntity
     {
         if ($inParty!= $this->inParty) 
         {
-            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-            //$this->onPropertyChanged('inParty', $this->inParty, $inParty);
             $this->inParty = $inParty ; 
         }
     }
@@ -77,8 +71,6 @@ class Deck extends TraceableEntity
     {
         if ($inHand!= $this->inHand) 
         {
-            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-            //$this->onPropertyChanged('inHand', $this->inHand, $inHand);
             $this->inHand = $inHand ; 
         }
     }
@@ -102,60 +94,6 @@ class Deck extends TraceableEntity
     public function getInParty() { return $this->inParty; }
     public function getInHand() { return $this->inHand; }
  
-    /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers > Have to delete this once happy
-     * 
-     */
-    /*
-    public function onPropertyChanged($propertyName, $currentState , $newState)
-    {
-        try {
-             //Not all decks are directly linked to a game. In order to use game->onChange, I must first find the game this deck ultimately belongs to
-            $game = $this->findGame() ;
-            // Impossible to track changes of gameless Decks
-            if ($game)
-            {
-                $game->onChange($this, $propertyName , $currentState, $newState) ;
-            }
-        } catch (Exception $ex) {
-            throw new \Exception($ex) ;
-        }
-    }
-     */
-    
-    /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers > Have to delete this once happy
-     * Returns the game the deck ultimately belongs to :
-     * Directly, from a party, from a party's hand, from a card's controlled cards
-     * @return \Entities\Game
-     */
-    /*
-    public function findGame()
-    {
-        // This Deck has a game defined : return it
-        if ($this->game)
-        {
-            return $this->game ;
-        }
-        // This Deck has a inParty defined : return the game of that party
-        if ($this->inParty)
-        {
-            return $this->inParty->getGame() ;
-        }
-        // This Deck has a inHand defined : return the game of that party
-        if ($this->inHand)
-        {
-            return $this->inHand->getGame() ;
-        }
-        // Otherwise, the Deck is controlled by a card, find that card, find the Deck of cards it controls, find the game of that Deck
-        $card = $this->getControlled_by() ;
-        // We do have cardless decks on occasion (when on-the-fly controlled cards are not created yet
-        if ($card)
-        {
-            return $card->getCardsControlled()->findGame() ;
-        }
-        return FALSE ;
-    }
-    */
-    
     public function __construct($name)
     {
         $this->setName($name) ;
@@ -328,8 +266,6 @@ class Deck extends TraceableEntity
         $card->setPosition(0) ;
         $this->getCards()->add($card) ;
         $card->setDeck($this) ;
-        /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-        //$this->onPropertyChanged('putCardOnTop', NULL , $card->getCardId()) ;
     }
     
     public function removeCard($card) 
@@ -343,8 +279,6 @@ class Deck extends TraceableEntity
             }
         }
         $this->getCards()->removeElement($card) ;
-        /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-//        $this->onPropertyChanged('removeCard', $card->getCardId() , NULL) ;
     }
 
     public function getNumberOfCards() 
@@ -367,9 +301,6 @@ class Deck extends TraceableEntity
             {
                 $card2->changePosition(-1);
             }
-            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-
-//            $this->onPropertyChanged('drawFirstCard', NULL , $card->getCardId()) ;
             return $card ;
         }
         else
@@ -381,11 +312,7 @@ class Deck extends TraceableEntity
     public function shuffle()
     {
         $positions = $this->getPositions() ;
-        $before = $this->getPositions() ;
         shuffle($positions) ;
-        /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-
-//        $this->onPropertyChanged('shuffle', $before , $positions) ;
         $i=0;
         foreach($this->getCards() as $card)
         {

@@ -290,20 +290,6 @@ class Proposal extends TraceableEntity
     public function getVote()       { return $this->vote; }
     public function getDecision()      { return $this->decision; }
     
-    /** 
-     * @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers 
-     * @todo : remove all reference to onPropertyChanged once happy (The Senate controller should handle all traces)
-     * @todo : Finally, traceableEntities won't be used anymore, though I might keep them in order to have a unified uniqueID for all my entities.
-     */
-    public function onPropertyChanged($propertyName, $currentState , $newState)
-    {
-        try {
-            $this->game->onChange($this, $propertyName , $currentState, $newState) ;
-        } catch (Exception $ex) {
-            throw new \Exception($ex) ;
-        }
-    }
-    
     public function setType($type)
     {
         if ($type!= $this->type) 

@@ -59,8 +59,6 @@ abstract class Card extends TraceableEntity
     {
         if ($deck!= $this->deck) 
         {
-            /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers */
-            //$this->onPropertyChanged('deck', $this->deck, $deck);
             $this->deck = $deck ;
         }
     }
@@ -81,36 +79,6 @@ abstract class Card extends TraceableEntity
     public function getPreciseType() { return $this->preciseType ; }
     public function getWithLegions() { return $this->withLegions; }
     public function getWithFleets() { return $this->withFleets; }
-
-    /**
-     * onPropertyChanged must ultimately call game->onChange
-     * Cards don't belong to a game, they belong to a deck
-     * @param type $propertyName
-     * @param type $currentState
-     * @param type $newState
-     * @throws \Exception
-     */
-     /** @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers > Have to delete this once happy
-
-    public function onPropertyChanged($propertyName, $currentState , $newState)
-    {
-        try {
-             // Not all decks are directly linked to a game. In order to use game->onChange, I must first find the game this deck ultimately belongs to
-            $deck  =$this->getDeck() ;
-            if ($deck)
-            {
-                $game = $deck->findGame() ;
-                // Impossible to track changes of gameless Cards
-                if ($game)
-                {
-                    $game->onChange($this, $propertyName , $currentState, $newState) ;
-                }
-            }
-        } catch (Exception $ex) {
-            throw new \Exception($ex) ;
-        }
-    }
-    */
 
     // Only create the cards_controlled deck when it becomes necessary
     /**

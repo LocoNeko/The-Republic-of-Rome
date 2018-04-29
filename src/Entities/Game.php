@@ -266,40 +266,6 @@ class Game
         return $this->created;
     }
     
-
-    /**
-     * Creates a trace for the change of a property in a proposal
-     * @param \Entities\TraceableEntity $entity
-     * @param string $propertyName
-     * @param string $currentState serialised
-     * @param string $newState serialised
-     * @throws \Exception
-     */
-    /**
-     * @todo trace : trying something else. No ónPropertyChanged in Entities, do everything in controllers 
-    public function onChange($entity , $propertyName, $currentState , $newState)
-    {
-        try {
-            $propertyType = gettype($newState);
-            // using getRealClass otherwise I sometimes get Proxies
-            // @todo Check this always returns a doctrine entity, as normal classes might not like getRealClass
-            $propertyClass = (($propertyType=='object') ? \Doctrine\Common\Util\ClassUtils::getRealClass(get_class($newState)) : '');
-            if ($propertyType=='object')
-            {
-                if ( ($currentState!==NULL) && (method_exists($currentState, 'getId')) )
-                {
-                    $currentState = $currentState->getId() ;
-                }
-                $newState = $newState->getId() ;
-            }
-            $trace = new \Entities\Trace($this , $entity , $propertyName , $propertyClass , serialize($currentState) , serialize($newState)) ;
-            $this->getTraces()->add($trace) ;
-        } catch (Exception $ex) {
-            throw new \Exception($ex) ;
-        }
-    }
-     */
-    
     public function nextTick()
     {
         $this->tick++ ;
