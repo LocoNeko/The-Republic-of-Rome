@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
  **/
 class Trace
 {
-    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' , 'DonePlayingCards' , 'RevenueRedistribute' , 'RevenueContributions') ;
+    public static $VALID_OPERATIONS = array('PickLeader' , 'PlayStatesman' , 'PlayConcession' , 'DonePlayingCards' , 'RevenueRedistribute' , 'RevenueContributions' , 'Proposal') ;
 
     /** @Id @Column(type="integer") @GeneratedValue @var int */
     protected $traceId ;
@@ -49,7 +49,7 @@ class Trace
     {
         return (self::isValidOperation($this->operation) ? $this->operation : FALSE) ;
     }
-    
+    /** @return \ArrayCollection */
     public function getEntities() { return $this->entities ; }
     public function getParameters() { return $this->parameters ; }
 
@@ -193,6 +193,24 @@ class Trace
         try {
             $giver = $this->entities->first() ;
             return sprintf(_('%1$s gives %2$d T. toRome') , $giver->getName() , $this->parameters['amount']);
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+    
+    /**
+     * 'Proposal'
+     * parameters : array( 'action')
+     * entities : ArrayCollection($proposal)
+     * 
+     * @return string
+     * @throws \Exception
+     */
+    function describeProposal()
+    {
+        try {
+            $proposal = $this->entities->first() ;
+            return sprintf(_('Proposal %1$s , action : %2$s') , $proposal->getType() , $this->parameters['action']);
         } catch (Exception $ex) {
             throw new \Exception($ex);
         }

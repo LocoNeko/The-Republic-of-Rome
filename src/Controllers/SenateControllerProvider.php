@@ -65,7 +65,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 /* @var $proposal \Entities\Proposal */
-                $app['session']->getFlashBag()->add('danger', ' SenateMakeProposal json : '.json_encode($json_data, JSON_PRETTY_PRINT));
+                /** @todo remove when happy (DEBUG) : $app['session']->getFlashBag()->add('danger', ' SenateMakeProposal json : '.json_encode($json_data, JSON_PRETTY_PRINT)); */
                 try {
                     $proposal = $this->makeProposal($user_id , $game , $json_data);
                 } catch (Exception $exception) {
@@ -192,8 +192,7 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function makeProposal($user_id , $game , $json_data)
     {
-        // The proposal type is equal to the sub phase, except during otherbusiness in which case it's determined by ???
-        /** @todo Find the json var that holds the type of otherBusiness proposal that is selected */
+        // The proposal type is equal to the sub phase, except during otherbusiness in which case it's determined by $json_data['otherBusinessList']
         $subPhase = $game->getSubPhase() ;
         $proposalType = ( ($subPhase=='OtherBusiness') ? $json_data['otherBusinessList'] : $game->getSubPhase() ) ;
         try 
@@ -202,7 +201,8 @@ class SenateControllerProvider implements ControllerProviderInterface
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
-        $game->log($proposal->getDescription(), 'log') ;
+        $game   ->log($proposal->getDescription(), 'log')
+                ->recordTrace('Proposal', array('action' => 'makeProposal') , array($proposal)) ;
         return $proposal ;
     }
     
@@ -353,7 +353,8 @@ class SenateControllerProvider implements ControllerProviderInterface
             }
         }
         $currentProposal->setVote($user_id, $totalVotes, $description , $unanimous) ;
-        $game->log($description);
+        $game   ->log($description)
+                ->recordTrace('Proposal', array('action' => 'vote'), $currentProposal);
         $this->doVoteEnd($game , $currentProposal) ;
     }
     
@@ -382,11 +383,12 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $type = $proposal->getType() ;
                 try
                 {
-                    if ($type=='Censor')        { $this->implementProposalCensor($game , $proposal);}
-                    if ($type=='Prosecutions')  { $this->implementProposalProsecutions($game , $proposal);}
-                    if ($type=='recruit')       { $this->implementProposalRecruit($game , $proposal);}
-                    if ($type=='commander')     { $this->implementProposalCommander($game , $proposal);}
-                    if ($type=='concession')    { $this->implementProposalConcession($game , $proposal);}
+                    /** 
+                     * Calls the method $this->implementProposal{type} where type is the proposal type with its first letter capitalised 
+                     * type is among : Censor , Prosecutions , recruit , commander , concession
+                     */
+                    $methodName = 'implementProposal'.ucfirst($type) ;
+                    $this->$methodName($game , $proposal) ;
                 } catch (Exception $ex2) {
                     throw new \Exception($ex2) ;
                 }

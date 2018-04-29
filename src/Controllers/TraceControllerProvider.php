@@ -275,5 +275,56 @@ class TraceControllerProvider implements ControllerProviderInterface
         }
     }
 
+    /**
+     * 'Proposal'
+     * parameters : array('action')
+     * entities : ArrayCollection($proposal)
+     * 
+     * @param \Entities\Game $game
+     * @param \Entities\Message $message
+     * @return string
+     * @throws \Exception
+     */
+    private function undoProposal($game , $message)
+    {
+        /**
+         * Undoing a proposal is a completley different affair than other traces
+         * - All messages with this proposal in their trace must be collected and cancelled in reverse order
+         * - Each trace as an 'action' in its parameters, describing which action is to be cancelled.
+         * - Each action can change the content of both this trace's parameters & entities
+         * - A proposal can NEVER be undone before its outcome is 'done' : in other words, finish a proposal completely before undoing it
+         * List of possible actions :
+         * makeProposal , vote , veto , decide , appoint , implement
+         * good luck
+         */
+        try {
+            $trace = $message->getTrace() ;
+            $entities = $trace->getEntities() ;
+            $parameters = $trace->getParameters() ;
+            $proposal = $entities->first() ;
+            $action = $parameters['action'] ;
+            /* @var $aMessage \Entities\Message */
+            foreach (array_reverse($game->getMessages()->toArray()) as $aMessage) 
+            {
+                if ($aMessage->getTrace()->getEntities()->first() === $proposal)
+                {
+                    /** 
+                     * @todo Found a message which had this proposal in its trace : its action needs to be undone 
+                     * @todo This is the hardest undone ever
+                     */
+                }
+            }
+
+            /**
+            $this->entityManager->remove($trace) ;
+            $this->entityManager->remove($message) ;
+            $this->entityManager->flush();
+             * 
+             */
+        } catch (Exception $ex) {
+            throw new \Exception($ex);
+        }
+    }
+
     
 }

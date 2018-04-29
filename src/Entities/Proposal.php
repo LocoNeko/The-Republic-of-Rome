@@ -294,7 +294,6 @@ class Proposal extends TraceableEntity
     {
         if ($type!= $this->type) 
         {
-            $this->onPropertyChanged('type', $this->type, $type);
             $this->type = $type;
         }
     }
@@ -303,7 +302,6 @@ class Proposal extends TraceableEntity
     {
         if ($flow!= $this->flow) 
         {
-            $this->onPropertyChanged('flow', $this->flow, $flow);
             $this->flow = $flow;
         }
     }
@@ -312,7 +310,6 @@ class Proposal extends TraceableEntity
     {
         if ($step!== $this->step) 
         {
-            $this->onPropertyChanged('step', $this->step, $step);
             $this->step = $step;
         }
     }
@@ -321,7 +318,6 @@ class Proposal extends TraceableEntity
     {
         if ($content!= $this->content) 
         {
-            $this->onPropertyChanged('content', $this->content, $content);
             $this->content = $content;
         }
     }
@@ -330,7 +326,6 @@ class Proposal extends TraceableEntity
     {
         if ($proposedBy!= $this->proposedBy) 
         {
-            $this->onPropertyChanged('proposedBy', $this->proposedBy, $proposedBy);
             $this->proposedBy = $proposedBy;
         }
     }
@@ -339,7 +334,6 @@ class Proposal extends TraceableEntity
     {
         if ($constraints!= $this->constraints) 
         {
-            $this->onPropertyChanged('constraints', $this->constraints, $constraints);
             $this->constraints = $constraints;
         }
     }
@@ -348,7 +342,6 @@ class Proposal extends TraceableEntity
     {
         if ($conditions!= $this->conditions) 
         {
-            $this->onPropertyChanged('conditions', $this->conditions, $conditions);
             $this->conditions = $conditions;
         }
     }
@@ -357,7 +350,6 @@ class Proposal extends TraceableEntity
     { 
         if ($outcome!= $this->outcome) 
         {
-            $this->onPropertyChanged('outcome', $this->outcome, $outcome);
             $this->outcome = $outcome; 
         }
     }
@@ -1031,7 +1023,6 @@ class Proposal extends TraceableEntity
                 $this->vote[$i]['votes'] = $votes ;
                 $this->vote[$i]['description'] = $description ;
                 $this->vote[$i]['unanimous'] = $unanimous ;
-                $this->onPropertyChanged('vote', $currentVote , $this->getVote());
                 return TRUE ;
             }
         }
@@ -1047,9 +1038,6 @@ class Proposal extends TraceableEntity
     public function setDecision($key , $value)
     {
         try {
-            $currenState = $this->getDecision() ;
-            $newState = array_merge($currenState , array($key=>$value)) ;
-            $this->onPropertyChanged('decision', $currenState , $newState);
             $this->decision[$key] = $value ;
         } catch (Exception $ex) {
             throw new \Exception(_('ERROR - Proposal-.setDecision')) ;

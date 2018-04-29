@@ -49,6 +49,7 @@ class Message
     public function getRecipients() { return $this->recipients; }
     public function getFrom() { return $this->from; }
     public function getTime() { return $this->time ; }
+    /** @return \Entities\Trace */
     public function getTrace() { return $this->trace ; }
 
     /**
