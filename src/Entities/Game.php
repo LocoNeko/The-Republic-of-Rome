@@ -535,7 +535,7 @@ class Game
                 {
                     if ($message->getTime() > $party->getLastUpdate()) 
                     {
-                        if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) 
+                        if ( $message->isRecipient($user_id) ) 
                         {
                             array_push($messages , $message) ;
                         }
@@ -545,30 +545,6 @@ class Game
             }
         }
         return array() ;
-    }
-    
-    /**
-     * Returns all the messages in this Game which have $user_id or NULL as a recipient (NULL means everybody)
-     * @param int $user_id
-     * @return array of messages
-     */
-    public function getAllMessages ($user_id) 
-    {
-        $messages = array() ;
-        foreach($this->getParties() as $party) 
-        {
-            if ($party->getUser_id()==(int)$user_id) 
-            {
-                foreach (array_reverse($this->getMessages()->toArray()) as $message) 
-                {
-                    if ( $message->getRecipients()===NULL || count($message->getRecipients()) == 0 || $message->isRecipient($user_id)) 
-                    {
-                        array_push($messages , $message) ;
-                    }
-                }
-            }
-        }
-        return $messages ;
     }
     
     /**

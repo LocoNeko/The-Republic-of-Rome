@@ -63,7 +63,45 @@ class GamePresenter
                 ) ;
             }
         }
-        $this->messages = $game->getAllMessages($user_id);
+        /*
+         * Returns all the messages in this Game which have $user_id or NULL as a recipient (NULL means everybody)
+         * The Presenter gets the following from the Message, using $message->getLogVersion(...) :
+         * - Time
+         * - Colour
+         * - Text
+         * - Trace operation
+         * - Trace description (FALSE if no trace)
+         * - ProposalId (or -1 if not a proposal)
+         * - Proposal is underway (or FALSE if not a proposal)
+         */
+        $messages = array() ;
+        /* @var $message \Entities\Message */
+        $currentUndo = 'none' ;
+        foreach (array_reverse($game->getMessages()->toArray()) as $message) 
+        {
+            if ( $message->isRecipient($user_id) )
+            {
+                $messageLogVersion = $message->getLogVersion($user_id, $this->partiesNames) ;
+                // 'undoTrace' is TRUE only when we need to display the UNDO icon
+                $messageLogVersion['undoTrace'] = FALSE ;
+                if ($currentUndo=='none' && $messageLogVersion['traceDescription'])
+                {
+                    $currentUndo = $messageLogVersion['traceOperation'] ;
+                    $messageLogVersion['undoTrace'] = TRUE ;
+                }
+                if ($currentUndo=='proposal')
+                {
+                    
+                }
+                // If we don't have a trace yet, we check the $message for the trace's operation
+                // If the operation is a proposal, we only display an UNDO if the proposal's outcome is not 'underway'
+                // If we have set an UNDO, remember the proposal
+                // Display a tiny icon on all other actions of the same proposal
+                // If the operation is not a proposal, display an UNDO, and set the current undo to 'operation'
+                array_push($messages , $messageLogVersion) ;
+            }
+        }
+        $this->messages = $messages ;
         $this->variants = $game->getVariants() ;
     }
 

@@ -209,6 +209,25 @@ class Message
         return ucfirst( $formattedMessage );
     }
     
+    /**
+     * An array with all the information needed to properly display the message in the log 
+     * @param type $user_id
+     * @param type $partiesNames
+     * @return type
+     */
+    public function getLogVersion($user_id , $partiesNames) 
+    {
+        return array (
+            'time'              => $this->time ,
+            'colour'            => $this->getColour() ,
+            'text'              => $this->show($user_id, $partiesNames) ,
+            'traceDescription'  => $this->getTraceDescription() ,
+            'traceOperation'    => $this->getTraceOperation() ,
+            'proposalId'        => $this->getProposalId() ,
+            'proposalUnderway'  => $this->getProposalUnderway()
+        ) ;
+    }
+            
     public function getColour() {
         switch($this->type) {
             case 'chat'     : $result='seagreen' ;  break ;
@@ -221,11 +240,11 @@ class Message
     
     public function isRecipient($user_id) {
         $recipients = $this->getRecipients() ;
-        if ($recipients !== NULL) {
-            foreach($recipients as $recipient) {
-                if ($recipient->getUser_id()==$user_id) {
-                    return TRUE ;
-                }
+        if ($recipients===NULL) {return TRUE;}
+        if (count($recipients)==0) {return TRUE;}
+        foreach($recipients as $recipient) {
+            if ($recipient->getUser_id()==$user_id) {
+                return TRUE ;
             }
         }
         return FALSE ;
@@ -283,5 +302,39 @@ class Message
         /* @var $trace \Entities\Trace */
         $trace = $this->trace ;
         return ($trace!==NULL ? $trace->getOperation() : FALSE);
+    }
+    
+    /**
+     * If this message's trace's operation is 'Proposal', returns the Id of the proposal
+     * Otherwise returns -1
+     * @return integer
+     */
+    public function getProposalId()
+    {
+        /* @var $trace \Entities\Trace */
+        if (($this->trace) && ($this->trace->getOperation()=='Proposal'))
+        {
+            return $this->trace->getEntities()->first()->getId() ;
+        }
+        else
+        {
+            return -1 ;
+        }
+    }
+
+    /**
+     * If this message's trace's operation is 'Proposal', returns TRUE if the proposal is still underway
+     * @return integer
+     */
+    public function getProposalUnderway()
+    {
+        if (($this->trace) && ($this->trace->getOperation()=='Proposal'))
+        {
+            return ($this->trace->getEntities()->first()->getOutcome() === 'underway') ;
+        }
+        else
+        {
+            return FALSE ;
+        }
     }
 }
