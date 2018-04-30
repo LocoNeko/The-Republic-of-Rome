@@ -18,6 +18,8 @@
                             } }
                         %}
                         {% endembed %}
+                    {% elseif message['bindProposal'] %}
+                        <span class="glyphicon glyphicon-asterisk text-danger" title="{{message['traceDescription']}}"></span>
                     {% endif %}
                 </td>
                 <td style="color: {{message['colour']}}; width:100%; padding: 1px;">

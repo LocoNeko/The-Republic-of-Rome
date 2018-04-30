@@ -66,17 +66,18 @@ class GamePresenter
         /*
          * Returns all the messages in this Game which have $user_id or NULL as a recipient (NULL means everybody)
          * The Presenter gets the following from the Message, using $message->getLogVersion(...) :
-         * - Time
-         * - Colour
-         * - Text
-         * - Trace operation
-         * - Trace description (FALSE if no trace)
-         * - ProposalId (or -1 if not a proposal)
-         * - Proposal is underway (or FALSE if not a proposal)
+         * - time
+         * - colour
+         * - text
+         * - traceDescription (FALSE if no trace)
+         * - traceOperation
+         * - proposalId (or -1 if not a proposal)
+         * - proposalUnderway (or FALSE if not a proposal)
          */
         $messages = array() ;
         /* @var $message \Entities\Message */
         $currentUndo = 'none' ;
+        $currentProposalWithUndo = FALSE ;
         foreach (array_reverse($game->getMessages()->toArray()) as $message) 
         {
             if ( $message->isRecipient($user_id) )
@@ -84,20 +85,31 @@ class GamePresenter
                 $messageLogVersion = $message->getLogVersion($user_id, $this->partiesNames) ;
                 // 'undoTrace' is TRUE only when we need to display the UNDO icon
                 $messageLogVersion['undoTrace'] = FALSE ;
+                $messageLogVersion['bindProposal'] = FALSE ;
+                /** We have no current UNDO, and we found a trace in the message */
                 if ($currentUndo=='none' && $messageLogVersion['traceDescription'])
                 {
                     $currentUndo = $messageLogVersion['traceOperation'] ;
-                    $messageLogVersion['undoTrace'] = TRUE ;
+                    // We have set UNDO on a proposal, remember the proposal
+                    if ($currentUndo=='Proposal')
+                    {
+                        $currentProposalWithUndo = $messageLogVersion['proposalId'] ;
+                        $messageLogVersion['undoTrace'] = !$messageLogVersion['proposalUnderway'] ;
+                    }
+                    else
+                    {
+                        $messageLogVersion['undoTrace'] = TRUE ;
+                    }
                 }
-                if ($currentUndo=='proposal')
+                /* 
+                 * We have found a message with a trace in which the Proposal is the same as the proposal for which we currently show undo 
+                 * Show an icon that indicates this is bound to a Proposal
+                 */
+                if ($currentUndo=='Proposal' && ($messageLogVersion['proposalId'] === $currentProposalWithUndo))
                 {
-                    
+                    $messageLogVersion['bindProposal'] = TRUE ;
+                    $messageLogVersion['traceDescription'].=_(' - Cannot undo a proposal that is underway');
                 }
-                // If we don't have a trace yet, we check the $message for the trace's operation
-                // If the operation is a proposal, we only display an UNDO if the proposal's outcome is not 'underway'
-                // If we have set an UNDO, remember the proposal
-                // Display a tiny icon on all other actions of the same proposal
-                // If the operation is not a proposal, display an UNDO, and set the current undo to 'operation'
                 array_push($messages , $messageLogVersion) ;
             }
         }
