@@ -211,21 +211,19 @@
      * @return boolean
      */
     function getNewMessages($app) {
-        $user_id = $app['user']->getId() ;
-        $entityManager = $app['orm.em'] ;
-        try 
+        /** @var \Entities\Game $game */
+        $game = $app['getGame']((int)$app['session']->get('game_id')) ;
+        if ($game!==FALSE)
         {
-            /** @var \Entities\Game $game */
-            $game = $app['getGame']((int)$app['session']->get('game_id')) ;
+            $user_id = $app['user']->getId() ;
+            $entityManager = $app['orm.em'] ;
+            $messages = $game->getNewMessages($user_id) ;
+            $entityManager->persist($game) ;
+            $entityManager->flush() ;
+            return array('messages' => $messages , 'parties_names' => $game->getPartiesNames()) ;
+
         }
-        catch (Exception $ex)
-        {
-            return FALSE ;
-        }
-        $messages = $game->getNewMessages($user_id) ;
-        $entityManager->persist($game) ;
-        $entityManager->flush() ;
-        return array('messages' => $messages , 'parties_names' => $game->getPartiesNames()) ;
+        return FALSE ;
     }
 
     /**
@@ -242,15 +240,15 @@
         $result = $query->getResult() ;
         if (count($result)!==1)
         {
-            throw new \Exception(sprintf(_('ERROR - No game with unique id %1$d') , (int)$game_id)) ;
+            return FALSE ;
         }
         elseif($checkStarted && !$result[0]->gameStarted())
         {
-            throw new \Exception(sprintf(_('ERROR - Game %1$s not started.') , (int)$game_id )) ;
+            return FALSE ;
         }
         elseif ( ($checkSubPhases != NULL) && !in_array($result[0]->getSubPhase(), $checkSubPhases))
         {
-            throw new \Exception(sprintf(_('ERROR - Sub phase not recognised.') , (int)$game_id )) ;
+            return FALSE ;
         }
         $app['session']->set('game_id', (int)$game_id);
         return $result[0];
@@ -263,12 +261,14 @@
         {
             /** @var \Entities\Game $game */
             $game = $app['getGame']((int)$app['session']->get('game_id')) ;
-            $app['orm.em']->persist($game) ;
-            $app['orm.em']->flush() ;
+            if ($game!==FALSE)
+            {
+                $app['orm.em']->persist($game) ;
+                $app['orm.em']->flush() ;
+            }
         }
         catch (Exception $ex)
         {
-            do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
         }
     });
     

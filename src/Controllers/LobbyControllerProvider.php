@@ -65,10 +65,10 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/Join/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
-            try 
+            /** @var \Entities\Game $game */
+            $game = $app['getGame']((int)$game_id , FALSE) ;
+            if ($game!==FALSE)
             {
-                /** @var \Entities\Game $game */
-                $game = $app['getGame']((int)$game_id , FALSE) ;
                 if ($game->gameStarted())
                 {
                     return $app->redirect($app['BASE_URL'].'/Setup/'.$game_id) ;
@@ -81,11 +81,7 @@ class LobbyControllerProvider implements ControllerProviderInterface
                     ));
                 }
             }
-            catch (Exception $exception)
-            {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-            }
+            return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
         })
         ->bind('JoinGame');
 
@@ -95,17 +91,9 @@ class LobbyControllerProvider implements ControllerProviderInterface
         $controllers->get('/Play/{game_id}', function($game_id) use ($app)
         {
             $app['session']->set('game_id', $game_id);
-            try 
-            {
-                /** @var \Entities\Game $game */
-                $game = $app['getGame']((int)$game_id , FALSE) ;
-            }
-            catch (Exception $exception)
-            {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-            }
-            if ($game->gameStarted())
+            /** @var \Entities\Game $game */
+            $game = $app['getGame']((int)$game_id , FALSE) ;
+            if ( ($game!==FALSE) && ($game->gameStarted()))
             {
                 return $app->redirect($app['BASE_URL'].'/'.$game->getPhase().'/'.$game_id) ;
             }
@@ -146,28 +134,24 @@ class LobbyControllerProvider implements ControllerProviderInterface
         */
         $controllers->post('/Join/{game_id}/Ready', function($game_id) use ($app)
         {
-            try 
+            /** @var \Entities\Game $game */
+            $game = $app['getGame']((int)$game_id , FALSE) ;
+            if ($game!==FALSE)
             {
-                /** @var \Entities\Game $game */
-                $game = $app['getGame']((int)$game_id , FALSE) ;
+                if ($this->setPartyToReady($game, $app['user']->getId()) )
+                {
+                    $this->entityManager->persist($game);
+                    $this->entityManager->flush();
+                    $app['session']->getFlashBag()->add('success', _('You are ready to start'));
+                    return $app->json( _('You are ready to start') , 201);
+                }
+                else
+                {
+                    $app['session']->getFlashBag()->add('danger', _('Error - Invalid user.') );
+                    return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
+                }
             }
-            catch (Exception $exception)
-            {
-                $app['session']->getFlashBag()->add('danger', $exception->getMessage());
-                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-            }
-            if ($this->setPartyToReady($game, $app['user']->getId()) )
-            {
-                $this->entityManager->persist($game);
-                $this->entityManager->flush();
-                $app['session']->getFlashBag()->add('success', _('You are ready to start'));
-                return $app->json( _('You are ready to start') , 201);
-            }
-            else
-            {
-                $app['session']->getFlashBag()->add('danger', _('Error - Invalid user.') );
-                return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
-            }
+            return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
         })
         ->bind('verb_Ready');
 
