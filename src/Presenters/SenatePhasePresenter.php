@@ -226,7 +226,7 @@ class SenatePhasePresenter
                 * Types : office, statesman, tribune
                 * Code : CENSOR , DICTATOR APPOINTMENT , PRESIDENT , {senatorID} , {cardID}
                 **/
-                // TO DO : rethink the codes for senators & cards. They could both be card IDs : then if the card is a Senator, it's a free tribune, otherwise it's a tribune card
+                /** @todo: rethink the codes for senators & cards. They could both be card IDs : then if the card is a Senator, it's a free tribune, otherwise it's a tribune card */
                 $this->interface['listProposalHow'] =  array (
                     'type'  => 'select' ,
                     'class' => 'senateMakeProposal' ,
@@ -245,6 +245,7 @@ class SenatePhasePresenter
                     'verb' => 'senateMakeProposal' ,
                     'text' => _('MAKE PROPOSAL')
                 ) ;
+                
                 /**
                 * The proposal's content, specific to the subPhase. This should include :
                 * - A description in the header
@@ -660,6 +661,13 @@ class SenatePhasePresenter
                     'items' => $availableOtherBusiness
                 )
             ) ;
+            $this->interface['adjournSenate']= array(
+                'type'=> 'button' ,
+                'verb' => 'senateAdjourn' ,
+                'style' => 'warning' ,
+                'text'=> _('ADJOURN')
+            ) ;
+
         }
     }
 

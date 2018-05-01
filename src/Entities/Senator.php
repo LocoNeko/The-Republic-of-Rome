@@ -342,6 +342,7 @@ class Senator extends Card
             throw new \Exception(sprintf(_('The Senator cannot hold another office while he is %s') , $currentOffice)) ;
         }
         $this->setOffice($office) ;
+        /** @todo : Pontifex Maximus */
         switch ($office) 
         {
             case 'Dictator' :        $INFincrease = 7 ; break ;

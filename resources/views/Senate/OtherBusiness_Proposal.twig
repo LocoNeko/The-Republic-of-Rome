@@ -8,6 +8,11 @@
             <td class="success">{{view.interface['otherBusinessList']['description']}}</td>
             <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['otherBusinessList']['list']}%}{% endembed %}</td>
         </tr>
+        <tr>
+            <td class="success" colspan="2">
+                {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['adjournSenate']}%}{% endembed %}
+            </td>
+        </tr>
     </tbody>
 </table>
 <div class='otherBusinessWrapper' data-json='{{view.data_json}}'>

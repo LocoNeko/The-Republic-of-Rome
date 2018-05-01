@@ -599,7 +599,8 @@ class SenateControllerProvider implements ControllerProviderInterface
 			                	if ($decision=='AGAINST')
 			                	{
                                                     $allFor = FALSE ;
-                                                    $game->log(sprintf(_('%1$s refuses to go with inadequate forces.') , $commander->getName()));
+                                                    $game   ->log(sprintf(_('%1$s refuses to go with inadequate forces.') , $commander->getName()))
+                                                            ->recordTrace('Proposal', array('action' => 'decide' , 'decision' => 'AGAINST'), array('commander' => $commander));
                                                     /** 
                                                      * @todo I cannot remove the Proposal without violating the constraint on Trace, but should I set it to fail or have a 'removed' status instead ?
                                                      * Setting it to fail might trigger unseen problems with unanimous defeat or making impossible to propose the same Proposal again
@@ -607,11 +608,16 @@ class SenateControllerProvider implements ControllerProviderInterface
                                                     $currentProposal->setOutcome('fail') ;
                                                     $currentProposal->setStep(2) ;
 			                	}
+                                                if ($decision=='FOR')
+                                                {
+                                                    $game   ->log(sprintf(_('%1$s agrees to go with inadequate forces.') , $commander->getName()))
+                                                            ->recordTrace('Proposal', array('action' => 'decide' , 'decision' => 'FOR'), array('commander' => $commander));
+                                                }
                 			}
                 		}
                 		if ($decisionSenatorDecision==NULL)
                 		{
-                			$allFor = FALSE ;
+                                    $allFor = FALSE ;
                 		}
                 	}
                 }
@@ -937,9 +943,13 @@ class SenateControllerProvider implements ControllerProviderInterface
     		$commander = $game->getFilteredCards(array('senatorID'=>$sendForces['commander']))->first() ;
     		$conflict = $game->getFilteredCards(array('cardId'=>$sendForces['conflict']))->first() ;
 
-                // Setting 'commanderIn' for the Senator
-                /** @todo : MoH */
+                // Setting 'commanderIn' for the Senator (as well as the Master of Horse if sending a Dictator
                 $commander->setCommanderIn($conflict) ;
+                if ($commander->getOffice()=='Dictator')
+                {
+                    $MoH = $game->getFilteredCards(array('office'=>'Master of Horse'))->first() ;
+                    $MoH->setCommanderIn($conflict) ;
+                }
 
     		// Set fleets location
                 $fleetsToSend = $sendForces['fleets'] ;
