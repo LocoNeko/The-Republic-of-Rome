@@ -177,9 +177,13 @@ class SenateControllerProvider implements ControllerProviderInterface
         return $controllers;
     }
     
-    private function persistFlush($game)
+    /**
+     * Persists $entity and calls flush() on the entity manager. This makes the entity's id available, which is useful for proposals
+     * @param type $entity
+     */
+    private function persistFlush($entity)
     {
-        $this->entityManager->persist($game);
+        $this->entityManager->persist($entity);
         $this->entityManager->flush();
     }
     
@@ -198,11 +202,13 @@ class SenateControllerProvider implements ControllerProviderInterface
         try 
         {
             $proposal = new \Entities\Proposal($user_id , $proposalType , $game , $json_data) ;
+            // I need to persist the proposal before calling recordTrace, or I wouldn't have its id
+            $this->persistFlush($proposal);
+            $game   ->log($proposal->getDescription(), 'log')
+                    ->recordTrace('Proposal', array('action' => 'makeProposal') , array('proposal' => $proposal)) ;
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
-        $game   ->log($proposal->getDescription(), 'log')
-                ->recordTrace('Proposal', array('action' => 'makeProposal') , array('proposal' => $proposal)) ;
         return $proposal ;
     }
     
@@ -423,6 +429,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                         $proposal->incrementStep() ;
                     }
                     $game->setNewProposal($UnanimousDefeatProposal) ;
+                    $this->persistFlush($UnanimousDefeatProposal) ;
                 }
                 else
                 {

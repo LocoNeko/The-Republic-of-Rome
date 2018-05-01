@@ -216,10 +216,7 @@ class Senator extends Card
 
     public function setBiddingFor($biddingFor) 
     {
-        if ($biddingFor!= $this->biddingFor) 
-        {
-            $this->biddingFor = $biddingFor ;
-        }
+        $this->biddingFor = $biddingFor ;
     }
 
     public function setSteppedDown($steppedDown) 

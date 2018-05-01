@@ -645,7 +645,19 @@ class ForumPhasePresenter
                     'user_id' => NULL ,
                     'LOY' => $card->getActualLOY($game) ,
                     'treasury' => $card->getTreasury() ,
-                    'description' => $card->getName().' in the Forum - Loyalty: '.$card->getActualLOY($game)
+                    'description' => sprintf(
+                        _('%1$s in the Forum - Loyalty: %2$d%3$s') ,
+                        $card->getName() ,
+                        $card->getActualLOY($game) ,
+                        ( ($card->getTreasury()>0) ? 
+                            sprintf(
+                                _(', Treasury : %1$d = %2$d') , 
+                                $card->getTreasury() , 
+                                ($card->getTreasury() + $card->getActualLOY($game))) :
+                            ''
+                        )
+                    )
+                    
                 ) ;
             }
         }

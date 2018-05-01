@@ -373,6 +373,12 @@ class Game
             $party->setIsDone(FALSE) ;
             $party->setBid(0) ;
             $party->setInitiativeWon(FALSE) ;
+            /** Need to reset bidders as well, as in fringe cases I was getting integrity violation by setting a new bidder for a party that already had one from a previous subphase */
+            $bidder = $party->getBidWith() ;
+            if ($bidder)
+            {
+                $bidder->setBiddingFor(NULL) ;
+            }
         }
     }
 

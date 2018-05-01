@@ -44,19 +44,19 @@ class Trace
      * 
      * @param string $operation
      * @param array $parameters
-     * @param array $orderedEntites These entities should only be used when a trace is recorded for a new entity. Without this, there's no way to know the Entity ID, since the operation occurs within the constructor, before persisting, hence before the id is known
+     * @param array $orderedEntities These entities should only be used when a trace is recorded for a new entity. Without this, there's no way to know the Entity ID, since the operation occurs within the constructor, before persisting, hence before the id is known
      * this parameter is passed in the format of an array of 'key' => entity
      */
-    public function __construct($operation  , $parameters=NULL , $orderedEntites=NULL)
+    public function __construct($operation  , $parameters=NULL , $orderedEntities=NULL)
     {
         $this->operation = $operation ;
         $this->parameters = $parameters ;
-        if ($orderedEntites)
+        if ($orderedEntities)
         {
             $this->entities = new ArrayCollection();
         }
         $this->entitiesOrder = array() ;
-        foreach ($orderedEntites as $key=>$entity)
+        foreach ($orderedEntities as $key=>$entity)
         {
             $this->entities->add($entity) ;
             $this->entitiesOrder[$key] = $entity->getId() ;

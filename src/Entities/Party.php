@@ -143,15 +143,12 @@ class Party extends TraceableEntity
     }
 
     public function setBidWith($bidWith) {
-        if ($bidWith!= $this->bidWith) 
+        foreach($this->getSenators()->getCards() as $senator) 
         {
-            $this->bidWith = $bidWith ;
-            foreach($this->getSenators()->getCards() as $senator) 
-            {
-                $senator->setBiddingFor(NULL) ;
-            }
-            $bidWith->setBiddingFor($this) ;
+            $senator->setBiddingFor(NULL) ;
         }
+        $this->bidWith = $bidWith ;
+        $bidWith->setBiddingFor($this) ;
     }
     
     public function resetLeader()

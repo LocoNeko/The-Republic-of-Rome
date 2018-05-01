@@ -316,7 +316,7 @@ class Message
         /* @var $trace \Entities\Trace */
         if (($this->trace) && ($this->trace->getOperation()=='Proposal'))
         {
-            return $this->trace->getEntities()->first()->getId() ;
+            return $this->trace->getEntity('proposal')->getId() ;
         }
         else
         {
@@ -332,7 +332,7 @@ class Message
     {
         if (($this->trace) && ($this->trace->getOperation()=='Proposal'))
         {
-            return ($this->trace->getEntities()->first()->isFinished() ) ;
+            return ($this->trace->getEntity('proposal')->isFinished() ) ;
         }
         else
         {
