@@ -224,7 +224,7 @@ class Message
             'traceDescription'  => $this->getTraceDescription() ,
             'traceOperation'    => $this->getTraceOperation() ,
             'proposalId'        => $this->getProposalId() ,
-            'proposalUnderway'  => $this->getProposalUnderway()
+            'proposalFinished'  => $this->isProposalFinished()
         ) ;
     }
             
@@ -265,7 +265,9 @@ class Message
     public function recordTrace($operation , $parameters=NULL , $entities=NULL)
     {
         try {
+            /*
             // $entities is passed as an array to allow for control of the order in which the Trace->entities ArrayCollection will be created
+             * cancel that : couldn't guaranty the order anyway. Saved it inside a proper array
             if ($entities)
             {
                 $entitiesArrayCollection = new ArrayCollection() ;
@@ -277,8 +279,8 @@ class Message
             else
             {
                 $entitiesArrayCollection = NULL ;
-            }
-            $this->trace = new \Entities\Trace($operation , $parameters , $entitiesArrayCollection) ;
+            }*/
+            $this->trace = new \Entities\Trace($operation , $parameters , $entities) ;
         } catch (Exception $ex) {
             throw new \Exception($ex) ;
         }
@@ -326,11 +328,11 @@ class Message
      * If this message's trace's operation is 'Proposal', returns TRUE if the proposal is still underway
      * @return integer
      */
-    public function getProposalUnderway()
+    public function isProposalFinished()
     {
         if (($this->trace) && ($this->trace->getOperation()=='Proposal'))
         {
-            return ($this->trace->getEntities()->first()->getOutcome() === 'underway') ;
+            return ($this->trace->getEntities()->first()->isFinished() ) ;
         }
         else
         {

@@ -28,6 +28,7 @@ class SenatePhasePresenter
          * Common to all Phase presenters (should I abstract / extend ?)
          */
         $this->user_id = $user_id;
+        /** @todo This is a gamePresenter, should be called that ! see Issue #50 */
         $this->game = new \Presenters\GamePresenter($game, $user_id);
         foreach ($game->getParties() as $party)
         {
@@ -593,7 +594,7 @@ class SenatePhasePresenter
             foreach ($allCards as $card)
             {
                 /* @var $cardModel \Entities\Card */
-                $cardModel = $game->getFilteredCards(array('cardId' => $card->cardId))->first();
+                $cardModel = $game->getFilteredCards(array('cardId' => $card->id))->first();
                 // Add the deck as an attribute to all cards, so it can be used and displayed (for example in a drop down to show where the card is)
                 $card->addAttribute('deck' , $card->location['name']);
                 // Only add the concession if it's not flipped
@@ -803,7 +804,7 @@ class SenatePhasePresenter
                 // The commander is in this user's party
                 if ($commander->getLocation()['type']=='party' && $commander->getLocation()['value']->getUser_id() == $user_id)
                 {
-                    // TO DO : check if commander has a choice
+                    /** @todo check if commander has a choice */
                     $this->interface['choices'][] = array (
                         'description' => $commander->getName() ,
                         'action' => array (

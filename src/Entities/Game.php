@@ -796,7 +796,7 @@ class Game
     {
         $party=$this->getParty($user_id) ;
         $statesman = $this->getParty($user_id)->getHand()->getFirstCardByProperty('senatorID', $statesmanId) ;
-        $entitiesTrace = array($party , $statesman) ;
+        $entitiesTrace = array('party' => $party , 'statesman' => $statesman) ;
         if ($statesman->getPreciseType()!=='Statesman') 
         {
             throw new \Exception(sprintf(_('ERROR - %1$s is not a Statesman') , array($statesman->getName()))) ;
@@ -826,7 +826,7 @@ class Game
         if (isset($family)) {
             $familyLocation = $family->getLocation() ;
             $familyTrace = array ('familyLocation' => $familyLocation['type'] , 'familyLocationName' => $familyLocation['name']) ; 
-            $entitiesTrace[] = $family ;
+            $entitiesTrace = array_merge($entitiesTrace , array('family' => $family) );
             
             // The family was found in the player's party - Play the Statesman and make him control the Family
             if ( ($familyLocation['type']=='party') && $familyLocation['value']->getUser_id()==$party->getUser_id())

@@ -202,7 +202,7 @@ class SenateControllerProvider implements ControllerProviderInterface
             throw new \Exception($ex) ;
         }
         $game   ->log($proposal->getDescription(), 'log')
-                ->recordTrace('Proposal', array('action' => 'makeProposal') , array($proposal)) ;
+                ->recordTrace('Proposal', array('action' => 'makeProposal') , array('proposal' => $proposal)) ;
         return $proposal ;
     }
     
@@ -354,7 +354,7 @@ class SenateControllerProvider implements ControllerProviderInterface
         }
         $currentProposal->setVote($user_id, $totalVotes, $description , $unanimous) ;
         $game   ->log($description)
-                ->recordTrace('Proposal', array('action' => 'vote'), $currentProposal);
+                ->recordTrace('Proposal', array('action' => 'vote'), array('proposal' => $currentProposal));
         $this->doVoteEnd($game , $currentProposal) ;
     }
     
@@ -388,7 +388,10 @@ class SenateControllerProvider implements ControllerProviderInterface
                      * type is among : Censor , Prosecutions , recruit , commander , concession
                      */
                     $methodName = 'implementProposal'.ucfirst($type) ;
-                    $this->$methodName($game , $proposal) ;
+                    if (method_exists($this,$methodName))
+                    {
+                        $this->$methodName($game , $proposal) ;
+                    }
                 } catch (Exception $ex2) {
                     throw new \Exception($ex2) ;
                 }
@@ -522,7 +525,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                     foreach ($decision as $key=>$office)
                     {
                         $senator = $game->getFilteredCards(array('cardId'=>$currentProposal->getContent()[$key]))->first() ;
-                        $this->appoint($game, $senator, $office) ;
+                        $this->appoint($game, $currentProposal , $senator, $office) ;
                     }
                     $currentProposal->incrementStep();
                     /**
@@ -535,7 +538,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                     else
                     {
                         $game->log(_('There isn\'t 3 or more active wars, or one with a combined strength of 20+. No Dictator can be appointed or elected.'));
-                        $this->doAutomaticCensor($game) ;
+                        $this->doAutomaticCensor($game , $currentProposal) ;
                     }
                 }
             }
@@ -590,8 +593,12 @@ class SenateControllerProvider implements ControllerProviderInterface
 			                	{
                                                     $allFor = FALSE ;
                                                     $game->log(sprintf(_('%1$s refuses to go with inadequate forces.') , $commander->getName()));
-				                    $entityManager->remove($currentProposal) ;
-				                    $entityManager->flush() ;
+                                                    /** 
+                                                     * @todo I cannot remove the Proposal without violating the constraint on Trace, but should I set it to fail or have a 'removed' status instead ?
+                                                     * Setting it to fail might trigger unseen problems with unanimous defeat or making impossible to propose the same Proposal again
+                                                     */
+                                                    $currentProposal->setOutcome('fail') ;
+                                                    $currentProposal->setStep(2) ;
 			                	}
                 			}
                 		}
@@ -657,11 +664,12 @@ class SenateControllerProvider implements ControllerProviderInterface
     /**
      * Disappoint current official, and appoints new one. Throws exceptions left and right.
      * @param \Entities\Game $game
+     * @param \Entities\Proposal $proposal
      * @param \Entities\Senator $senator
      * @param string $office
      * @throws \Exception
      */
-    public function appoint($game , $senator , $office)
+    public function appoint($game , $proposal , $senator , $office)
     {
         try {
             /* @var $currentOfficial \Entities\Senator  */
@@ -675,7 +683,8 @@ class SenateControllerProvider implements ControllerProviderInterface
         }
         try {
             $senator->appoint($office) ;
-            $game->log(sprintf(_('%1$s becomes %2$s') , $senator->getName() , $office));
+            $game   ->log(sprintf(_('%1$s becomes %2$s') , $senator->getName() , $office))
+                    ->recordTrace('Proposal', array('action' => 'appoint' , 'office' => $office), array('proposal' => $proposal , 'senator' => $senator));
         } catch (\Exception $ex) {
             throw new \Exception(_('The following error was returned when appointing a Senator : ').$ex->getTraceAsString()) ;
         }
@@ -684,8 +693,9 @@ class SenateControllerProvider implements ControllerProviderInterface
     /**
      * If there is only one possible Censor, appoint him and move to Prosecutions, otherwise move to Censor election
      * @param \Entities\Game $game
+     * @param \Entities\Proposal $proposal
      */
-    public function doAutomaticCensor($game)
+    public function doAutomaticCensor($game , $proposal)
     {
         $game->setSubPhase('Censor');
         $listOfPossibleCensors  = $game->getFilteredCards(array('isSenatorOrStatesman' => TRUE) , 'possibleCensor') ;
@@ -693,7 +703,7 @@ class SenateControllerProvider implements ControllerProviderInterface
         {
             $newCensor = $listOfPossibleCensors->first() ;
             $game->log(sprintf(_('%1$s is the only possible Censor. He is automatically elected.') , $newCensor->getName()));
-            $this->appoint($game, $newCensor, 'Censor') ;
+            $this->appoint($game, $proposal , $newCensor, 'Censor') ;
             $game->setSubPhase('Prosecutions');
         }
     }
@@ -849,7 +859,7 @@ class SenateControllerProvider implements ControllerProviderInterface
             // Ship building
             $shipBuilding = $game->getFilteredCards(array('special' => 'fleets'))->first() ;
             $shipBuildingLocation = $shipBuilding->getLocation() ;
-            if ($shipBuildingLocation['type'] == 'card')
+            if ( ($shipBuildingLocation['type'] == 'card') && ($fleetsToRecruit>0) )
             {
                 $senator = $shipBuildingLocation['value'] ;
                 $senator->changeTreasury(3 * $fleetsToRecruit);
@@ -859,7 +869,7 @@ class SenateControllerProvider implements ControllerProviderInterface
             // Armaments
             $armament = $game->getFilteredCards(array('special' => 'legions'))->first() ;
             $armamentLocation = $armament->getLocation() ;
-            if ($armamentLocation['type'] == 'card')
+            if ( ($armamentLocation['type'] == 'card') && ($regularsToRecruit>0) ) 
             {
                 $senator = $armamentLocation['value'] ;
                 $senator->changeTreasury(2 * $regularsToRecruit);

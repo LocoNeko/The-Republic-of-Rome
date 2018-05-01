@@ -854,6 +854,15 @@ class Proposal extends TraceableEntity
     }
 
     /**
+     * Returns TRUE if the current step is the last one
+     * @return bool
+     */
+    public function isFinished()
+    {
+        return ( ( $this->getStep()) >= (count($this->getFlow())-1) ) ;
+    }
+    
+    /**
      * Returns the user id of the current voter for this proposal, or throws an exception
      * @return int $user_id
      * @throws \Exception

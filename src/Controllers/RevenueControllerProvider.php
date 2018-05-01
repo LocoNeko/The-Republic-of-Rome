@@ -464,7 +464,10 @@ class RevenueControllerProvider implements ControllerProviderInterface
         $fromEntity->changeTreasury(-$amount) ;
         $toEntity->changeTreasury($amount) ;
         $game   ->log(_('[['.$user_id.']] {transfer '.(int)$amount.'T , transfers money} from '.($fromParty ? _('party treasury') : $fromEntity->getName()).' to '.($toParty ? _('party treasury') : $toEntity->getName())) , 'log' )
-                ->recordTrace('RevenueRedistribute', array('user_id' => $user_id , 'fromName' => $game->getParty($user_id)->getName() , 'amount' => $amount , 'fromParty' => $fromParty , 'toParty' => $toParty) , array($fromEntity , $toEntity));
+                ->recordTrace('RevenueRedistribute', 
+                    array('user_id' => $user_id , 'fromName' => $game->getParty($user_id)->getName() , 'amount' => $amount , 'fromParty' => $fromParty , 'toParty' => $toParty) , 
+                    array('fromEntity' => $fromEntity , 'toEntity' => $toEntity)
+                );
     }
     
     /**
@@ -523,7 +526,7 @@ class RevenueControllerProvider implements ControllerProviderInterface
                 $INFgainMessage
             ) 
         )
-        ->recordTrace('RevenueContributions', array('amount' => $amount , 'INFgain' => $INFgain) , array($giver));
+        ->recordTrace('RevenueContributions', array('amount' => $amount , 'INFgain' => $INFgain) , array('giver' => $giver));
     }
 
     

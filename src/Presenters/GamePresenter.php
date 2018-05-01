@@ -72,7 +72,7 @@ class GamePresenter
          * - traceDescription (FALSE if no trace)
          * - traceOperation
          * - proposalId (or -1 if not a proposal)
-         * - proposalUnderway (or FALSE if not a proposal)
+         * - proposalFinished(or FALSE if not a proposal)
          */
         $messages = array() ;
         /* @var $message \Entities\Message */
@@ -94,7 +94,7 @@ class GamePresenter
                     if ($currentUndo=='Proposal')
                     {
                         $currentProposalWithUndo = $messageLogVersion['proposalId'] ;
-                        $messageLogVersion['undoTrace'] = !$messageLogVersion['proposalUnderway'] ;
+                        $messageLogVersion['undoTrace'] = ($messageLogVersion['proposalFinished']===TRUE) ;
                     }
                     else
                     {
@@ -105,7 +105,7 @@ class GamePresenter
                  * We have found a message with a trace in which the Proposal is the same as the proposal for which we currently show undo 
                  * Show an icon that indicates this is bound to a Proposal
                  */
-                if ($currentUndo=='Proposal' && ($messageLogVersion['proposalId'] === $currentProposalWithUndo))
+                if ($currentUndo=='Proposal' && !$messageLogVersion['undoTrace'] && ($messageLogVersion['proposalId'] === $currentProposalWithUndo))
                 {
                     $messageLogVersion['bindProposal'] = TRUE ;
                     $messageLogVersion['traceDescription'].=_(' - Cannot undo a proposal that is underway');

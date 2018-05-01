@@ -21,6 +21,14 @@ class Trace
      **/
     private $entities ;
 
+    /**
+     * There is no way to sort $entities, so I save their order in an array.
+     * using this method, I can actually use more descriptive keys than relying on order 
+     * @Column(type="array") @var array */
+    private $entitiesOrder ;
+    
+    /** @todo unfortunately, I need an entity order */
+
     /** @Column(type="string") @var string */
     protected $operation ;
 
@@ -36,23 +44,46 @@ class Trace
      * 
      * @param string $operation
      * @param array $parameters
-     * @param \ArrayCollection $entities These entities should only be used when a trace is recorded for a new entity. Without this, there's no way to know the Entity ID, since the operation occurs within the constructor, before persisting, hence before the id is known
+     * @param array $orderedEntites These entities should only be used when a trace is recorded for a new entity. Without this, there's no way to know the Entity ID, since the operation occurs within the constructor, before persisting, hence before the id is known
+     * this parameter is passed in the format of an array of 'key' => entity
      */
-    public function __construct($operation  , $parameters=NULL , $entities=NULL)
+    public function __construct($operation  , $parameters=NULL , $orderedEntites=NULL)
     {
         $this->operation = $operation ;
         $this->parameters = $parameters ;
-        $this->entities = $entities ;
+        if ($orderedEntites)
+        {
+            $this->entities = new ArrayCollection();
+        }
+        $this->entitiesOrder = array() ;
+        foreach ($orderedEntites as $key=>$entity)
+        {
+            $this->entities->add($entity) ;
+            $this->entitiesOrder[$key] = $entity->getId() ;
+        }
     }
     
     public function getOperation() 
     {
         return (self::isValidOperation($this->operation) ? $this->operation : FALSE) ;
     }
-    /** @return \ArrayCollection */
-    public function getEntities() { return $this->entities ; }
     public function getParameters() { return $this->parameters ; }
 
+    
+    /**
+     * 
+     * @param string $key
+     */
+    public function getEntity($key) 
+    {
+        foreach ($this->entities as $entity)
+        {
+            if ($entity->getId()==$this->entitiesOrder[$key])
+            {
+                return $entity ;
+            }
+        }
+    }
         /**
      * describe() calls function with the format describe{operation}
      * Describe traces.
@@ -85,7 +116,7 @@ class Trace
     /**
      * 'PickLeader'
      * parameters : array(finished -> boolean)
-     * entities : ArrayCollection($party , $leader)
+     * entities : 'party' => $party , 'leader' => $leader
      * @return string
      * @throws \Exception
      */    
@@ -93,8 +124,8 @@ class Trace
     {
         try 
         {
-            $party = $this->entities->first() ;
-            $leader = $this->entities->next() ;
+            $party = $this->getEntity('party') ;
+            $leader = $this->getEntity('leader') ;
             $finished = ($this->parameters['finished'] ? _('. All leaders picked, moving to play cards sub phase.') : '' );
             return sprintf(_('%1$s appointed leader of %2$s%3$s') , $leader->getName() , $party->getName() , $finished);
         } catch (Exception $ex) {
@@ -114,9 +145,10 @@ class Trace
     {
         try 
         {
-            $party = $this->entities->first() ;
+            $party = $this->getEntity('party') ;
             /* @var $statesman \Entities\Senator */
-            $statesman = $this->entities->next() ;
+            $statesman = $this->getEntity('statesman') ;
+            $family = $this->getEntity('family') ;
             return sprintf(_('%1$s played statesman %2$s') , $party->getName() , $statesman->getName());
         } catch (Exception $ex) {
             throw new \Exception($ex);
@@ -134,9 +166,9 @@ class Trace
     function describePlayConcession()
     {
         try {
-            $recipient = $this->entities->first() ;
-            $concession = $this->entities->next() ;
-            $party = $this->entities->next() ;
+            $party = $this->getEntity('party') ;
+            $recipient = $this->getEntity('recipient') ;
+            $concession = $this->getEntity('concession') ;
             return sprintf(_('%1$s plays concession %2$s on %3$s') , $party->getName() , $concession->getName() , $recipient->getName());
         } catch (Exception $ex) {
             throw new \Exception($ex);
@@ -154,7 +186,7 @@ class Trace
     function describeDonePlayingCards()
     {
         try {
-            $party = $this->entities->first() ;
+            $party = $this->getEntity('party') ;
             return sprintf(_('%1$s is done playing cards') , $party->getName());
         } catch (Exception $ex) {
             throw new \Exception($ex);
@@ -172,8 +204,8 @@ class Trace
     function describeRevenueRedistribute()
     {
         try {
-            $fromEntity = $this->entities->first() ;
-            $toEntity = $this->entities->next() ;
+            $fromEntity = $this->getEntity('fromEntity') ;
+            $toEntity = $this->getEntity('toEntity') ;
             return sprintf(_('%1$s transfers %2$d T. from %3$s to %4$s') , $this->parameters['fromName'] , $this->parameters['amount'] , $fromEntity->getName() , $toEntity->getName() );
         } catch (Exception $ex) {
             throw new \Exception($ex);
@@ -191,7 +223,7 @@ class Trace
     function describeRevenueContributions()
     {
         try {
-            $giver = $this->entities->first() ;
+            $giver = $this->getEntity('giver') ;
             return sprintf(_('%1$s gives %2$d T. toRome') , $giver->getName() , $this->parameters['amount']);
         } catch (Exception $ex) {
             throw new \Exception($ex);
@@ -209,7 +241,7 @@ class Trace
     function describeProposal()
     {
         try {
-            $proposal = $this->entities->first() ;
+            $proposal = $this->getEntity('proposal') ;
             return sprintf(_('Proposal %1$s , action : %2$s') , $proposal->getType() , $this->parameters['action']);
         } catch (Exception $ex) {
             throw new \Exception($ex);
