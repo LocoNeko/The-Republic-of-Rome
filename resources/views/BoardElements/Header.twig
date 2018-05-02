@@ -1,28 +1,19 @@
-<table class="table table-condensed table-responsive" style="display: block;">
-    <tr>
-        <td class="text-right"><h4>Phase</h4></td>
-        <td><strong><h4>{{view.game.phase}}</h4></strong></td>
-    </tr>
-    <tr>
-        <td class="text-right">Sub Phase</td>
-        <td><strong>{{view.game.subPhase}}</strong></td>
-    </tr>
-    <tr>
-        <td class="text-right">HRAO / President</td>
-        <td><strong>{{view.game.HRAO_name}}</strong></td>
-    </tr>
-    <tr>
-        <td class="text-right">Order of play</td>
-        <td>
+<div class="btn-group" role="group" aria-label="Header" style="font-size:20px">
+  <button type="button" class="btn btn-outline-primary btn-lg">Turn : <strong>{{view.game.turn}}</strong></button>
+  <button type="button" class="btn btn-outline-primary btn-lg">Phase : <strong>{{view.game.phase}}</strong></button>
+  <button type="button" class="btn btn-outline-primary btn-lg">Sub Phase : <strong>{{view.game.subPhase}}</strong></button>
+  <button type="button" class="btn btn-outline-primary btn-lg">{{view.game.HRAOorPresident}} : <strong>{{view.game.HRAO_name}}</strong></button>
+  <button type="button" class="btn btn-outline-primary btn-lg">Order of play :
+      <strong>
             {% for position in view.game.orderOfPlay %}
                 <span class="{{ (position['playingNow']) ? 'orderOfPlay-on' : ''}}">
                     <a href="#Party_{{position['user_id']}}" class="{{ (position['playingNow']) ? '' : 'orderOfPlay-off'}}">{{ position['name']}}</a>
                 </span>
                 {{loop.last ? '' : '<span class="glyphicon glyphicon-arrow-right" style="margin-right: 4px; margin-left: 4px;" aria-hidden="true"></span>' }}
             {% endfor %}
-        </td>
-    </tr>
-</table>
+      </strong>
+  </button>
+</div>
             
 {#
     PHASE HEADER

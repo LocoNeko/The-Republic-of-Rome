@@ -9,10 +9,10 @@
     box-sizing:border-box;
     overflow-y:auto;
     overflow-x:hidden;
-    padding-left: 80px;
-    padding-right: 80px;
+    padding-left: 40px;
+    padding-right: 40px;
     padding-bottom: 5px;
-    padding-top: 5px;
+    padding-top: 40px;
 }
 
 .orderOfPlay-off

@@ -61,7 +61,7 @@ class SenatePhasePresenter
                 'type'=> 'button' ,
                 'verb' => 'senateAssassinate' ,
                 'style' => 'danger' ,
-                'text'=> _('ATTEMPT')
+                'text'=> _('ATTEMPT ASSASSINATION')
             ) ;
         }
 
@@ -87,6 +87,9 @@ class SenatePhasePresenter
                 $currentProposal = $proposal ;
             }
         }
+        /**
+         * There's a proposal underway
+         */
         if (isset($currentProposal) && $currentProposal->getCurrentStep()!='done')
         {
             $this->header['description'] .= _(' - Proposal underway');
@@ -211,11 +214,33 @@ class SenatePhasePresenter
         {
             $this->header['description'] .= _(' - No proposal underway') ;
             $listProposalHow = $this->getProposalHow($game) ; 
-
+            
+            /**
+             * The player cannot propose anything anymore because :
+             * - He was the President & has adjourned the Senate
+             * - He was not the President, but the President has adjourned the Senate and the player didn't keep it open (by choice or because he had no way to put forth a proposal)
+             */
+            if ($game->getParty($user_id)->getIsDone())
+            {
+                if ((int)$game->getHRAO(TRUE)->getLocation()['value']->getUser_id() == $user_id)
+                {
+                    $this->header['list'] = array (
+                        _('You have adjourned the Senate') ,
+                        _('Waiting on other players to decide to keep it open')
+                    ) ;
+                }
+                else
+                {
+                    $this->header['list'] = array (
+                        _('The President has adjourned the Senate') ,
+                        _('You couldn\'t or didn\'t want to keep it open')
+                    ) ;
+                }
+            }
             /**
             * This user has at least one way of making a proposal
             **/
-            if (count($listProposalHow)>0)
+            elseif (count($listProposalHow)>0)
             {
                 // Bring up the senateMakeProposal interface
                 $this->interface['name'] = 'senateMakeProposal';
@@ -252,6 +277,19 @@ class SenatePhasePresenter
                 * - An interface proposalType
                 **/
                 $this->setContent($game) ;
+                /*
+                * Adjourn the Senate - Only for the President during the OtherBusinss phase
+                 * Getting it out of the setContent function so I don't need to pass $user_id to it
+                */
+               if ( ($game->getSubPhase()=='OtherBusiness') && ((int)$game->getHRAO(TRUE)->getLocation()['value']->getUser_id() == $user_id) )
+               {
+                   $this->interface['adjournSenate']= array(
+                       'type'=> 'button' ,
+                       'verb' => 'senateAdjourn' ,
+                       'style' => 'warning' ,
+                       'text'=> _('ADJOURN')
+                   ) ;
+               }
             }
 
             /**
@@ -372,8 +410,8 @@ class SenatePhasePresenter
                 _('Dicator appointment') ,
             ) ;
             $this->interface['proposalType']= 'Dictator' ;
-            /*
-             * TO DO
+            /**
+             * @todo List candidates for dictatorship
             $this->interface['senators']= array
             (
 		    'description' => _('Senator') ,
@@ -493,6 +531,16 @@ class SenatePhasePresenter
                 _('Other business') ,
                 _('You must first choose a type of proposal')
             ) ;
+            if ((int)$game->getHRAO(TRUE)->getLocation()['value']->getIsDone())
+            {
+                $this->header['list'][] = _('The President has adjourned the Senate and this will be the last proposal');
+                $this->interface['agreeToAdjournSenate']= array(
+                    'type'=> 'button' ,
+                    'verb' => 'letSenateAdjourn' ,
+                    'style' => 'warning' ,
+                    'text'=> _('AGREE TO ADJOURN')
+                ) ;
+            }
             
             // This interface just has a drop down list otherBusinessList (defined at the end of this section)
             $this->interface['proposalType']= 'OtherBusiness' ;
@@ -661,13 +709,6 @@ class SenatePhasePresenter
                     'items' => $availableOtherBusiness
                 )
             ) ;
-            $this->interface['adjournSenate']= array(
-                'type'=> 'button' ,
-                'verb' => 'senateAdjourn' ,
-                'style' => 'warning' ,
-                'text'=> _('ADJOURN')
-            ) ;
-
         }
     }
 
@@ -1113,8 +1154,8 @@ class SenatePhasePresenter
     }
     
     /**
-    * Taken out of setContent (otherBusiness section) for readibility's sake
-    * This function adds an available other busines to the current list if it wasn't there already
+    * Taken out of setContent (otherBusiness section) for readability sake
+    * This function adds an available other business to the current list if it wasn't there already
      * @param array $current The current list of other business
      * @param string $value The key to insert in the list
      * @param string $description The description for that key 

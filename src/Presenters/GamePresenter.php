@@ -29,6 +29,7 @@ class GamePresenter
         $this->user_id = $user_id ;
         $this->game_id = $game->getId() ;
         $this->name = $game->getName() ;
+        $this->turn = $game->getTurn() ;
         $this->phase = $game->getPhase() ;
         $this->subPhase = $game->getSubPhase() ;
         $this->treasury = $game->getTreasury() ;
@@ -44,6 +45,7 @@ class GamePresenter
             }
         }
         $this->partiesNames = $game->getPartiesNames() ;
+        $this->HRAOorPresident = (($this->phase=='Senate') ? _('President') : _('HRAO')) ;
         $this->HRAO_name = $this->displayContextualName($game->getHRAO(TRUE)->getFullName()) ;
         $this->orderOfPlay = $this->getOrderOfPlay($game, $user_id) ;
         foreach ($game->getDecks() as $deck)

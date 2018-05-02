@@ -141,7 +141,6 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
-                $app['session']->getFlashBag()->add('danger', ' Received json : '.json_encode($json_data, JSON_PRETTY_PRINT));
                 $this->decide($user_id , $game , $json_data , $this->entityManager) ;
                 $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
@@ -165,6 +164,41 @@ class SenateControllerProvider implements ControllerProviderInterface
                 $game = $app['getGame']((int)$game_id) ;
                 $game->log(_('The Censor ends prosecutions and returns the floor to the HRAO.'));
                 $this->setNextSubPhase($game) ;
+                $this->persistFlush($game);
+                return $app->json( 'SUCCESS' , 201);
+            } catch (\Exception $exception) {
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
+                return $app->json( '' , 201 );
+            }
+        })
+        ->bind('verb_endProsecutions');
+        
+        /*
+        * The President adjourns the Senate
+        * Give all players who are not the President a chance to keep the Senate open by making a proposal (if they can)
+        * POST target
+        * Verb : senateAdjourn
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/senateAdjourn', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /* @var $game \Entities\Game  */
+                $game = $app['getGame']((int)$game_id) ;
+                $game->log(_('The President adjourns the Senate.'));
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                /*
+                 * We keep track of who wants to adjourn the Senate by checking party->isDone
+                 * So we set it to TRUE for the President
+                 */
+                $game->getParty($user_id)->setIsDone(TRUE) ;
+                 /**
+                 * - If nobody can keep the Senate open, adjourn the Senate (move to Combat phase) 
+                 * - If someone can, bring up the otherbusiness interface
+                 * - Upon completing the proposal, the Senate must be adjourned, so when implementing a proposal, always check if subPhase = otherbusiness and the President is done
+                 */
                 $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
@@ -926,15 +960,16 @@ class SenateControllerProvider implements ControllerProviderInterface
      */
     public function implementProposalCommander($game , $proposal)
     {
-    	$game->log(print_r($proposal->getContent(),TRUE));
     	// A commander proposal consists of an array, since they can be grouped.
     	foreach ($proposal->getContent() as $sendForces)
     	{
-    		// Check constraints : commander has agreed, conflict can be attacked, there are enough fleets, regulars, and veterans
-    		$sendForces['commander'] ;
-    		$sendForces['conflict'] ;
-    		$sendForces['fleets'] ;
-    		$sendForces['regulars'] ;
+    		/** @todo Check constraints : 
+                 * - commander has agreed
+                 * - conflict can be attacked
+                 * - there are enough fleets, regulars, and veterans
+                 * - there are  enough support fleets 
+                 */
+    		
     		/** @todo : $sendForces['veterans'] ;  */
 
     		// Implementing the proposal itself
@@ -963,10 +998,22 @@ class SenateControllerProvider implements ControllerProviderInterface
                         $fleetsToSend--;
                     }
                 }
-
-                /** @todo implement commander proposal : Set regulars location */
+                
+                // Set regulars location
+                $regularsToSend = $sendForces['regulars'] ;
+                foreach ($game->getLegions() as $legion)
+                {
+                    // Find the first regular in Rome
+                    if ( ($regularsToSend>0) && (!$legion->getVeteran()) && ($legion->getLocation() == 'Rome'))
+                    {
+                        /* @var $legion \Entities\Legion */
+                        $legion->setLocation($conflict);
+                        $regularsToSend--;
+                    }
+                }
                 /** @todo implement commander proposal : Set veterans */
     	}
+        /** @todo Check if the President has been sent to war, in which case give a chance to leave th Senate open */
     }
     
     /**

@@ -50,7 +50,7 @@ class PopulationControllerProvider implements ControllerProviderInterface
         {
             try
             {
-                /** @var \Entities\Game $game */
+                /* @var $game \Entities\Game */
                 $game = $app['getGame']((int)$game_id) ;
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
@@ -98,6 +98,7 @@ class PopulationControllerProvider implements ControllerProviderInterface
                         }
                     }
                 }
+                $game->resetAllIsDone() ;
                 $game->setPhase('Senate') ;
                 $game->setSubPhase('Consuls') ;
                 $this->entityManager->persist($game);

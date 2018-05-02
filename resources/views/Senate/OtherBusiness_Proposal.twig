@@ -8,11 +8,19 @@
             <td class="success">{{view.interface['otherBusinessList']['description']}}</td>
             <td>{% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['otherBusinessList']['list']}%}{% endembed %}</td>
         </tr>
+        {% if view.interface['adjournSenate']|default(FALSE) %}
         <tr>
             <td class="success" colspan="2">
                 {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['adjournSenate']}%}{% endembed %}
             </td>
         </tr>
+        {% elseif view.interface['agreeToAdjournSenate']|default(FALSE) %}
+        <tr>
+            <td class="success" colspan="2">
+                {% embed 'BoardElements/ActionToken.twig' with {'action': view.interface['agreeToAdjournSenate']}%}{% endembed %}
+            </td>
+        </tr>
+        {% endif %}
     </tbody>
 </table>
 <div class='otherBusinessWrapper' data-json='{{view.data_json}}'>
