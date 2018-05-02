@@ -2,9 +2,10 @@
 namespace Presenters ;
 use Doctrine\Common\Collections\ArrayCollection;
 
-// TO DO : Beginning of Senate phase
-//  - Initialise free tribunes of all senators
-//  - Initialise assassination attempts and targets
+/** @todo Beginning of Senate phase
+ * - Initialise free tribunes of all senators
+ * - Initialise assassination attempts and targets
+ */
 class SenatePhasePresenter
 {
     // Common to all phase presenters
@@ -25,7 +26,7 @@ class SenatePhasePresenter
     public function __construct($game, $user_id)
     {
         /**
-         * Common to all Phase presenters (should I abstract / extend ?)
+         * @todo Common to all Phase presenters (should I abstract / extend ?)
          */
         $this->user_id = $user_id;
         /** @todo This is a gamePresenter, should be called that ! see Issue #50 */
@@ -176,7 +177,7 @@ class SenatePhasePresenter
                         'text' => _('VOTE')
                     ) ;
                     // Vetoes (Tribune cards, Free tribunes, Free veto
-                    $vetoes = array_merge(array_merge([] , $this->getCardTribunes($game->getParty($user_id))) , $this->getFreeTribunes($game->getParty($user_id))) ;
+                    $vetoes = array_merge(array_merge([] , $game->getParty($user_id)->getCardTribunes() , $game->getParty($user_id)->getFreeTribunes())) ;
                     if (count($vetoes)>0)
                     {
                         $this->interface['senateVeto'] = array (
@@ -536,7 +537,7 @@ class SenatePhasePresenter
                 $this->header['list'][] = _('The President has adjourned the Senate and this will be the last proposal');
                 $this->interface['agreeToAdjournSenate']= array(
                     'type'=> 'button' ,
-                    'verb' => 'letSenateAdjourn' ,
+                    'verb' => 'senateAdjourn' ,
                     'style' => 'warning' ,
                     'text'=> _('AGREE TO ADJOURN')
                 ) ;
@@ -981,8 +982,8 @@ class SenatePhasePresenter
         {
             $result[] = array ('type' => 'office' , 'code' => 'PRESIDENT' , 'description' => _('President')) ;
         }
-        $result = array_merge($result, $this->getFreeTribunes($game->getParty($this->user_id))) ;
-        $result = array_merge($result, $this->getCardTribunes($game->getParty($this->user_id))) ;
+        $result = array_merge($result, $game->getParty($this->user_id)->getFreeTribunes()) ;
+        $result = array_merge($result, $game->getParty($this->user_id)->getCardTribunes()) ;
         return $result ;
     }
 
@@ -1000,43 +1001,6 @@ class SenatePhasePresenter
         }
         return $result ;
     }
-    
-    /**
-    * Returns a list of free tribunes provided by Satesmen special abilities
-    * @param \Entities\Party $party
-    * @return array {'type' , 'code' , 'description'}
-    **/
-    public function getFreeTribunes($party)
-    {
-        $result = array() ;
-        foreach ($party->getSenators()->getCards() as $senator)
-        {
-            if ($senator->getFreeTribune() == 1)
-            {
-                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'value' =>$senator->getCardId() , 'description' => _('Free tribune from ').$senator->getName()) ;
-            }
-        }
-        return $result ;
-    }
-    
-    /**
-    * Returns a list of tribune cards for this party
-    * @param \Entities\Party $party
-    * @return array {'type' , 'code' , 'description'}
-    **/
-    public function getCardTribunes($party)
-    {
-        $result = array() ;
-        foreach ($party->getHand()->getCards() as $card)
-        {
-            if ($card->getName()=='TRIBUNE')
-            {
-                $result[] = array ('type' => 'tribune' , 'code' => $card->getCardId() , 'value' =>$card->getCardId() , 'description' => 'Tribune card') ;
-            }
-        }
-        return $result ;
-    }
-    
     /**
      * Returns a list of Senator candidates for a specific proposal, $secondary is used if two different lists are needed for the same proposal (e.g. Prosecutions : List of accused, list of prosecutors)
      * @param \Entities\Game $game

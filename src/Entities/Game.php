@@ -1827,8 +1827,27 @@ class Game
     }
     
     /**
+     * Matched Wars in the áctiveWars' or 'unprosecutedWars' decks
+     * @param \Entities\Conflict $conflict
+     * @return int
+     */
+    public function getConflictMultiplier($conflict)
+    {
+        $multiplier=0;
+        $matchedConflicts = $this->getFilteredCards(array('matches' => $conflict->getMatches())) ;
+        foreach ($matchedConflicts as $matchedConflict)
+        {
+            $location = $matchedConflict->getLocation() ;
+            if ($location['type']=='game' && ($location['name'] == 'activeWars' || $location['name'] == 'unprosecutedWars'))
+            {
+                $multiplier++ ;
+            }
+        }
+        return $multiplier ;
+    }
+    /**
      * 
-     * @param type $conflict
+     * @param \Entities\Conflict $conflict
      * @return \Entities\array('land'
      * @throws \ExceptionReturns the modified land & fleet strength of a conflict based on active matched conflicts and leaders
      * @return array('land' , 'fleet')
@@ -1840,19 +1859,13 @@ class Game
             throw new \Exception(_('ERROR - Must be a conflict card.'));
         }
         // Matched Wars in the áctiveWars' or 'unprosecutedWars' decks
-        $multiplier=0;
-        $matchedConflicts = $this->getFilteredCards(array('matches' => $conflict->getMatches())) ;
-        foreach ($matchedConflicts as $matchedConflict)
-        {
-            $location = $matchedConflict->getLocation() ;
-            if ($location['type']=='game' && ($location['name'] == 'activeWars' || $location['name'] == 'unprosecutedWars'))
-            {
-                $multiplier++ ;
-            }
-        }
-        $result = array('land' => $conflict->getLand()*$multiplier , 'fleet' => $conflict->getFleet()*$multiplier) ;
+        $multiplier = $this->getConflictMultiplier($conflict);
+        $result = array(
+            'land'  => $conflict->getLand() * $multiplier , 
+            'fleet' => ($conflict->getFleetDefeated() ? 0 : 1) * $conflict->getFleet() * $multiplier
+        ) ;
         // Leaders on the card
-        foreach ($conflict->getCardsControlled() as $card)
+        foreach ($conflict->getCardsControlled()->getCards() as $card)
         {
             if ($card->getPreciseType()=='Leader')
             {

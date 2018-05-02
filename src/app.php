@@ -203,6 +203,7 @@
     $app->mount($app['BASE_URL'].'/Forum'      , new Controllers\ForumControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Population' , new Controllers\PopulationControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Senate'     , new Controllers\SenateControllerProvider($app) );
+    $app->mount($app['BASE_URL'].'/Combat'     , new Controllers\CombatControllerProvider($app) );
     $app->mount($app['BASE_URL'].'/Trace'      , new Controllers\TraceControllerProvider($app) );
 
     /**

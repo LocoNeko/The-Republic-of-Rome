@@ -34,7 +34,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                 }
                 catch (\Exception $exception) 
                 {
-                    $app['session']->getFlashBag()->add('danger', $exception->getTraceAsString());
+                    do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $exception->getFile(), $exception->getLine(), $exception->getMessage(), get_class($exception))); } while($exception = $exception->getPrevious());
                     return $app->redirect($app['BASE_URL'].'/Lobby/List') ;
                 }
                 
@@ -174,7 +174,7 @@ class SenateControllerProvider implements ControllerProviderInterface
         ->bind('verb_endProsecutions');
         
         /*
-        * The President adjourns the Senate
+        * The President adjourns the Senate OR other players agree to adjourn
         * Give all players who are not the President a chance to keep the Senate open by making a proposal (if they can)
         * POST target
         * Verb : senateAdjourn
@@ -186,19 +186,40 @@ class SenateControllerProvider implements ControllerProviderInterface
             {
                 /* @var $game \Entities\Game  */
                 $game = $app['getGame']((int)$game_id) ;
-                $game->log(_('The President adjourns the Senate.'));
                 $json_data = $request->request->all() ;
                 $user_id = (int)$json_data['user_id'] ;
                 /*
                  * We keep track of who wants to adjourn the Senate by checking party->isDone
-                 * So we set it to TRUE for the President
+                 * So we set it to TRUE
                  */
                 $game->getParty($user_id)->setIsDone(TRUE) ;
-                 /**
-                 * - If nobody can keep the Senate open, adjourn the Senate (move to Combat phase) 
-                 * - If someone can, bring up the otherbusiness interface
-                 * - Upon completing the proposal, the Senate must be adjourned, so when implementing a proposal, always check if subPhase = otherbusiness and the President is done
-                 */
+                if ((int)$game->getHRAO(TRUE)->getLocation()['value']->getUser_id() == $user_id)
+                {
+                    $game->log(_('The President adjourns the Senate.'));
+                    /** Go through all non-President players and check if they have a way to keep the Senate open, if they don't, do $party->isDone */
+                    foreach ($game->getParties() as $aParty)
+                    {
+                        if ($aParty->getUser_id()!=$user_id)
+                        {
+                            if ( (count($aParty->getCardTribunes()) + count($aParty->getFreeTribunes())) === 0 )
+                            {
+                                $aParty->setIsDone(TRUE) ;
+                                $game->log(_('[['.$aParty->getUser_id().']] {have,has} no way to keep the Senate from being adjourned') , 'log');
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    $game->log(_('[['.$user_id.']] {agree,agrees} to let the Senate adjourn') , 'log');
+                }
+                /** If nobody can keep the Senate open, adjourn the Senate (move to Combat phase)  */
+                if ($game->isEveryoneDone())
+                {
+                    $game->log(_('The Senate is adjourned.'));
+                    $game->resetAllIsDone() ;
+                    $game->setPhase('Combat') ;
+                }
                 $this->persistFlush($game);
                 return $app->json( 'SUCCESS' , 201);
             } catch (\Exception $exception) {
@@ -474,7 +495,7 @@ class SenateControllerProvider implements ControllerProviderInterface
                  * - Repopulating Rome (the proposal sent a Senator that made the total number of Senators in Rome below 8)
                  * - Adjourn Senate (the proposal sent the HRAO away from Rome)
                  * @todo repopulating Rome
-                 * @todo adjourn senate
+                 * @todo adjourn senate : This is done by checking HRAO's party->isDone() which is set to TRUE if the HRAO has adjourned (in which case, it means this proposal was put forward by another party before adjourning)
                  */
             }
         }

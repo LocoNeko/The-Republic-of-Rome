@@ -30,15 +30,11 @@
                 <td class="text-center">
                     {% if senatorVote['votes']>0 and senatorVote['talents']!=0 %}
                         {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['talents']}%}{% endembed %}
-                    {% else %}
-                        -
                     {% endif %}
                 </td>
                 <td>
                     {% if senatorVote['votes']>0 %}
                         {% embed 'BoardElements/ActionToken.twig' with {'action': senatorVote['splitVote']}%}{% endembed %}
-                    {% else %}
-                        -
                     {% endif %}
                 </td>
             </tr>

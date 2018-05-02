@@ -474,4 +474,43 @@ class Party extends TraceableEntity
         return $result ;
     }
 
+    /**
+    * ----------------------------------------------------
+    * Forum
+    * ----------------------------------------------------
+    */
+    
+    /**
+    * Returns a list of free tribunes provided by Satesmen special abilities
+    * @return array {'type' , 'code' , 'description'}
+    **/
+    public function getFreeTribunes()
+    {
+        $result = array() ;
+        foreach ($this->getSenators()->getCards() as $senator)
+        {
+            if ($senator->getFreeTribune() == 1)
+            {
+                $result[] = array ('type' => 'statesman' , 'code' => $senator->getSenatorID() , 'value' =>$senator->getCardId() , 'description' => _('Free tribune from ').$senator->getName()) ;
+            }
+        }
+        return $result ;
+    }
+    
+    /**
+    * Returns a list of tribune cards for this party
+    * @return array {'type' , 'code' , 'description'}
+    **/
+    public function getCardTribunes()
+    {
+        $result = array() ;
+        foreach ($this->getHand()->getCards() as $card)
+        {
+            if ($card->getName()=='TRIBUNE')
+            {
+                $result[] = array ('type' => 'tribune' , 'code' => $card->getCardId() , 'value' =>$card->getCardId() , 'description' => 'Tribune card') ;
+            }
+        }
+        return $result ;
+    }
 }

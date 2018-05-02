@@ -14,6 +14,9 @@ class Proposal extends TraceableEntity
     /** @ManyToOne(targetEntity="Game", inversedBy="proposals" , cascade={"persist"}) */
     private $game ;
 
+    /** @Column(type="integer") @var int */
+    private $turn ;
+
     /** @Column(type="string") @var string */
     private $type ;
 
@@ -66,6 +69,7 @@ class Proposal extends TraceableEntity
     public function __construct($user_id , $type , $game , $json_data)
     {
         $this->game = $game ;
+        $this->turn = $game->getTurn() ;
 
         /**
          * First, check if the constraints for this proposal are satisfied
@@ -281,6 +285,7 @@ class Proposal extends TraceableEntity
         }
     }
    
+    public function getTurn()       { return $this->turn ; }
     public function getType()       { return $this->type ; }
     public function getFlow()       { return $this->flow; }
     public function getStep()       { return $this->step; }
@@ -580,8 +585,10 @@ class Proposal extends TraceableEntity
                     'commander' => $item['otherBusinessCommanderSenator'] ,
                     'conflict' => $item['otherBusinessCommanderConflict'] ,
                     'fleets' => (int)$item['otherBusinessCommanderFleets'] ,
-                    'regulars' => (int)$item['otherBusinessCommanderRegulars']
+                    'regulars' => (int)$item['otherBusinessCommanderRegulars'] ,
                     /** @todo constraint for commander proposal : veterans content */
+                    'veterans' => NULL ,
+                    'battleResult' => 'pending'
                 ) ;
                 // decision are in an array of the form senatorID => decision (initialised to NULL)
                 $this->setDecision($item['otherBusinessCommanderSenator'] , NULL) ;
