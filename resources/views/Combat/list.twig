@@ -1,0 +1,90 @@
+<table class="table table-bordered" style="width:auto; text-shadow: 1px 1px #888888;">
+    <tbody>
+        <tr>
+            <td class="success" colspan="14" style="font-size: 150%; font-weight: bold; ">Battles</td>
+        </tr>
+        <tr>
+            <td class="info">Commander</td>
+            <td class="info">Fleets</td>
+            <td class="info">Legions</td>
+            <td class="info">Conflict</td>
+            <td class="info">Multiplier</td>
+            <td class="info">Leaders</td>
+            <td class="info">Fleets</td>
+            <td class="info">Support</td>
+            <td class="info">Land</td>
+            <td class="info">Naval total</td>
+            <td class="info">Land total</td>
+            <td class="info">Disasters</td>
+            <td class="info">Standoffs</td>
+            <td class="info">Roll</td>
+        </tr>
+        {% for battle in view.interface['list'] %}
+            <tr class="text-center">
+                <td class="text-left" style="vertical-align: middle;">
+                    {{battle['commander']['office']}} {{battle['commander']['name']}} (MIL: {{battle['commander']['MIL']}})
+                    {% if battle['MoH']|length > 0 %}
+                        <br>and [JUST TESTING] Master of Horse {{battle['MoH']['name']}} (MIL: {{battle['MoH']['MIL']}})
+                    {% endif %}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['fleets']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['regulars']}}
+                </td>
+                <td class="text-left" style="vertical-align: middle;">
+                    {{battle['conflict']['name']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    X {{battle['conflict']['multiplier']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {% if battle['conflict']['leaders']|length > 0 %}
+                        {% for leader in battle['conflict']['leaders']%}
+                            {{leader['name']}} (+{{leader['strength']}})
+                        {% endfor %}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['conflict']['fleet']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['conflict']['support']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['conflict']['land']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['fleetsModified']}} vs {{battle['conflict']['totalNaval']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['regularsModified']}} vs {{battle['conflict']['totalLand']}}
+                </td>
+                <td style="vertical-align: middle;">
+                    {% if battle['disasters']|length > 0 %}
+                        {{battle['disasters']}}
+                    {% else %}
+                        none
+                    {% endif %}
+                </td>
+                <td style="vertical-align: middle;">
+                    {% if battle['standoffs']|length > 0 %}
+                        {{ battle['standoffs'] }}
+                    {% else %}
+                        none
+                    {% endif %}
+                </td>
+                <td>
+                    {% if battle['action']|length > 0 %}
+                        {% embed 'BoardElements/ActionToken.twig' with {'action': battle['action']}%}{% endembed %}
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+

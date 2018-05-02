@@ -49,7 +49,8 @@ class CombatPhasePresenter
         {
             throw new \Exception(_('ERROR - Wrong phase')) ;
         }
-        $this->header['description'] = print_r($this->getBattleList($game),TRUE) ;
+        $this->interface['name'] = 'list';
+        $this->interface['list'] = $this->getBattleList($game) ;
         /**
          * - List all combat for this turn
          * - The party of the commander of the first combat has a "NAVAL BATTLE" or "LAND BATTLE" button
@@ -81,10 +82,12 @@ class CombatPhasePresenter
             /** Only check commander proposals from this turn*/
             if (($proposal->getTurn() == $game->getTurn()) && ($proposal->getType() == 'commander'))
             {
+                /** Go through all individual items, as they may be grouped */
                 foreach ($proposal->getContent() as $item)
                 {
                     /* @var $commander \Entities\Senator */
                     $commander = $game->getFilteredCards(array('senatorID'=>$item['commander']))->first() ;
+                    $MIL_total = 0 ;
                     if ($commander->getOffice()=='Dictator')
                     {
                         $MoH = $game->getAllSenators('isMaster of Horse')->first() ;
@@ -94,56 +97,80 @@ class CombatPhasePresenter
                             'Name' => $MoH->getName() ,
                             'MIL' => $MoH->getMIL()
                         ) ;
+                        $MIL_total += $MoH->getMIL() ;
                     }
                     else
                     {
-                        $MoH_array = NULL ;
+                        //$MoH_array = NULL ;
+                        /** @todo this is a debug thing , delete once happy, replace by line above*/
+                        $MoH_array = array (
+                            'senatorID' => 2 ,
+                            'user_id' => 10 ,
+                            'name' => 'FABIUS' ,
+                            'MIL' => 4
+                        ) ;
+                        $MIL_total += 4 ;
                     }
                     $user_id = $commander->getLocation()['value']->getUser_id() ;
 
                     /* @var $conflict \Entities\Conflict */
                     $conflict = $game->getFilteredCards(array('cardId'=>$item['conflict']))->first() ;
                     $leaders_array = [] ;
+                    $disaster_array = [] ;
+                    $standoff_array = [] ;
                     foreach ($conflict->getCardsControlled()->getCards() as $card)
                     {
                         /* @var $card \Entities\Leader */
                         if ($card->getPreciseType()=='Leader')
                         {
                             $leaders_array[] = array (
+                                'name' => $card->getName() ,
                                 'description' => $card->getDescription() ,
                                 'strength' => $card->getStrength() ,
-                                'disaster' => $card->getDisaster() ,
-                                'standoff' => $card->getStandoff() ,
                                 'ability' => $card->getAbility() 
                             ) ;
+                            $disaster_array[] = $card->getDisaster() ;
+                            $standoff_array[] = $card->getStandoff() ;
                         }
                     }
+                    $disaster_array[] = $conflict->getDisaster() ;
+                    $standoff_array[] = $conflict->getStandoff() ;
+                    $MIL_total += $commander->getMIL() ;
                     $result[] = array (
                         'commander' => array(
                             'senatorID' => $commander->getSenatorID() ,
                             'user_id' => $user_id ,
-                            'Name' => $commander->getName() ,
-                            'Office'  => $commander->getOffice() ,
+                            'name' => $commander->getName() ,
+                            'office'  => $commander->getOffice() ,
                             'MIL' => $commander->getMIL() ,
                             'specialAbility' => $commander->getSpecialAbility()
                         ) ,
-                        'Moh' => $MoH_array ,
+                        'MoH' => $MoH_array ,
                         'conflict' => array(
                             'cardId' => $conflict->getCardId() ,
+                            'name' => $conflict->getName() ,
                             'multiplier' => $game->getConflictMultiplier($conflict) ,
                             'leaders' => $leaders_array ,
                             'fleet' => $conflict->getFleet() ,
                             'support' => $conflict->getSupport() ,
                             'land'  => $conflict->getLand() ,
                             'totalNaval' => $game->getModifiedConflictStrength($conflict)['fleet'] ,
-                            'totalLand' => $game->getModifiedConflictStrength($conflict)['land'] ,
-                            'disaster' => $conflict->getDisaster() ,
-                            'standoff' => $conflict->getStandoff()
+                            'totalLand' => $game->getModifiedConflictStrength($conflict)['land']
                         ) ,
+                        'disasters' => implode(',' , $disaster_array) ,
+                        'standoffs' => implode(',' , $standoff_array) ,
                         'fleets' => $item['fleets'] ,
-                        //'regulars' => $item['regulars'] ,
+                        'fleetsModified' => ($item['fleets']>0 ? ($item['fleets'] + min($MIL_total,$item['fleets'])) : 0)  ,
+                        'regulars' => 0 ,
+                        'regularsModified' => 0  ,
                         //'veterans' => $item['veterans'] ,
-                        'battleResult' => $item['battleResult']
+                        'battleResult' => $item['battleResult'] ,
+                        'action' => array(
+                            'type'=> 'button' ,
+                            'verb' => 'combatRoll' ,
+                            'style' => 'danger' ,
+                            'text'=> _('VAE VICTIS')
+                        )
                     ) ;
                 }
             }
