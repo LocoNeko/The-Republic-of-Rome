@@ -50,7 +50,7 @@ class CombatPhasePresenter
             throw new \Exception(_('ERROR - Wrong phase')) ;
         }
         $this->interface['name'] = 'list';
-        $this->interface['list'] = $this->getBattleList($game) ;
+        $this->interface['list'] = $this->getBattleList($game , $user_id) ;
         /**
          * - List all combat for this turn
          * - The party of the commander of the first combat has a "NAVAL BATTLE" or "LAND BATTLE" button
@@ -71,10 +71,17 @@ class CombatPhasePresenter
     }
     
     /**
+     * Get a list of all the battles for this turn and this user_id
      * 
      * @param \Entities\Game $game
+     * @param int $user_id
+     * @return array    'proposal', 
+     *                  'commander' : array ('senatorID' , 'commander_user_id' , 'name' , 'office' , 'MIL' , 'specialAbility') ,<br>
+     *                  'MoH' : array ('senatorID' , 'user_id' , 'Name' , 'MIL')<br>
+     *                  'conflict' : array( 'cardId' , 'name' , 'multiplier' , 'leaders' , 'fleet' , 'support' , 'land' , 'totalNaval' , 'totalLand') ,<br>
+     *                  'disasters' , 'standoffs' , 'fleets' , 'fleetsModified' , 'regulars' , 'regularsModified'  , //'veterans'// , 'battleResult' , 'battleCount' , 'action'<br>
      */
-    public function getBattleList($game)
+    public function getBattleList($game , $user_id)
     {
         $result = [] ;
         foreach ($game->getProposals() as $proposal)
@@ -94,7 +101,7 @@ class CombatPhasePresenter
                         $MoH_array = array (
                             'senatorID' => $MoH->getSenatorID() ,
                             'user_id' => $MoH->getLocation()['value']->getUser_id() ,
-                            'Name' => $MoH->getName() ,
+                            'name' => $MoH->getName() ,
                             'MIL' => $MoH->getMIL()
                         ) ;
                         $MIL_total += $MoH->getMIL() ;
@@ -111,13 +118,16 @@ class CombatPhasePresenter
                         ) ;
                         $MIL_total += 4 ;
                     }
-                    $user_id = $commander->getLocation()['value']->getUser_id() ;
+                    $commander_user_id = $commander->getLocation()['value']->getUser_id() ;
 
                     /* @var $conflict \Entities\Conflict */
                     $conflict = $game->getFilteredCards(array('cardId'=>$item['conflict']))->first() ;
                     $leaders_array = [] ;
                     $disaster_array = [] ;
                     $standoff_array = [] ;
+                    /**
+                     * Enemy leaders
+                     */
                     foreach ($conflict->getCardsControlled()->getCards() as $card)
                     {
                         /* @var $card \Entities\Leader */
@@ -136,10 +146,39 @@ class CombatPhasePresenter
                     $disaster_array[] = $conflict->getDisaster() ;
                     $standoff_array[] = $conflict->getStandoff() ;
                     $MIL_total += $commander->getMIL() ;
+                    /**
+                     * Go through all the items in the proposal to check if the same conflict is fought by several commander
+                     */
+                    $battleCount = 0 ;
+                    /**
+                     * Action buttons :
+                     * - 'battleOrder' choice if the same conflict is fought several time as part fo the same proposal
+                     * > The choice will be saved in the 'battleResult' of the Proposal as a number (1 = fight first , 2 = fight second, etc)
+                     * > When a commander chooses the order, see if there are no more 'pending' battleResult, in which case :
+                     * > Check if the commanders agree on the order, assign randomely if they don't
+                     * > Once there are no more battleOrder action button to show, we can show only combatRoll
+                     * - 'combatRoll' action button if the commander is in the user's party and the conflicts' order is known
+                     */
+                    $action = ( ($commander_user_id == $user_id) ? 
+                    array(
+                        'type'=> 'button' ,
+                        'verb' => 'combatRoll' ,
+                        'style' => 'danger' ,
+                        'text'=> _('VAE VICTIS')
+                    ) : FALSE );
+                    foreach ($proposal->getContent() as $item2)
+                    {
+                        $conflict2 = $game->getFilteredCards(array('cardId'=>$item2['conflict']))->first() ;
+                        if ($conflict->getCardId() == $conflict2->getCardId())
+                        {
+                            $battleCount++ ;
+                        }
+                    }
                     $result[] = array (
+                        'proposal' => $proposal->getId() ,
                         'commander' => array(
                             'senatorID' => $commander->getSenatorID() ,
-                            'user_id' => $user_id ,
+                            'commander_user_id' => $commander_user_id ,
                             'name' => $commander->getName() ,
                             'office'  => $commander->getOffice() ,
                             'MIL' => $commander->getMIL() ,
@@ -165,12 +204,8 @@ class CombatPhasePresenter
                         'regularsModified' => 0  ,
                         //'veterans' => $item['veterans'] ,
                         'battleResult' => $item['battleResult'] ,
-                        'action' => array(
-                            'type'=> 'button' ,
-                            'verb' => 'combatRoll' ,
-                            'style' => 'danger' ,
-                            'text'=> _('VAE VICTIS')
-                        )
+                        'battleCount' => $battleCount ,
+                        'action' => $action
                     ) ;
                 }
             }

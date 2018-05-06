@@ -1,7 +1,7 @@
 <table class="table table-bordered" style="width:auto; text-shadow: 1px 1px #888888;">
     <tbody>
         <tr>
-            <td class="success" colspan="14" style="font-size: 150%; font-weight: bold; ">Battles</td>
+            <td class="success" colspan="15" style="font-size: 150%; font-weight: bold; ">Battles</td>
         </tr>
         <tr>
             <td class="info">Commander</td>
@@ -17,6 +17,7 @@
             <td class="info">Land total</td>
             <td class="info">Disasters</td>
             <td class="info">Standoffs</td>
+            <td class="info" style="font-size: 50%;">Multiple<br>battles</td>
             <td class="info">Roll</td>
         </tr>
         {% for battle in view.interface['list'] %}
@@ -76,6 +77,9 @@
                     {% else %}
                         none
                     {% endif %}
+                </td>
+                <td style="vertical-align: middle;">
+                    {{battle['battleCount']>1 ? battle['battleCount'] : 'No'}}
                 </td>
                 <td>
                     {% if battle['action']|length > 0 %}

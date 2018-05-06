@@ -465,17 +465,21 @@
 */
 
 .sprite-position-card-name {
+    position: absolute;
     font-size: 150%;
     text-shadow: 1px 1px #777777;
     text-align: center ;
-    margin-top: 30px;
+    top: 30px;
+    width: 90%;
 }
 
 .sprite-position-card-subname {
+    position: absolute;
     font-size: 100%;
     text-shadow: 1px 1px #777777;
     text-align: center ;
-    margin-top: 0px;
+    top: 50px;
+    width: 90%;
 }
 
 .sprite-position-card-text {
