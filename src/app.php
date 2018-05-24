@@ -260,7 +260,7 @@
     {
         try 
         {
-            /** @var \Entities\Game $game */
+            /* @var $game \Entities\Game */
             $game = $app['getGame']((int)$app['session']->get('game_id')) ;
             if ($game!==FALSE)
             {

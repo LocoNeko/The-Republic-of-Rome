@@ -154,3 +154,15 @@
     max-width: 350px;
     width: 350px;
 }
+
+.die-black
+{
+    background-color: #000000; 
+    color: #ffffff;
+}
+
+.die-white
+{
+    background-color: #ffffff; 
+    color: #000000;
+}

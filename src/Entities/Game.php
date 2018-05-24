@@ -103,6 +103,9 @@ class Game
     // A Game has many trace
     /** @OneToMany(targetEntity="Trace", mappedBy="game", cascade={"persist"} ) **/
     private $traces ;
+    
+    /** @Column(type="array") @var array */
+    private $dieRoll = array() ;
 
     /** @Column(type="datetime")  */
     private $created;
@@ -258,8 +261,9 @@ class Game
     public function getEvents() { return $this->events; }
     public function getAppealTable() { return $this->appealTable; }
     public function getLandBillsTable() { return $this->landBillsTable; }
+    public function getDieRoll() { return $this->dieRoll; }
 
-    public function getCreated()
+     public function getCreated()
     {
         if ($this->timezone==NULL) { $this->timezone = 'UTC' ; }
         if (!$this->localised) { $this->created->setTimeZone(new \DateTimeZone($this->timezone)); }
@@ -991,28 +995,28 @@ class Game
      * 
      * @param int $nb = Number of dice to roll (1 to 3)
      * @param int $evilOmensEffectPassed = Whether evil omens affect the roll by -1 , +1 or 0
-     * @return array|boolean 'total' => the total roll , 'x' => value of die X so we can obtain 1 white die & 2 black dice
+     * @return array|boolean 'rawTotal' => The brutal total ,  'total' => the total roll including evil omens effects, 'x' => value of die X so we can obtain 1 black die & 2 white dice
      */
     public function rollDice($nb , $evilOmensEffectPassed)
     {
-        $nb = (int)$nb;
-        if ($nb<1) { $nb = 1 ; }
-        if ($nb>3) { $nb = 3 ; }
+        if ((int)$nb<1) { $nb = 1 ; }
+        if ((int)$nb>3) { $nb = 3 ; }
         // Sanitise $evilOmensEffect to be -1 ,+1 or 0
         $evilOmensEffect = (int)$evilOmensEffectPassed ;
-        if ( ($evilOmensEffect!=-1) && ($evilOmensEffect!=1) )
+        if ( abs($evilOmensEffect)!=1 )
         {
             $evilOmensEffect = 0 ;
         }
         $result = array() ;
-        $result['total'] = 0 ;
-        for ($i=0 ; $i<$nb ; $i++)
+        $result['rawTotal'] = 0 ;
+        for ($i=0 ; $i<(int)$nb ; $i++)
         {
             $result[$i]=mt_rand(1,6);
-            $result['total']+=$result[$i];
+            $result['rawTotal']+=$result[$i];
         }
         // Add evil omens effects to the roll
-        $result['total'] += $evilOmensEffect * $this->getEventProperty('name' , 'Evil Omens');
+        $result['total'] = $result['rawTotal'] + ($evilOmensEffect * $this->getEventProperty('name' , 'Evil Omens'));
+        $this->dieRoll = $result ;
         return $result ;
     }
     
@@ -1034,6 +1038,14 @@ class Game
         }
     }
 
+    /**
+     * Resets the current dieroll being displayed to an empty array (nothing to display)
+     */
+    public function resetDieRoll()
+    {
+        $this->dieRoll = [] ;
+    }
+    
     /**
     * Returns a description of the effects of evil omens on a die/dice roll. Empty if current evil omens level is 0
     * @param type $effect -1|+1
@@ -1075,7 +1087,7 @@ class Game
      */
     
     /**
-     * 
+     * Returns an array of mortality chits that can be an integers (family ID) , 'NONE', or 'DRAW 2'
      * @param integer $qty
      * @return array
      */
@@ -1193,13 +1205,13 @@ class Game
         {
             foreach($this->getAllSenators() as $senator)
             {
-                if ($senator->getSenatorID()==$senatorID)
+                if ($senator->getSenatorID()===$senatorID)
                 {
                     $deadSenator = $senator ;
                 }
             }
         }
-
+        
         // Now that the dead Senator has been determined, kill him dead
         if (isset($deadSenator))
         {
@@ -1232,7 +1244,7 @@ class Game
                 }
                 else
                 {
-                    $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID, $this->getDeck('Curia') ) ;
+                    $party->getSenators()->getFirstCardByProperty('senatorID' , $senatorID, $this->getDeck('curia') ) ;
                     $message.=sprintf(_('%1$s of party [[').$party->getUser_id()._(']] dies. The family goes to the curia. ') , $deadSenator->getName() );
                 }
             }
@@ -1922,4 +1934,552 @@ class Game
         }
         return $result ;
     }
+    
+    /**
+    * ----------------------------------------------------
+    * Combat
+    * ----------------------------------------------------
+    */
+    
+    /**
+     * Get a list of all the battles for this turn and this user_id
+     * 
+     * @param int $user_id
+     * @return array    'proposal', 
+     *                  'commander' : array ('senatorID' , 'commander_user_id' , 'name' , 'office' , 'MIL' , 'specialAbility') ,<br>
+     *                  'MoH' : array ('senatorID' , 'user_id' , 'Name' , 'MIL')<br>
+     *                  'conflict' : array( 'cardId' , 'name' , 'multiplier' , 'leaders' , 'fleet' , 'support' , 'land' , 'totalNaval' , 'totalLand') ,<br>
+     *                  'disasters' , 'standoffs' , 'fleets' , 'fleetsModified' , 'regulars' , 'regularsModified'  , //'veterans'// , 'battleResult' , 'battleCount' , 'action'<br>
+     * @throws \Exception
+     */
+    public function getBattleList($user_id)
+    {
+        $result = [] ;
+        foreach ($this->getProposals() as $proposal)
+        {
+            // Only check commander proposals from this turn
+            if (($proposal->getTurn() == $this->getTurn()) && ($proposal->getType() == 'commander'))
+            {
+                // Go through all individual items, as they may be grouped
+                foreach ($proposal->getContent() as $item)
+                {
+                    /* @var $commander \Entities\Senator */
+                    $commander = $this->getFilteredCards(array('senatorID'=>$item['commander']))->first() ;
+                    $MIL_total = 0 ;
+                    if ($commander->getOffice()=='Dictator')
+                    {
+                        $MoH = $this->getAllSenators('isMaster of Horse')->first() ;
+                        $MoH_array = array (
+                            'senatorID' => $MoH->getSenatorID() ,
+                            'user_id' => $MoH->getLocation()['value']->getUser_id() ,
+                            'name' => $MoH->getName() ,
+                            'MIL' => $MoH->getMIL()
+                        ) ;
+                        $MIL_total += $MoH->getMIL() ;
+                    }
+                    else
+                    {
+                        $MoH_array = NULL ;
+                    }
+                    try {
+                        $commander_location = $commander->getLocation() ;
+                        $commander_user_id = ( ($commander_location['type']=='party') ? $commander_location['value']->getUser_id() : -1 ) ;
+                    } catch (Exception $ex) {
+                        throw new \Exception(_('ERROR - Commander not found'));
+                    }
+
+                    /* @var $conflict \Entities\Conflict */
+                    $conflict = $this->getFilteredCards(array('cardId'=>$item['conflict']))->first() ;
+                    $leaders_array = [] ;
+                    $disaster_array = [] ;
+                    $standoff_array = [] ;
+                    /**
+                     * Enemy leaders
+                     */
+                    foreach ($conflict->getCardsControlled()->getCards() as $card)
+                    {
+                        /* @var $card \Entities\Leader */
+                        if ($card->getPreciseType()=='Leader')
+                        {
+                            $leaders_array[] = array (
+                                'name' => $card->getName() ,
+                                'description' => $card->getDescription() ,
+                                'strength' => $card->getStrength() ,
+                                'ability' => $card->getAbility() 
+                            ) ;
+                            $disaster_array[] = $card->getDisaster() ;
+                            $standoff_array[] = $card->getStandoff() ;
+                        }
+                    }
+                    $disaster_array[] = $conflict->getDisaster() ;
+                    $standoff_array[] = $conflict->getStandoff() ;
+                    $MIL_total += $commander->getMIL() ;
+                    /**
+                     * Go through all the items in the proposal to check if the same conflict is fought by several commander
+                     * @todo I should also initialise a flag to get the first pending conflict, since this is the one that must be rolled first, and others should not have a combatRoll action
+                     */
+                    $battleCount = 0 ;
+                    $allChoicesMade = TRUE ;
+                    foreach ($proposal->getContent() as $item2)
+                    {
+                        $conflict2 = $this->getFilteredCards(array('cardId'=>$item2['conflict']))->first() ;
+                        if ($conflict->getCardId() == $conflict2->getCardId())
+                        {
+                            $battleCount++ ;
+                            if ($item2['battleResult']=='pending')
+                            {
+                                $allChoicesMade = FALSE ;
+                            }
+                        }
+                    }
+                    /**
+                     * Action buttons :
+                     * - 'combatBattleOrder' choice if the same conflict is fought several time as part of the same proposal, and all choices have not been made yet
+                     * - 'combatRoll' action button if the battle is the first in line and the commander is in the user's party and the conflicts order is known
+                     */
+                    $action = FALSE ;
+                    /** The battle result is pending, and the commander is in this party : combatRoll*/
+                    $allChoicesMade = FALSE ; $battleCount=3;
+                    if ( ($item['battleResult']=='pending') && ($commander_user_id == $user_id) && $allChoicesMade )
+                    {
+                        $action = array(
+                            'type'=> 'button' ,
+                            'verb' => 'combatRoll' ,
+                            'style' => 'danger' ,
+                            'text'=> _('VAE VICTIS')
+                        ) ;
+                    }
+                    /**
+                     * All choices have not been made : there's at least one pending battle for the same conflict
+                     */
+                    if (!$allChoicesMade)
+                    {
+                        if ($commander_user_id == $user_id)
+                        {
+                            $itemArray = [] ;
+                            for ($i=1;$i<=$battleCount;$i++)
+                            {
+                                $itemArray[] = array('value' => $i , 'description' => $i) ;
+                            }
+                            /**
+                             * For user who send a commander to one of several battle against the same conflict :
+                             * Give a toggle that allows them to choose the order (as many choices as $battlecount)
+                             */
+                            $action = array (
+                                'type'  => 'toggle' ,
+                                'name' => 'combatBattleOrder' ,
+                                'class' => 'toggleCombatBattleOrder' ,
+                                'items' => $itemArray
+                            ) ;
+                        }
+                    }
+                    /*
+                     * Add all the collected data into the $result array 
+                     */
+                    $result[] = array (
+                        'proposal' => $proposal->getId() ,
+                        'commander' => array(
+                            'senatorID' => $commander->getSenatorID() ,
+                            'commander_user_id' => $commander_user_id ,
+                            'name' => $commander->getName() ,
+                            'office'  => $commander->getOffice() ,
+                            'MIL' => $commander->getMIL() ,
+                            'specialAbility' => $commander->getSpecialAbility()
+                        ) ,
+                        'MoH' => $MoH_array ,
+                        'conflict' => array(
+                            'cardId' => $conflict->getCardId() ,
+                            'name' => $conflict->getName() ,
+                            'multiplier' => $this->getConflictMultiplier($conflict) ,
+                            'leaders' => $leaders_array ,
+                            'fleet' => $conflict->getFleet() ,
+                            'support' => $conflict->getSupport() ,
+                            'land'  => $conflict->getLand() ,
+                            'totalNaval' => $this->getModifiedConflictStrength($conflict)['fleet'] ,
+                            'totalLand' => $this->getModifiedConflictStrength($conflict)['land']
+                        ) ,
+                        'disasters' => implode(',' , $disaster_array) ,
+                        'standoffs' => implode(',' , $standoff_array) ,
+                        'fleets' => $item['fleets'] ,
+                        'fleetsModified' => ($item['fleets']>0 ? ($item['fleets'] + min($MIL_total,$item['fleets'])) : 0)  ,
+                        'regulars' => 0 ,
+                        'regularsModified' => 0  ,
+                        //'veterans' => $item['veterans'] ,
+                        'battleResult' => $item['battleResult'] ,
+                        'battleCount' => $battleCount ,
+                        'action' => $action
+                    ) ;
+                }
+            }
+        }
+        return $result ;
+    }
+    
+    /**
+     * This mega function resolves the first battle that should be resolved in the list of battles for this turn
+     * @param int $user_id
+     * @throws \Exception
+     */
+    public function doBattle($user_id)
+    {
+        try {
+            $battleList = $this->getBattleList($user_id) ;
+        } catch (Exception $ex) {
+            throw $ex;
+        }
+        $battle = FALSE ;
+        foreach ($battleList as $aBattle)
+        {
+            /**
+             * If there is a combatRoll verb, we have found the battle we need to roll for
+             */
+            if ($aBattle['action'] && $aBattle['action']['verb']=='combatRoll')
+            {
+                $battle = $aBattle ;
+                break ;
+            }
+        }
+        if ($battle===FALSE)
+        {
+            throw new \Exception(_('ERROR - No battle found'));
+        }
+        /**
+         * For battles with a naval and land component, check which one to roll for
+         */
+        if ($battle['conflict']['totalNaval'] >0)
+        {
+            $battleType = 'naval' ;
+            $RomeModifiedStrength = $battle['fleetsModified'] ;
+            $ConflictModifiedStrength = $battle['conflict']['totalNaval'] ;
+        }
+        else
+        {
+            $battleType = 'land' ;
+            /** @todo Add veterans */
+            $RomeModifiedStrength = $battle['regularsModified'] ;
+            $ConflictModifiedStrength = $battle['conflict']['totalLand'] ;
+        }
+        /* @var $conflict \Entities\Conflict */
+        try {
+            $conflict = $this->getFilteredCards(array('cardId' => $battle['conflict']['cardId']))->first() ;
+        } catch (Exception $ex) {
+            throw new \Exception(_('ERROR - Conflict not found'));
+        }
+        /**
+         * Commander & MoH
+         */
+        try {
+            $commander = $this->getFilteredCards(array('senatorID'=>$battle['commander']['senatorID']))->first() ;
+        } catch (Exception $ex) {
+            throw new \Exception(_('ERROR - Commander not found'));
+        }
+        try {
+            $MoH = ($battle['MoH']===NULL ? NULL : $this->getFilteredCards(array('senatorID'=>$battle['MoH']['senatorID']))->first());
+        } catch (Exception $ex) {
+            throw new \Exception(_('ERROR - Master of Horse not found'));
+        }
+        /**
+         * The combat roll
+         */
+        $roll = $this->rollDice(3 , -1) ;
+        /**
+         * Events
+         */
+        $eventModifiers = 0 ;
+        $eventModifiersText = '' ;
+        /**
+         * Ally Deserts : Roman allies are wavering. All battles fought this turn with an even result on 3d6 will result in a temporary increase to the War cards's strength for this turn equal to the result of the black die. This increase is applied after any multipliers for Matching Wars;
+         * level 2 : Roman Auxiliary Deserts : Roman allies are shaken. All battles fought this turn with an even result on 3d6 will result in a temporary increase to the War cards's strength for this turn equal to the result of the white dice. This increase is applied after any multipliers for Matching Wars ;
+         */
+        $allyDesertsLevel = $this->getEventProperty('name' , 'Ally Deserts') ;
+        if ($allyDesertsLevel > 0)
+        {
+            $even = ($roll['rawTotal']%2) == 0 ;
+            $strengthIncrease = ( ($allyDesertsLevel == 1) ? ((int)$roll[0]) : ((int)$roll[1]+(int)$roll[2])) ;
+            if ($even)
+            {
+                $eventModifiersText.=sprintf(
+                    _(' further increased by the %1$s (%2$d) from the event "%3$s"') ,
+                    (($allyDesertsLevel == 1) ? _('black die') : _('white dice')) ,
+                    $strengthIncrease ,
+                    $this->getEventProperty('name' , 'Ally Deserts' , 'name')
+                );
+                $eventModifiers-=$strengthIncrease ;
+            }
+            else
+            {
+                $eventModifiersText.=sprintf(_(' unmodified by the "%1$s" event since the roll total was odd') , $this->getEventProperty('name' , 'Ally Deserts' , 'name') );
+            }
+        }
+        /**
+         * Enemy's Ally Deserts : All battles fought this turn with an odd result on 3d6 will result in a temporary decrease to the War's Strength for this turn equal to the result on the black die. THis decrease is applied after any multipliers for Matching Wars. The minimum Strength it can be lowered to is 0.;
+         * level 2 : Enemy Mercenaries Desert : All battles fought this turn with an odd result on 3d6 will result in a temporary decrease to the War's Strength for this turn equal to the result on the white dice. This decrease is applied after any multipliers for Matching Wars. The minimum Strength it can be lowered to is 0.;
+         */
+        $enemyAllyDesertsLevel = $this->getEventProperty('name' , 'Enemy\'s Ally Deserts') ;
+        if ($enemyAllyDesertsLevel > 0)
+        {
+            $odd = ($roll['rawTotal']%2) == 1 ;
+            $strengthDecrease = ( ($enemyAllyDesertsLevel == 1) ? ((int)$roll[0]) : ((int)$roll[1]+(int)$roll[2])) ;
+            if ($odd)
+            {
+                $eventModifiersText.=sprintf(
+                    _(' further decreased by the %1$s (%2$d) from the event "%3$s"') ,
+                    (($enemyAllyDesertsLevel == 1) ? _('black die') : _('white dice')) ,
+                    $strengthDecrease ,
+                    $this->getEventProperty('name' , 'Enemy\'s Ally Deserts' , 'name')
+                );
+                $eventModifiers+=$strengthDecrease ;
+            }
+            else
+            {
+                $eventModifiersText.=sprintf(_(' unmodified by the "%1$s" event since the roll total was even') , $this->getEventProperty('name' , 'Enemy\'s Ally Deserts' , 'name') );
+            }
+        }
+        $total = (int) ($RomeModifiedStrength - $ConflictModifiedStrength + $roll['total'] + $eventModifiers) ;
+        $battleMessage = sprintf(
+            _('%1$s : Rome modified strength of %2$d against %3$s modified strength of %4$d%5$s. Roll of %6$d%7$s for a final result of %8$d.') ,
+            ($battleType=='naval' ? _('Naval battle') : _('Land battle')) ,
+            $RomeModifiedStrength ,
+            $battle['conflict']['name'] ,
+            $ConflictModifiedStrength ,
+            $eventModifiersText ,
+            $roll['total'] ,
+            $this->getEvilOmensMessage(-1) ,
+            $total
+        );
+        $this->log($battleMessage , 'alert') ;
+        /**
+         * Handle results
+         */
+        /**
+         * Check for disasters and standoffs from the Conflict and Leader
+         */
+        $result = '';
+        $specialLosses = 0 ;
+        $losses = 0 ;
+        /**
+         * @todo Exclude disasters that have already been rolled this turn
+         */
+        if (in_array($roll['rawTotal'] , explode(',' , $battle['disasters']) ) )
+        {
+            $result = 'disaster';
+            $specialLosses = 0.5 ;
+        }
+        elseif (in_array($roll['rawTotal'] , explode(',' , $battle['standoffs']) ) )
+        {
+            $result = 'standoff';
+            $specialLosses = 0.25 ;
+        }
+        /**
+         * Combat table
+         */
+        else
+        {
+            if ($total<=3)
+            {
+                $result = 'defeat' ;
+                $specialLosses =1 ;
+            }
+            elseif ($total<=7)
+            {
+                $result = 'defeat' ;
+                $losses = 8 - $total ;
+            }
+            elseif ($total<=13)
+            {
+                $result = 'stalemate' ;
+                $losses = 13 - $total ;
+            }
+            else
+            {
+                $result = 'victory' ;
+                $losses = max( (18 - $total) , 0) ;
+            }
+        }
+        /**
+         * Losses
+         */
+        $lostFleet = 0 ;
+        $lostLegions = 0 ;
+        if ($specialLosses>0)
+        {
+            $lostFleet = round ($battle['fleets'] * $specialLosses) ;
+            /** @todo What about veterans ? */
+            $lostLegions = round ($battle['regulars'] * $specialLosses) ;
+        }
+        else
+        {
+            $lostFleet = min ($battle['fleets'] , $losses) ;
+            /** @todo Determine the actual legions lost, between regulars and veterans ? */
+            $lostLegions = min ($battle['regulars'] , $losses) ;
+        }
+        /**
+         * Commander loss of POP from legions losses
+         */
+        $commanderPOPLoss = ( ($lostLegions>0) ? round($lostLegions/2) : 0 ) ;
+        $commander->changePOP(-$commanderPOPLoss) ;
+        /**
+         * Unrest
+         */
+        $unrestMessage='';
+        if ($result=='defeat')
+        {
+            $this->changeUnrest(2) ;
+            $unrestMessage=_('The defeat increases the unrest by 2.') ;
+        }
+        if ($result=='disaster')
+        {
+            $this->changeUnrest(1) ;
+            $unrestMessage=_('The disaster increases the unrest by 1.') ;
+        }
+        if ($result=='victory')
+        {
+            $this->changeUnrest(-1) ;
+            $unrestMessage=_('The victory lowers the unrest by 1.') ;
+        }
+        /**
+         * Commander & MoH death & capture
+         */
+        // In case of defeat, the commander and MoH are killed without needing mortality chits
+        if ($result=='defeat')
+        {
+            $commanderStatus = 'killed' ;
+            $MoHStatus =  'killed' ;
+        }
+        else
+        {
+            $commanderStatus = 'safe' ;
+            $MoHStatus =  'safe' ;
+            // draw as many chits as the number of units lost
+            if (($lostFleet+$lostLegions) >0)
+            {
+                $mortalityChits = $this->mortality_chits($lostFleet+$lostLegions) ;
+                for ($i=0;$i<count($mortalityChits);$i++)
+                {
+                    $captured = ($i==count($mortalityChits)-1);
+                    if ((int)$mortalityChits[$i] == $commander->getFamilyID())
+                    {
+                        $commanderStatus = ($captured ? 'captured' : 'killed') ;
+                    }
+                    if ($MoH!==NULL && ((int)$mortalityChits[$i] == $MoH->getFamilyID()))
+                    {
+                        $MoHStatus = ($captured ? 'captured' : 'killed') ;
+                    }
+                }
+            }
+            else
+            {
+                $mortalityChits = [] ;
+            }
+        }
+
+        $this->log(
+            sprintf(_('The result is a %1$s with losses of %2$d fleets and %3$d legions%4$s.%5$s') , 
+                $result , 
+                $lostFleet , 
+                $lostLegions , 
+                (($commanderPOPLoss>0) ? sprintf(_(' causing a loss of %1$d POP to the commander') , $commanderPOPLoss) : '') ,
+                $unrestMessage
+            ) ,
+        'alert') ;
+
+        if ($result=='defeat')
+        {
+            if ($MoH!==NULL)
+            {
+                $this->log(_('As a result of the defeat, the commander and his master of horse are killed') , 'alert');
+            }
+            else
+            {
+                $this->log(_('As a result of the defeat, the commander is killed') , 'alert');
+            }
+        }
+        elseif (count($mortalityChits)>0)
+        {
+            $this->log(
+                sprintf(_('%1$d mortality chits are drawn based on the number of losses : %2$s. %3$s%4$s') ,
+                    (int)($lostFleet+$lostLegions) ,
+                    implode(', ' , $mortalityChits) ,
+                    sprintf(_('The commander is %1$s.') , $commanderStatus) ,
+                    ($MoH!==NULL ? sprintf(_(' The Master of horse is %1$s') , $MoHStatus) : '')
+                ) ,
+            'alert') ;
+        }
+        /**
+         * Actual death or capture of the commander & MoH
+         * Put here as killSenator triggers notifications that should be shown only after the battle result
+         */
+        if ($commanderStatus=='killed')
+        {
+            $deathMessage = $this->killSenator($commander->getSenatorID() , TRUE) ;
+            $this->log($deathMessage[0]) ;
+        }
+        if ( ($MoH!==NULL) && ($MoHStatus=='killed') )
+        {
+            $deathMessage = $this->killSenator($MoH->getSenatorID() , TRUE) ;
+            $this->log($deathMessage[0]) ;
+        }
+        if ($commanderStatus=='captured' && $result<>'victory')
+        {
+            $commander->setCaptive($battle['conflict']['cardId']);
+        }
+        if ($MoHStatus=='captured' && $result<>'victory')
+        {
+            $MoH->setCaptive($battle['conflict']['cardId']);
+        }
+        /**
+         * Create veterans for land battles resulting is stalemate, standoff or victory
+         */
+        if ( ($battleType=='land') && ($result<>'disaster') && ($result<>'defeat') )
+        {
+            /** @todo create veteran interface */
+        }
+        /**
+         * Offer the possibility to the commander to fight the land battle following naval victory
+         */
+        if ( ($battleType=='naval') && ($result<>'victory') )
+        {
+            /** @todo create choose to fight land battle interface */
+        }
+        /**
+         * Victory : Commander POP & INF gains
+         * If Land battle : Spoils, provinces, INF and POP gain for commander.
+         */
+        if ($result=='victory')
+        {
+            if ($commanderStatus<>'killed')
+            {
+                $commanderGain = ( ($battleType=='Land') ? round((int)$battle['conflict']['land']/2) : round((int)$battle['conflict']['fleet']/2)) ;
+                $commander->changeINF($commanderGain) ;
+                $commander->changePOP($commanderGain) ;
+                $this->log( sprintf(_('The commander gains %1$d POP and INF from the victory') , $commanderGain) , 'alert') ;
+            }
+            if ($battleType=='naval')
+            {
+                $provincesCreated = explode(',' , $conflict->getCreates()) ;
+                $spoils = $conflict->getSpoils() ;
+                $this->changeTreasury($spoils) ;
+                $provincesNames=[] ;
+                foreach ($provincesCreated as $provinceID)
+                {
+                    $province = $this->getDeck('unplayedProvinces')->getFirstCardByProperty('cardId' , $provinceID , $this->getDeck('forum')) ;
+                    $provincesNames[] = $province->getName() ;
+                }
+                $provincesNamesText = '' ;
+                if (count($provincesNames)==1)
+                {
+                    $provincesNamesText = sprintf(_(' and the province %1$s is created.') , $provincesNames[0]) ;
+                }
+                if (count($provincesNames)>1)
+                {
+                    $provincesNamesText = sprintf(_(' and the %1$d provinces %2$s are created.') , count($provincesNames) , implode(' , ' , $provincesNames) ) ;
+                }
+                $this->log( sprintf(_('Rome receives %1$d T in spoils%2$s') , $spoils , $provincesNamesText) , 'alert') ;
+            }
+        }
+        /**
+         * Record what needs to be recorded back in the Proposal : battleResult & roll
+         */
+    }
+
 }

@@ -1,7 +1,9 @@
-<div class="btn-group" role="group" aria-label="Header" style="font-size:20px">
+<div class="btn-group" role="group" aria-label="Header" style="font-size:20px; margin-bottom:15px;">
   <button type="button" class="btn btn-outline-primary btn-lg">Turn : <strong>{{view.game.turn}}</strong></button>
   <button type="button" class="btn btn-outline-primary btn-lg">Phase : <strong>{{view.game.phase}}</strong></button>
-  <button type="button" class="btn btn-outline-primary btn-lg">Sub Phase : <strong>{{view.game.subPhase}}</strong></button>
+  {% if view.game.subPhase|length > 0 %}
+    <button type="button" class="btn btn-outline-primary btn-lg">Sub Phase : <strong>{{view.game.subPhase}}</strong></button>
+  {% endif %}
   <button type="button" class="btn btn-outline-primary btn-lg">{{view.game.HRAOorPresident}} : <strong>{{view.game.HRAO_name}}</strong></button>
   <button type="button" class="btn btn-outline-primary btn-lg">Order of play :
       <strong>
@@ -13,7 +15,26 @@
             {% endfor %}
       </strong>
   </button>
-</div>
+</div><br>
+
+{# DIE ROLL : When we have a die roll, it should be stored in the game. If that's the case, display the roll in the header #}
+
+{% set dieRoll = view.game.dieRoll %}
+{% if dieRoll|length > 0 %}
+    <div class="btn-group" role="group" aria-label="Header">
+        <button type="button" class="btn btn-secondary btn-lg"  style="font-weight: bold; font-stretch: ultra-condensed; margin-right:5px;">Latest roll : </button>
+        {% for key,die in dieRoll %}
+            {% if key|length == 1 %}
+                {# TO DO : Make something better than this #}
+                <button type="button" class="btn btn-outline-secondary btn-lg active {{key==0 ? 'die-black' : 'die-white'}}" style="margin-right:5px;">
+                    &#x{{2159+die}};
+                </button>
+            {% endif %}
+        {% endfor %}
+        <button type="button" class="btn btn-outline-default btn-lg active"  style="font-weight: bold; margin-right:5px;">=</button>
+        <button type="button" class="btn btn-outline-secondary btn-lg active"  style="font-weight: bold;">{{dieRoll['total']}}</button>
+    </div>
+{% endif %}
             
 {#
     PHASE HEADER

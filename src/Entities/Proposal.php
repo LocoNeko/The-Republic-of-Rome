@@ -588,7 +588,9 @@ class Proposal extends TraceableEntity
                     'regulars' => (int)$item['otherBusinessCommanderRegulars'] ,
                     /** @todo constraint for commander proposal : veterans content */
                     'veterans' => NULL ,
-                    'battleResult' => 'pending'
+                    'battleResult' => 'pending' ,
+                    'roll' => NULL ,
+                    'battleOrder' => NULL
                 ) ;
                 // decision are in an array of the form senatorID => decision (initialised to NULL)
                 $this->setDecision($item['otherBusinessCommanderSenator'] , NULL) ;
@@ -675,7 +677,9 @@ class Proposal extends TraceableEntity
     
     /**
      * Adds the array $newContent to this proposal's current content
+     * This is a dangerous function as it bypasses constraints
      * @param array$newContent
+     * @todo This is actually TOO dangerous and should be avoided...
      */
     public function addContent($newContent)
     {
@@ -1169,5 +1173,34 @@ class Proposal extends TraceableEntity
             ) ;
         }
         return $result ;
+    }
+    
+    /**
+     */
+    /**
+     * A commander proposal must be updated in 3 cases :
+     * - 'battleResult' (default 'pending') : Save the battle result once determined (defeat, disaster , victory , stalemate , standoff
+     * - 'roll' (default NULL) : Save the roll once it is made
+     * - 'battleOrder' (default NULL) : Commanders have made a choice as to which order battles will be fought when several commanders are sent to fight the same conflict
+     * 
+     * @param string $type 'order' | 'result'
+     * @param int $index The index of the item to update in this proposal (warning : starts at 1, since dynamicSections start at 1, and a commander proposal is a dynamicSection)
+     * @param mixed $value Must be validated
+     */
+    public function updateCommanderProposal($type , $index , $value)
+    {
+        /**
+         * Update battleOrder
+         */
+        if ($type=='order')
+        {
+        }
+        /**
+         * Update battleResult and roll
+         */
+        if ($type=='result')
+        {
+            
+        }
     }
 }

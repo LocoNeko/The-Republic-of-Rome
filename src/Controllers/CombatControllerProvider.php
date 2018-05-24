@@ -24,13 +24,16 @@ class CombatControllerProvider implements ControllerProviderInterface
                 /** @var \Entities\Game $game */
                 $game = $app['getGame']((int)$game_id);
                 $user_id = (int)$app['user']->getId();
+
+                //If seeing your own party, this means the update time can be set (as all the updates you need to see are now displayed)
+                $game->getParty($user_id)->setLastUpdateToNow();
+
                 $presenter = new \Presenters\CombatPhasePresenter($game, $user_id);
                 return $app['twig']->render('BoardElements/Main.twig', array(
                     'layout_template' => 'InGameLayout.twig',
                     /** @todo This is ugly as shit. replace view by presenter everywhere (in all Presenters !*/
                     'view' => $presenter
                 ));
-
             }
             catch (\Exception $ex) 
             {
@@ -40,19 +43,48 @@ class CombatControllerProvider implements ControllerProviderInterface
         })
         ->bind('Combat');
 
+        /*
+        * POST target
+        * Verb : combatRoll
+        * JSON data : user_id
+        */
+        $controllers->post('/{game_id}/combatRoll', function($game_id , Request $request) use ($app)
+        {
+            try
+            {
+                /* @var $game \Entities\Game  */
+                $game = $app['getGame']((int)$game_id) ;
+                $json_data = $request->request->all() ;
+                $user_id = (int)$json_data['user_id'] ;
+                $game->doBattle($user_id) ;
+                /**
+                 * Check : 
+                 * - Move wars to unprosecuted if applicable
+                 */
+                return $app->json( 'SUCCESS' , 201);
+            } catch (\Exception $ex) {
+                do { $app['session']->getFlashBag()->add('danger', sprintf("%s:%d %s [%s]", $ex->getFile(), $ex->getLine(), $ex->getMessage(), get_class($ex))); } while($ex = $ex->getPrevious());
+                return $app->json( '' , 201 );
+            }
+        })
+        ->bind('verb_combatRoll');
+
+        /*
+        * POST target
+        * Verb : combatBattleOrder
+        * > The choices must be saved in the Proposal 'battleOrder' as a number (1 = fight first , 2 = fight second, etc)
+        * > When a commander chooses the order, see if there are no more 'pending' battleResult, in which case :
+        * > Check if the commanders agree on the order, assign randomly if they don't
+        * > Once there are no more battleOrder action button to show, we can show only combatRoll
+        * JSON data : user_id
+        */
+        
+        /*
+        * POST target
+        * Verb : combatLandBattle
+        * JSON data : user_id
+        */
+     
         return $controllers;
     }
-    /**
-     * Events relevant to combats
-     * 161;
-     * Ally Deserts : Roman allies are wavering. All battles fought this turn with an even result on 3d6 will result in a temporary increase to the War cards's strength for this turn equal to the result of the black die. This increase is applied after any multipliers for Matching Wars;
-     * level 2 : Roman Auxiliary Deserts : Roman allies are shaken. All battles fought this turn with an even result on 3d6 will result in a temporary increase to the War cards's strength for this turn equal to the result of the white dice. This increase is applied after any multipliers for Matching Wars ;
-     * 
-     * 166;
-     * Enemy's Ally Deserts : All battles fought this turn with an odd result on 3d6 will result in a temporary decrease to the War's Strength for this turn equal to the result on the black die. THis decrease is applied after any multipliers for Matching Wars. The minimum Strength it can be lowered to is 0.;
-     * level 2 : Enemy Mercenaries Desert : All battles fought this turn with an odd result on 3d6 will result in a temporary decrease to the War's Strength for this turn equal to the result on the white dice. This decrease is applied after any multipliers for Matching Wars. The minimum Strength it can be lowered to is 0.;
-     * 
-     * 168;
-     * Evil Omens :The State Treasury must immediately pay 20T for sacrifices and Temple repair and a -1 penalty is applied to EVERY die or dice roll except for Initiative and further rolls on the Events Table (Exception: +1 to all Persuasion Attempts.) In the case of Provincial Spoils and State Income subtract one from the total income - not from the die roll.;
-     */
 }

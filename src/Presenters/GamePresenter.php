@@ -10,6 +10,7 @@ class GamePresenter
     public $subPhase ;
     public $treasury ;
     public $unrest ;
+    public $dieRoll = [] ;
     public $legionsDescription = [] ;
     public $HRAO_name ;
     public $orderOfPlay = [] ;
@@ -34,6 +35,7 @@ class GamePresenter
         $this->subPhase = $game->getSubPhase() ;
         $this->treasury = $game->getTreasury() ;
         $this->unrest = $game->getUnrest() ;
+        $this->dieRoll = $game->getDieRoll() ;
         $this->legions = $game->getLegions() ;
         $this->fleets = $game->getFleets() ;
         $this->legionsDescription['Rome'] = '' ;

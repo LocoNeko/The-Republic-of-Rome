@@ -59,10 +59,18 @@
                     {{battle['conflict']['land']}}
                 </td>
                 <td style="vertical-align: middle;">
-                    {{battle['fleetsModified']}} vs {{battle['conflict']['totalNaval']}}
+                    {% if (battle['fleetsModified'] > 0) and (battle['conflict']['totalNaval']>0) %}
+                        {{ (battle['fleetsModified'] > battle['conflict']['totalNaval']) ? '+' : '-' }}{{(battle['fleetsModified'] - battle['conflict']['totalNaval']) | abs}} ({{battle['fleetsModified']}} vs {{battle['conflict']['totalNaval']}})
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
                 <td style="vertical-align: middle;">
-                    {{battle['regularsModified']}} vs {{battle['conflict']['totalLand']}}
+                    {% if battle['regularsModified'] > 0  %}
+                        {{ (battle['regularsModified'] > battle['conflict']['totalLand']) ? '+' : '-' }}{{(battle['regularsModified'] - battle['conflict']['totalLand']) | abs}} ({{battle['regularsModified']}} vs {{battle['conflict']['totalLand']}})
+                    {% else %}
+                        -
+                    {% endif %}
                 </td>
                 <td style="vertical-align: middle;">
                     {% if battle['disasters']|length > 0 %}
@@ -84,6 +92,8 @@
                 <td>
                     {% if battle['action']|length > 0 %}
                         {% embed 'BoardElements/ActionToken.twig' with {'action': battle['action']}%}{% endembed %}
+                    {% else %}
+                        {{battle['battleResult']}}
                     {% endif %}
                 </td>
             </tr>
